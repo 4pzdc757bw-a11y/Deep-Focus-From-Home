@@ -116,7 +116,7 @@ function MorePage() {
             <Megaphone className="size-5" />
           </span>
           <span>
-            <span className="block font-display text-xl text-olive">Sales page</span>
+            <span className="block font-display text-xl text-olive">Start here</span>
             <span className="mt-1 block text-ink">
               The public funnel: free 7-day pack, then the $17 handbook + fillables (optional $37 app).
             </span>
