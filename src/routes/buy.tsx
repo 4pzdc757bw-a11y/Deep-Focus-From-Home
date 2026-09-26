@@ -1,11 +1,13 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Card } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
+import { LegalFooter } from "@/components/legal-footer";
 import {
   APP_PRICE_LABEL,
   markPurchased,
   PRICE_LABEL,
 } from "@/lib/offer";
+import { STORE_CREDIT_CHECKOUT_LINE } from "@/lib/legal";
 import { useFocusStore } from "@/lib/store";
 
 export const Route = createFileRoute("/buy")({ component: BuyPage });
@@ -107,6 +109,9 @@ function BuyPage() {
         </Link>
         .
       </p>
+
+      <p className="text-sm text-muted">{STORE_CREDIT_CHECKOUT_LINE}</p>
+      <LegalFooter />
     </div>
   );
 }

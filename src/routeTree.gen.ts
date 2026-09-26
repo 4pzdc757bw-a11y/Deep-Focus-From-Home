@@ -18,9 +18,12 @@ import { Route as HouseholdRouteImport } from './routes/household'
 import { Route as IntroRouteImport } from './routes/intro'
 import { Route as MonthRouteImport } from './routes/month'
 import { Route as MoreRouteImport } from './routes/more'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as SetupRouteImport } from './routes/setup'
 import { Route as StartRouteImport } from './routes/start'
 import { Route as StarterRouteImport } from './routes/starter'
+import { Route as StoreCreditRouteImport } from './routes/store-credit'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as ThanksRouteImport } from './routes/thanks'
 import { Route as WeekRouteImport } from './routes/week'
 import { Route as GuideIndexRouteImport } from './routes/guide.index'
@@ -71,6 +74,11 @@ const MoreRoute = MoreRouteImport.update({
   path: '/more',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SetupRoute = SetupRouteImport.update({
   id: '/setup',
   path: '/setup',
@@ -84,6 +92,16 @@ const StartRoute = StartRouteImport.update({
 const StarterRoute = StarterRouteImport.update({
   id: '/starter',
   path: '/starter',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StoreCreditRoute = StoreCreditRouteImport.update({
+  id: '/store-credit',
+  path: '/store-credit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ThanksRoute = ThanksRouteImport.update({
@@ -117,9 +135,12 @@ export interface FileRoutesByFullPath {
   '/intro': typeof IntroRoute
   '/month': typeof MonthRoute
   '/more': typeof MoreRoute
+  '/privacy': typeof PrivacyRoute
   '/setup': typeof SetupRoute
   '/start': typeof StartRoute
   '/starter': typeof StarterRoute
+  '/store-credit': typeof StoreCreditRoute
+  '/terms': typeof TermsRoute
   '/thanks': typeof ThanksRoute
   '/week': typeof WeekRoute
   '/guide/$slug': typeof GuideSlugRoute
@@ -134,9 +155,12 @@ export interface FileRoutesByTo {
   '/intro': typeof IntroRoute
   '/month': typeof MonthRoute
   '/more': typeof MoreRoute
+  '/privacy': typeof PrivacyRoute
   '/setup': typeof SetupRoute
   '/start': typeof StartRoute
   '/starter': typeof StarterRoute
+  '/store-credit': typeof StoreCreditRoute
+  '/terms': typeof TermsRoute
   '/thanks': typeof ThanksRoute
   '/week': typeof WeekRoute
   '/guide/$slug': typeof GuideSlugRoute
@@ -153,9 +177,12 @@ export interface FileRoutesById {
   '/intro': typeof IntroRoute
   '/month': typeof MonthRoute
   '/more': typeof MoreRoute
+  '/privacy': typeof PrivacyRoute
   '/setup': typeof SetupRoute
   '/start': typeof StartRoute
   '/starter': typeof StarterRoute
+  '/store-credit': typeof StoreCreditRoute
+  '/terms': typeof TermsRoute
   '/thanks': typeof ThanksRoute
   '/week': typeof WeekRoute
   '/guide/$slug': typeof GuideSlugRoute
@@ -173,9 +200,12 @@ export interface FileRouteTypes {
     | '/intro'
     | '/month'
     | '/more'
+    | '/privacy'
     | '/setup'
     | '/start'
     | '/starter'
+    | '/store-credit'
+    | '/terms'
     | '/thanks'
     | '/week'
     | '/guide/$slug'
@@ -190,9 +220,12 @@ export interface FileRouteTypes {
     | '/intro'
     | '/month'
     | '/more'
+    | '/privacy'
     | '/setup'
     | '/start'
     | '/starter'
+    | '/store-credit'
+    | '/terms'
     | '/thanks'
     | '/week'
     | '/guide/$slug'
@@ -208,9 +241,12 @@ export interface FileRouteTypes {
     | '/intro'
     | '/month'
     | '/more'
+    | '/privacy'
     | '/setup'
     | '/start'
     | '/starter'
+    | '/store-credit'
+    | '/terms'
     | '/thanks'
     | '/week'
     | '/guide/$slug'
@@ -227,9 +263,12 @@ export interface RootRouteChildren {
   IntroRoute: typeof IntroRoute
   MonthRoute: typeof MonthRoute
   MoreRoute: typeof MoreRoute
+  PrivacyRoute: typeof PrivacyRoute
   SetupRoute: typeof SetupRoute
   StartRoute: typeof StartRoute
   StarterRoute: typeof StarterRoute
+  StoreCreditRoute: typeof StoreCreditRoute
+  TermsRoute: typeof TermsRoute
   ThanksRoute: typeof ThanksRoute
   WeekRoute: typeof WeekRoute
 }
@@ -299,6 +338,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MoreRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/setup': {
       id: '/setup'
       path: '/setup'
@@ -318,6 +364,20 @@ declare module '@tanstack/react-router' {
       path: '/starter'
       fullPath: '/starter'
       preLoaderRoute: typeof StarterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/store-credit': {
+      id: '/store-credit'
+      path: '/store-credit'
+      fullPath: '/store-credit'
+      preLoaderRoute: typeof StoreCreditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/thanks': {
@@ -373,21 +433,15 @@ const rootRouteChildren: RootRouteChildren = {
   IntroRoute: IntroRoute,
   MonthRoute: MonthRoute,
   MoreRoute: MoreRoute,
+  PrivacyRoute: PrivacyRoute,
   SetupRoute: SetupRoute,
   StartRoute: StartRoute,
   StarterRoute: StarterRoute,
+  StoreCreditRoute: StoreCreditRoute,
+  TermsRoute: TermsRoute,
   ThanksRoute: ThanksRoute,
   WeekRoute: WeekRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}

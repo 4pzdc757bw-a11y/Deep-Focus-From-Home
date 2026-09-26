@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { type FormEvent, useState } from "react";
 import { Card } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
+import { LegalFooter } from "@/components/legal-footer";
 import { STARTER_DAYS } from "@/lib/content";
 import { saveLeadEmail } from "@/lib/offer";
 
@@ -103,6 +104,8 @@ function StartPage() {
         <h2 className="font-display text-2xl text-olive">The first job is a desk, not a course.</h2>
         <OptIn label="Send me the pack" />
       </Card>
+
+      <LegalFooter />
     </div>
   );
 }

@@ -7,11 +7,13 @@ import {
   Home,
   Megaphone,
   NotebookPen,
+  Scale,
   Users,
 } from "lucide-react";
 import { useRef, useState } from "react";
 import { Card, PageTitle } from "@/components/app-shell";
 import { InstallCard } from "@/components/install-card";
+import { LegalFooter } from "@/components/legal-footer";
 import { Button } from "@/components/ui/button";
 import { downloadBackup, importBackup } from "@/lib/backup";
 
@@ -139,7 +141,33 @@ function MorePage() {
           </Link>
         );
       })}
+      <Card className="flex flex-col gap-3">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
+          Legal
+        </p>
+        <div className="flex flex-col gap-2">
+          <Link to="/terms" className="flex items-center gap-3 font-semibold text-olive">
+            <span className="grid size-9 place-items-center rounded-md bg-sage text-olive">
+              <Scale className="size-4" />
+            </span>
+            Terms of Service
+          </Link>
+          <Link to="/privacy" className="flex items-center gap-3 font-semibold text-olive">
+            <span className="grid size-9 place-items-center rounded-md bg-sage text-olive">
+              <Scale className="size-4" />
+            </span>
+            Privacy Policy
+          </Link>
+          <Link to="/store-credit" className="flex items-center gap-3 font-semibold text-olive">
+            <span className="grid size-9 place-items-center rounded-md bg-sage text-olive">
+              <Scale className="size-4" />
+            </span>
+            Store Credit Policy
+          </Link>
+        </div>
+      </Card>
       <InstallCard />
+      <LegalFooter />
     </div>
   );
 }

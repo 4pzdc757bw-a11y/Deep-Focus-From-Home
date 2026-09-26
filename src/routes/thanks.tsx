@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { Card } from "@/components/app-shell";
+import { LegalFooter } from "@/components/legal-footer";
 import { Button } from "@/components/ui/button";
 import { APP_PRICE_LABEL, PRICE_LABEL } from "@/lib/offer";
 import { useFocusStore } from "@/lib/store";
@@ -75,6 +76,7 @@ function ThanksPage() {
           </Button>
         </div>
       </Card>
+      <LegalFooter />
     </div>
   );
 }
