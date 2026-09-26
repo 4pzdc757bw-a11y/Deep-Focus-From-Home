@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AccessRouteImport } from './routes/access'
 import { Route as BuyRouteImport } from './routes/buy'
 import { Route as DailyRouteImport } from './routes/daily'
 import { Route as EnergyRouteImport } from './routes/energy'
@@ -32,6 +33,11 @@ import { Route as GuideSlugRouteImport } from './routes/guide.$slug'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccessRoute = AccessRouteImport.update({
+  id: '/access',
+  path: '/access',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BuyRoute = BuyRouteImport.update({
@@ -127,6 +133,7 @@ const GuideSlugRoute = GuideSlugRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/access': typeof AccessRoute
   '/buy': typeof BuyRoute
   '/daily': typeof DailyRoute
   '/energy': typeof EnergyRoute
@@ -148,6 +155,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/access': typeof AccessRoute
   '/buy': typeof BuyRoute
   '/daily': typeof DailyRoute
   '/energy': typeof EnergyRoute
@@ -169,6 +177,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/access': typeof AccessRoute
   '/buy': typeof BuyRoute
   '/daily': typeof DailyRoute
   '/energy': typeof EnergyRoute
@@ -192,6 +201,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/access'
     | '/buy'
     | '/daily'
     | '/energy'
@@ -213,6 +223,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/access'
     | '/buy'
     | '/daily'
     | '/energy'
@@ -233,6 +244,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/access'
     | '/buy'
     | '/daily'
     | '/energy'
@@ -255,6 +267,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AccessRoute: typeof AccessRoute
   BuyRoute: typeof BuyRoute
   DailyRoute: typeof DailyRoute
   EnergyRoute: typeof EnergyRoute
@@ -280,6 +293,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/access': {
+      id: '/access'
+      path: '/access'
+      fullPath: '/access'
+      preLoaderRoute: typeof AccessRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/buy': {
@@ -425,6 +445,7 @@ const GuideRouteWithChildren = GuideRoute._addFileChildren(GuideRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AccessRoute: AccessRoute,
   BuyRoute: BuyRoute,
   DailyRoute: DailyRoute,
   EnergyRoute: EnergyRoute,
