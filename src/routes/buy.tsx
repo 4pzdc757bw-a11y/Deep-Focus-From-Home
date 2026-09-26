@@ -6,6 +6,8 @@ import {
   APP_PRICE_LABEL,
   markPurchased,
   PRICE_LABEL,
+  STRIPE_APP_PAYMENT_LINK,
+  STRIPE_HANDBOOK_PAYMENT_LINK,
 } from "@/lib/offer";
 import { STORE_CREDIT_CHECKOUT_LINE } from "@/lib/legal";
 import { useFocusStore } from "@/lib/store";
@@ -25,6 +27,8 @@ const APP_INCLUDED = [
 function BuyPage() {
   const navigate = useNavigate();
   const start = useFocusStore((s) => s.startStarter);
+  const handbookCheckout = STRIPE_HANDBOOK_PAYMENT_LINK;
+  const appCheckout = STRIPE_APP_PAYMENT_LINK;
 
   return (
     <div className="flex flex-col gap-6">
@@ -54,21 +58,30 @@ function BuyPage() {
         </ul>
         <p className="text-3xl font-display text-olive">{PRICE_LABEL}</p>
         <p className="text-sm text-muted">Pay once. No subscription.</p>
-        <Button
-          type="button"
-          onClick={() => {
-            markPurchased();
-            start();
-            void navigate({ to: "/starter" });
-          }}
-        >
-          Pay {PRICE_LABEL} — get the handbook
-        </Button>
-        <p className="text-sm text-muted">
-          This preview unlocks access on this device. When you sell for real,
-          this button becomes Stripe or Gumroad for the {PRICE_LABEL} handbook,
-          then sends the same people here.
-        </p>
+        {handbookCheckout ? (
+          <Button asChild>
+            <a href={handbookCheckout} rel="noopener noreferrer">
+              Pay {PRICE_LABEL} — get the handbook
+            </a>
+          </Button>
+        ) : (
+          <>
+            <Button
+              type="button"
+              onClick={() => {
+                markPurchased();
+                start();
+                void navigate({ to: "/starter" });
+              }}
+            >
+              Pay {PRICE_LABEL} — get the handbook
+            </Button>
+            <p className="text-sm text-muted">
+              Preview unlock on this device. Live Stripe Payment Link is not
+              configured yet (set VITE_STRIPE_HANDBOOK_PAYMENT_LINK).
+            </p>
+          </>
+        )}
       </Card>
 
       <Card className="flex flex-col gap-3">
@@ -85,21 +98,31 @@ function BuyPage() {
         </ul>
         <p className="text-3xl font-display text-olive">{APP_PRICE_LABEL}</p>
         <p className="text-sm text-muted">One-time. After the handbook, if you want it.</p>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => {
-            markPurchased();
-            start();
-            void navigate({ to: "/starter" });
-          }}
-        >
-          Pay {APP_PRICE_LABEL} — unlock the app
-        </Button>
-        <p className="text-sm text-muted">
-          Preview stub only. Live checkout will use Stripe or Gumroad for the{" "}
-          {APP_PRICE_LABEL} app SKU — separate from the handbook.
-        </p>
+        {appCheckout ? (
+          <Button variant="outline" asChild>
+            <a href={appCheckout} rel="noopener noreferrer">
+              Pay {APP_PRICE_LABEL} — unlock the app
+            </a>
+          </Button>
+        ) : (
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                markPurchased();
+                start();
+                void navigate({ to: "/starter" });
+              }}
+            >
+              Pay {APP_PRICE_LABEL} — unlock the app
+            </Button>
+            <p className="text-sm text-muted">
+              Preview stub only. Live Stripe Payment Link is not configured yet
+              (set VITE_STRIPE_APP_PAYMENT_LINK).
+            </p>
+          </>
+        )}
       </Card>
 
       <p className="text-sm text-muted">
