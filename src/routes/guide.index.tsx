@@ -1,0 +1,39 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { ArrowRight } from "lucide-react";
+import { Card, PageTitle } from "@/components/app-shell";
+import { CHAPTERS } from "@/lib/content";
+
+export const Route = createFileRoute("/guide/")({ component: GuidePage });
+
+function GuidePage() {
+  return (
+    <div className="flex flex-col gap-5">
+      <PageTitle
+        kicker="The handbook"
+        title="Seven chapters you can use this week"
+        lede="Read the chapter that names your biggest friction. Then do the action — not all seven at once."
+      />
+      <p className="text-ink">
+        New to the system?{" "}
+        <Link to="/intro" className="font-semibold text-olive underline">
+          How this works and FAQ
+        </Link>
+        .
+      </p>
+      {CHAPTERS.map((ch) => (
+        <Link key={ch.slug} to="/guide/$slug" params={{ slug: ch.slug }} className="block">
+          <Card className="transition-colors hover:bg-paper">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
+              {ch.number}
+            </p>
+            <h2 className="mt-1 font-display text-2xl text-olive">{ch.title}</h2>
+            <p className="mt-2 text-ink">{ch.summary}</p>
+            <p className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-olive">
+              Open chapter <ArrowRight className="size-4" />
+            </p>
+          </Card>
+        </Link>
+      ))}
+    </div>
+  );
+}

@@ -1,0 +1,79 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@theme {
+  --color-sage: #d0dbc0;
+  --color-olive: #3a4a32;
+  --color-gold: #8b7a3e;
+  --color-yellow: #e8d9a0;
+  --color-cream: #f4f1e0;
+  --color-ink: #2c3528;
+  --color-muted: #5c6b52;
+  --color-paper: #fffef8;
+  --font-display: Georgia, "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+  --font-sans: ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --radius-sm: 0.35rem;
+  --radius-md: 0.6rem;
+  --radius-lg: 0.9rem;
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  html,
+  body,
+  #app {
+    min-height: 100%;
+    background: var(--color-sage);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+    font-family: var(--font-display);
+  }
+  p {
+    text-wrap: pretty;
+  }
+  .hero-photo {
+    object-fit: cover;
+    object-position: 32% 52%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media print {
+  header,
+  nav,
+  .no-print {
+    display: none !important;
+  }
+  body,
+  html,
+  #app {
+    background: #fffef8 !important;
+    color: #2c3528 !important;
+  }
+  main {
+    padding: 0 !important;
+    max-width: none !important;
+  }
+  a {
+    text-decoration: none !important;
+    color: inherit !important;
+  }
+}
+

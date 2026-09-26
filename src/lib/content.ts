@@ -1,0 +1,297 @@
+export const APP_NAME = "Deep Focus from Home";
+export const APP_LINE = "Focus is a design problem, not a character test.";
+
+export const STARTER_DAYS = [
+  {
+    day: 1,
+    title: "Workspace",
+    job: "Claim one surface that is work-only.",
+    why: "When the same table is dining, couch desk, and office, the brain never gets a clean start cue.",
+    actions: [
+      "Pick the exact surface you will use for the next seven workdays.",
+      "Clear everything that is not work.",
+      "For the first deep-work block, park the phone (another room or off the desk).",
+      "When you finish, close the space — do not linger there.",
+    ],
+  },
+  {
+    day: 2,
+    title: "Household",
+    job: "Set one visible do-not-disturb signal.",
+    why: "People at home treat physical presence as availability. A signal they can see is kinder than a lecture.",
+    actions: [
+      "Name your core hours out loud to anyone who shares the space.",
+      "Choose a signal a child could understand (door, headphones, card).",
+      "Agree what counts as an emergency.",
+      "Write one rule: chores wait for a break.",
+    ],
+  },
+  {
+    day: 3,
+    title: "Digital",
+    job: "Park the phone for the first deep-work block.",
+    why: "Use this app to plan and start the day. During the block itself, the phone leaves your desk — the mere presence of a phone reduces attention.",
+    actions: [
+      "Open Deep Focus, set today’s 1–3 outcomes, and start the block.",
+      "Then put the phone away for 60–90 minutes (another room, or face-down off the desk).",
+      "If you need the chime, leave only this screen on in another room — do not scroll.",
+      "Between blocks, come back to the app. Pick two short windows to check messages.",
+    ],
+  },
+  {
+    day: 4,
+    title: "Rituals",
+    job: "Write a morning start and a shutdown.",
+    why: "Rituals replace willpower. The same five minutes every day tell the brain when work begins and ends.",
+    actions: [
+      "Write a 5–7 minute morning sequence.",
+      "Clear the surface. Write 1–3 outcomes. Start the first block.",
+      "Write a 5-minute shutdown: mark what finished, capture tomorrow, leave.",
+      "Run both for five workdays before changing them.",
+    ],
+  },
+  {
+    day: 5,
+    title: "Blocks",
+    job: "Protect two deep-work sessions on the calendar.",
+    why: "A block that is not on the calendar is a wish. Treat it as immovable.",
+    actions: [
+      "Choose two 60–90 minute windows for the next five workdays.",
+      "Put them on the calendar with a start and an end.",
+      "At the end of each, write one sentence about what you finished.",
+      "If the day is wrecked, keep a 15-minute minimum. Do not cancel the streak.",
+    ],
+  },
+  {
+    day: 6,
+    title: "People",
+    job: "Add one accountability loop.",
+    why: "Home has no passive social pressure. One person who knows the plan is enough.",
+    actions: [
+      "Name one accountability partner.",
+      "Send them today’s 1–3 outcomes before you start.",
+      "Schedule one body-doubling or coworking session.",
+      "Keep the message short. Do not wait for the perfect person.",
+    ],
+  },
+  {
+    day: 7,
+    title: "Energy",
+    job: "Find your peak window. Plan next week there.",
+    why: "Focus follows energy. Heroic blocks in a trough are how people quit the system.",
+    actions: [
+      "Look at the energy log from the last few days.",
+      "Name your strongest two-hour window.",
+      "Put next week’s hardest work inside it.",
+      "Take one genuine outdoor or movement break this afternoon.",
+    ],
+  },
+] as const;
+
+export const CHAPTERS = [
+  {
+    slug: "intro",
+    number: "Introduction",
+    title: "Why focus feels harder at home",
+    kicker: "It is a systems problem",
+    summary:
+      "Remote work removed the office’s structure. Concentration did not fail you. The supports disappeared, and they have to be rebuilt on purpose.",
+    body: [
+      "Remote work promised freedom. For many people it delivered some of that. It also delivered days that dissolve into chores, phone checks, and low-grade guilt.",
+      "Household tasks interrupt flow. Personal devices sit within arm’s reach. Nobody sees whether you are in deep work or scrolling. The home itself lacks the cues that once told the brain this is work time.",
+      "An office, whatever its flaws, supplied structure, separation, and external pressure by default. At home those supports disappear. The individual has to rebuild them.",
+      "You do not need every idea at once. Start with the chapter that names your biggest current friction. The goal is not perfection. It is reliable concentration that leaves you less drained.",
+    ],
+    action:
+      "Open Today. Write 1–3 outcomes for this workday and put one 60–90 minute block on the calendar before you do anything else.",
+  },
+  {
+    slug: "environment",
+    number: "Chapter 1",
+    title: "Design your focus environment",
+    kicker: "Claim one workspace",
+    summary:
+      "A dedicated surface is one of the highest-leverage changes most remote workers can make. Mixed-use tables send mixed signals.",
+    body: [
+      "Choose one consistent location. A room with a door is ideal. If not, a corner that can stay set up.",
+      "Equip it with essentials only: screen, keyboard, chair, light, water, notebook. Remove non-work objects.",
+      "Prefer natural light. Desk perpendicular to a window. Control sound with headphones or a simple door signal.",
+      "Clear the desk every evening so the morning starts clean. Store work materials in one place so setup is short.",
+      "When you leave the space, treat it as closing the office. Do not linger there for leisure.",
+    ],
+    action:
+      "Spend 30–45 minutes redesigning one workspace. Use it exclusively for the next five workdays and notice how quickly you settle.",
+  },
+  {
+    slug: "household",
+    number: "Chapter 2",
+    title: "Set clear boundaries with home life",
+    kicker: "Presence is not availability",
+    summary:
+      "Family, pets, deliveries, and unfinished chores are the most cited focus killers. Boundaries have to be explicit and consistently signaled.",
+    body: [
+      "Share core work hours. Post them if it helps. Agree what is an emergency versus a question that can wait.",
+      "For children, use a signal they can see: closed door, headphones, a red or green card.",
+      "If you share space with another remote worker, coordinate quiet windows.",
+      "Batch chores into break slots. Keep a home-task list separate from the work list.",
+      "Some days will be more interrupted. Plan lighter goals those days rather than fighting reality.",
+    ],
+    action:
+      "Hold a short conversation with anyone who shares your space. Agree on a signal and one rule about chores. Fill the Household Agreement.",
+  },
+  {
+    slug: "digital",
+    number: "Chapter 3",
+    title: "Tame digital distractions",
+    kicker: "First 90 minutes protected",
+    summary:
+      "Devices are engineered to capture attention. At home they are closer and less constrained. Treat them as a design problem.",
+    body: [
+      "During deep-work blocks, park the phone off the desk. Use this app before and after the block — out of sight beats willpower.",
+      "Turn off non-essential notifications. Keep only calls from favorites if you truly must.",
+      "Schedule two short windows for personal messages instead of continuous availability.",
+      "Close extra tabs. Check email on a timer, not as a default tab.",
+      "The first 90 minutes of the workday are the most expensive to leak. Guard them first.",
+    ],
+    action:
+      "For the next three workdays, park the phone during the first 90-minute block. Note the urge, then keep working. Use the app between blocks.",
+  },
+  {
+    slug: "rituals",
+    number: "Chapter 4",
+    title: "Create structure and daily rituals",
+    kicker: "A start and a stop",
+    summary:
+      "Without a commute, the day has no edges. A short morning sequence and a shutdown give the brain a beginning and an end.",
+    body: [
+      "Morning: clear the surface, write 1–3 outcomes, start the first block. Five to seven minutes is enough.",
+      "Do not open chat or news before the first block ends.",
+      "Shutdown: mark what finished, capture tomorrow, close the space. Five minutes.",
+      "Run both for five consecutive workdays before you change them. Adjusting daily is another form of avoidance.",
+    ],
+    action:
+      "Write the two sequences in Today’s Daily OS. Execute both for five workdays without skipping.",
+  },
+  {
+    slug: "deep-work",
+    number: "Chapter 5",
+    title: "Protect deep work time",
+    kicker: "Treat the block as immovable",
+    summary:
+      "Deep work is the work that actually moves a project. It needs a named block, not leftover minutes between meetings.",
+    body: [
+      "Block two 60–90 minute sessions. Put them on the calendar with start and end times.",
+      "One outcome per block is better than a heroic list.",
+      "At the end, write one sentence about what you completed.",
+      "Meetings do not get to eat the first block unless you chose that on purpose.",
+      "On a wrecked day, keep a 15–20 minute minimum. Do not treat a sick-child day as a failed streak.",
+    ],
+    action:
+      "Block two sessions for the next five workdays. Treat them as immovable. Review the sentences on Friday.",
+  },
+  {
+    slug: "people",
+    number: "Chapter 6",
+    title: "Build accountability and motivation",
+    kicker: "One person who knows the plan",
+    summary:
+      "Home has no hallway. Body doubling, a short daily note, and one partner restore the social pressure the office used to supply.",
+    body: [
+      "Name one accountability partner. Send today’s 1–3 outcomes before you start.",
+      "Schedule two body-doubling or virtual coworking sessions this week.",
+      "Keep the message one sentence. Do not wait for a perfect system.",
+      "Motivation follows completed blocks more reliably than it precedes them.",
+    ],
+    action:
+      "Send the first daily priority note today. Book one coworking session before the week ends.",
+  },
+  {
+    slug: "energy",
+    number: "Chapter 7",
+    title: "Manage energy, breaks, and sustainability",
+    kicker: "On a hard day, shrink the plan",
+    summary:
+      "Focus follows energy. Log a few days, put the hardest work in the peak window, and take real breaks. This is how the system lasts.",
+    body: [
+      "Log energy and focus a few times a day for three days. Look for the two-hour peak.",
+      "Put the week’s hardest thinking in that window. Admin can live in the trough.",
+      "Take one genuine outdoor or movement break each afternoon.",
+      "Sleep, food, and a hard stop matter more than another productivity trick.",
+      "On a hard day: 15–20 minutes, one outcome, a person who knows the plan.",
+    ],
+    action:
+      "Complete the energy log for three days. Place next week’s hardest block in the peak window you find.",
+  },
+] as const;
+
+export const DAILY_CHECKS = [
+  { id: "surface", label: "Work-only surface is clear" },
+  { id: "phone", label: "Phone parked for the block (off desk / out of reach)" },
+  { id: "signal", label: "Household signal is on" },
+  { id: "block", label: "Deep-work block started" },
+  { id: "shutdown", label: "Shutdown sequence done" },
+] as const;
+
+export type DailyCheckId = (typeof DAILY_CHECKS)[number]["id"];
+
+export const HOW_IT_WORKS = [
+  {
+    step: "1",
+    title: "Read why home is hard",
+    copy: "The office used to supply structure. Home does not. This is a design problem, not a character test.",
+  },
+  {
+    step: "2",
+    title: "Do the 7-day starter",
+    copy: "One job per day. Workspace, household signal, phone, rituals, blocks, people, energy. Do not add extra systems this week.",
+  },
+  {
+    step: "3",
+    title: "Run the Daily OS",
+    copy: "Each workday: 1–3 outcomes, one protected block, five checks, a shutdown. That is the whole morning.",
+  },
+  {
+    step: "4",
+    title: "Use one tool when you need it",
+    copy: "Setup sheet, household agreement, weekly planner, energy log, monthly review. Open the one that names your current friction.",
+  },
+] as const;
+
+export const FAQ = [
+  {
+    q: "Do I have to follow every chapter?",
+    a: "No. Start with the biggest friction. The starter week is the only sequence. After that, pick the chapter that names what is actually stealing the block.",
+  },
+  {
+    q: "I have kids / a shared room. Will this still work?",
+    a: "Yes. Perfect quiet is not required. You still pick a visible signal, an emergency rule, and a 15-minute minimum on hard days. Fill the Household Agreement in language a child can understand.",
+  },
+  {
+    q: "What if I miss a day?",
+    a: "Start the next workday. Do not restart the week as punishment. A sick-child day is not a failed streak. Shrink the plan to one outcome and a short block.",
+  },
+  {
+    q: "Why park the phone if Deep Focus is a phone app?",
+    a: "The app is how you run the system — plan, start, check, shut down. The deep-work block is different: the mere presence of a phone reduces attention, even silenced. Open the app, start the block, then park the phone off your desk (or leave only this screen on in another room if you need the chime). Between blocks, come back to the app.",
+  },
+  {
+    q: "Do I need a spare room?",
+    a: "No. You need one surface that is work-only for the week. A corner is enough if it stays set up and you leave it when you shut down.",
+  },
+  {
+    q: "Where is my data saved?",
+    a: "On this device only — there is no account. Use Tools → Export notes to keep a copy. Print the household agreement for the fridge. If you clear site data, the logs go with it unless you have that file.",
+  },
+  {
+    q: "Will the bell ring if I lock my phone?",
+    a: "The screen tries to stay awake during a block. If you lock the phone or leave the app, the bell rings when you open it again. It will not ding in another room. If you need the chime, leave only this screen on away from your desk — do not use the phone for anything else until the block ends.",
+  },
+  {
+    q: "How is this different from a planner?",
+    a: "A planner captures tasks. This system rebuilds the structure an office used to give you: a workspace, a household signal, a phone rule, a start, a stop, and one person who knows the plan.",
+  },
+  {
+    q: "When do I add the weekly planner or monthly review?",
+    a: "After a few days of the Daily OS. Do not flood week one. Day 5 is blocks. Day 7 is energy. The monthly review is for the end of the month — keep one or two changes, drop the rest.",
+  },
+] as const;
