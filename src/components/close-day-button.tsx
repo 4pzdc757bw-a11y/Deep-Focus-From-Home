@@ -1,31 +1,54 @@
 import { useNavigate } from "@tanstack/react-router";
 import { Moon } from "lucide-react";
 import { useState } from "react";
+import { FridayReviewSheet } from "@/components/friday-review-sheet";
+import { WeeklyPlannerSheet } from "@/components/weekly-planner-sheet";
 import { closeDay } from "@/lib/close-day";
-import { todayKey } from "@/lib/utils";
-import { cn } from "@/lib/utils";
+import { cn, isFriday, todayKey } from "@/lib/utils";
+
+type Phase =
+  | "idle"
+  | "week-plan"
+  | "friday-review"
+  | "confirm"
+  | "offer-pdf";
 
 /**
- * Rightmost bottom-nav action: confirm → copy shutdown note to starter day,
+ * Rightmost bottom-nav action: on Friday, Weekly Work Planner → Friday review
+ * → confirm Close. Otherwise confirm → copy shutdown note to starter day,
  * mark day done, offer Save PDF, advance to next starter day.
  */
 export function CloseDayButton({ className }: { className?: string }) {
   const navigate = useNavigate();
-  const [open, setOpen] = useState(false);
-  const [offerPdf, setOfferPdf] = useState(false);
+  const [phase, setPhase] = useState<Phase>("idle");
   const [next, setNext] = useState<{ nextDay: number | null; nextDate: string } | null>(
     null,
   );
 
+  function startClose() {
+    if (isFriday()) {
+      setPhase("week-plan");
+      return;
+    }
+    setPhase("confirm");
+  }
+
+  function afterWeekPlan() {
+    setPhase("friday-review");
+  }
+
+  function afterFridayReview() {
+    setPhase("confirm");
+  }
+
   function runClose() {
     const result = closeDay(todayKey());
-    setOpen(false);
     setNext({ nextDay: result.nextDay, nextDate: result.nextDate });
-    setOfferPdf(true);
+    setPhase("offer-pdf");
   }
 
   function savePdfThenAdvance() {
-    setOfferPdf(false);
+    setPhase("idle");
     const nextDay = next?.nextDay ?? null;
     const nextDate = next?.nextDate;
     // Land on Today so the Daily OS is what prints, then offer Save as PDF.
@@ -42,7 +65,7 @@ export function CloseDayButton({ className }: { className?: string }) {
   }
 
   function advance() {
-    setOfferPdf(false);
+    setPhase("idle");
     if (next?.nextDay != null) {
       void navigate({ to: "/daily", search: { date: next.nextDate } });
     } else {
@@ -58,14 +81,22 @@ export function CloseDayButton({ className }: { className?: string }) {
           "flex min-h-14 w-full flex-col items-center justify-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted",
           className,
         )}
-        onClick={() => setOpen(true)}
+        onClick={startClose}
         aria-haspopup="dialog"
       >
         <Moon className="size-5" strokeWidth={1.8} />
         Close day
       </button>
 
-      {open ? (
+      {phase === "week-plan" ? (
+        <WeeklyPlannerSheet onDone={afterWeekPlan} />
+      ) : null}
+
+      {phase === "friday-review" ? (
+        <FridayReviewSheet onDone={afterFridayReview} />
+      ) : null}
+
+      {phase === "confirm" ? (
         <div
           className="fixed inset-0 z-50 flex items-end justify-center bg-olive/40 p-4 sm:items-center"
           role="dialog"
@@ -95,7 +126,7 @@ export function CloseDayButton({ className }: { className?: string }) {
               <button
                 type="button"
                 className="inline-flex h-11 items-center justify-center rounded-md border border-yellow bg-paper px-4 text-sm font-semibold text-olive"
-                onClick={() => setOpen(false)}
+                onClick={() => setPhase("idle")}
               >
                 Not yet
               </button>
@@ -104,7 +135,7 @@ export function CloseDayButton({ className }: { className?: string }) {
         </div>
       ) : null}
 
-      {offerPdf ? (
+      {phase === "offer-pdf" ? (
         <div
           className="fixed inset-0 z-50 flex items-end justify-center bg-olive/40 p-4 sm:items-center"
           role="dialog"
