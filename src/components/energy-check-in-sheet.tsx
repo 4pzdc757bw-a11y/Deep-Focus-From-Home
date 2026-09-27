@@ -1,0 +1,139 @@
+import { useEffect, useId, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Field, Input } from "@/components/ui/input";
+import {
+  EnergyScalePicker,
+  formatEnergyScore,
+} from "@/components/energy-scale";
+import { useFocusStore } from "@/lib/store";
+import { todayKey } from "@/lib/utils";
+
+export type EnergyCheckInContext = {
+  date: string;
+  slotLabel: string;
+  blockIndex: number;
+};
+
+type Step = "ask" | "form";
+
+/**
+ * After a focus block stops: optional energy check-in.
+ * Skip is one tap and never blocks Stop — the block already finished.
+ */
+export function EnergyCheckInSheet({
+  context,
+  onDismiss,
+}: {
+  context: EnergyCheckInContext;
+  onDismiss: () => void;
+}) {
+  const add = useFocusStore((s) => s.addEnergy);
+  const titleId = useId();
+  const [step, setStep] = useState<Step>("ask");
+  const [slot, setSlot] = useState(context.slotLabel);
+  const [energy, setEnergy] = useState(4);
+  const [focus, setFocus] = useState(4);
+
+  useEffect(() => {
+    setStep("ask");
+    setSlot(context.slotLabel);
+    setEnergy(4);
+    setFocus(4);
+  }, [context.date, context.blockIndex, context.slotLabel]);
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onDismiss();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onDismiss]);
+
+  function save() {
+    add({
+      date: context.date || todayKey(),
+      slot: slot.trim() || context.slotLabel || `Block ${context.blockIndex + 1}`,
+      energy,
+      focus,
+      note: "",
+    });
+    onDismiss();
+  }
+
+  return (
+    <div
+      className="no-print fixed inset-0 z-50 flex items-end justify-center bg-olive/40 p-4 sm:items-center"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={titleId}
+    >
+      <div className="w-full max-w-md rounded-lg border border-yellow bg-cream p-5 shadow-lg">
+        {step === "ask" ? (
+          <>
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
+              Block complete
+            </p>
+            <h2 id={titleId} className="mt-1 font-display text-2xl text-olive">
+              Log energy for this block?
+            </h2>
+            <p className="mt-2 text-ink">
+              A quick check-in feeds your peak window on Energy. Skip anytime —
+              the block is already done.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Button type="button" onClick={() => setStep("form")}>
+                Log now
+              </Button>
+              <Button type="button" variant="outline" onClick={onDismiss}>
+                Skip
+              </Button>
+            </div>
+          </>
+        ) : (
+          <>
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
+              Energy check-in
+            </p>
+            <h2 id={titleId} className="mt-1 font-display text-2xl text-olive">
+              How was this block?
+            </h2>
+            <div className="mt-3 flex flex-col gap-3">
+              <Field label="Time of day">
+                <Input
+                  value={slot}
+                  onChange={(e) => setSlot(e.target.value)}
+                  placeholder="Morning / 9–11 / after lunch"
+                  autoFocus
+                />
+              </Field>
+              <EnergyScalePicker
+                label="Energy"
+                value={energy}
+                onChange={setEnergy}
+                example="1 drained · 3 steady · 5 charged"
+              />
+              <EnergyScalePicker
+                label="Focus"
+                value={focus}
+                onChange={setFocus}
+                example="1 scattered · 3 usable · 5 locked in"
+              />
+              <p className="text-sm text-muted">
+                Selected: Energy {formatEnergyScore(energy)} · Focus{" "}
+                {formatEnergyScore(focus)}
+              </p>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Button type="button" onClick={save}>
+                Save
+              </Button>
+              <Button type="button" variant="outline" onClick={onDismiss}>
+                Skip
+              </Button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
