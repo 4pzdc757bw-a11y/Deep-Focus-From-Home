@@ -65,7 +65,7 @@ function HouseholdPage() {
     "Interrupt only if someone is hurt, or you cannot find a grown-up.";
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="household-print flex flex-col gap-5">
       <PageTitle
         kicker="Chapter 2"
         title="Household focus agreement"
@@ -76,7 +76,7 @@ function HouseholdPage() {
           Print fridge poster
         </Button>
         <p className="self-center text-sm text-muted">
-          Page 1 = fridge poster · page 2 = door STOP sign
+          Page 1 = Signal poster · page 2 = STOP · page 3 = agreement
         </p>
       </div>
 
@@ -299,6 +299,93 @@ function HouseholdPage() {
 
         <div className="door-stop-foot flex justify-center border-t border-olive/20 pt-3">
           <p className="text-[10px] uppercase tracking-[0.14em] text-muted sm:text-xs">
+            deepfocusfromhome.com
+          </p>
+        </div>
+      </section>
+
+      {/* Page 3 — household agreement (adult detail) */}
+      <section className="household-agreement mt-5 rounded-lg border-2 border-olive bg-cream p-5 sm:p-6 print:mt-0">
+        <div className="household-agreement-brand flex items-baseline justify-between gap-3 border-b-2 border-olive/25 pb-3">
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-gold sm:text-xs">
+              Deep Focus From Home
+            </p>
+            <p className="mt-0.5 text-[10px] uppercase tracking-[0.16em] text-muted sm:text-xs">
+              Household agreement · keep with the adults
+            </p>
+          </div>
+          <p className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.14em] text-olive sm:text-xs">
+            Page 3 · agreement
+          </p>
+        </div>
+
+        <div className="household-agreement-body mt-4 flex flex-1 flex-col gap-4 sm:mt-5 sm:gap-5">
+          <div>
+            <h2 className="font-display text-2xl leading-tight text-olive sm:text-3xl">
+              Household focus agreement
+            </h2>
+            <p className="mt-1.5 text-sm text-muted sm:text-base">
+              Presence is not availability. Same rules as the fridge poster, with room to write.
+            </p>
+          </div>
+
+          <dl className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-md border border-yellow bg-paper px-3 py-2.5 sm:px-4 sm:py-3">
+              <dt className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold sm:text-xs">
+                Core hours
+              </dt>
+              <dd className="mt-1 text-base font-semibold leading-snug text-ink sm:text-lg">
+                {h.hours?.trim() || "—"}
+              </dd>
+            </div>
+            <div className="rounded-md border border-yellow bg-paper px-3 py-2.5 sm:px-4 sm:py-3">
+              <dt className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold sm:text-xs">
+                Visible signal
+              </dt>
+              <dd className="mt-1 text-base font-semibold leading-snug text-ink sm:text-lg">
+                {signalText}
+              </dd>
+            </div>
+            <div className="rounded-md border border-yellow bg-paper px-3 py-2.5 sm:px-4 sm:py-3">
+              <dt className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold sm:text-xs">
+                Emergency (interrupt OK)
+              </dt>
+              <dd className="mt-1 text-base leading-snug text-ink sm:text-lg">
+                {emergencyText}
+              </dd>
+            </div>
+            <div className="rounded-md border border-yellow bg-paper px-3 py-2.5 sm:px-4 sm:py-3">
+              <dt className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold sm:text-xs">
+                Chores during work hours
+              </dt>
+              <dd className="mt-1 text-base leading-snug text-ink sm:text-lg">
+                {h.chores?.trim() || "Quiet play · outdoor · snack shelf — not knocking"}
+              </dd>
+            </div>
+          </dl>
+
+          <div className="rounded-md border border-yellow bg-paper px-3 py-2.5 sm:px-4 sm:py-3">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold sm:text-xs">
+              Kid version
+            </p>
+            <p className="mt-1 text-base leading-snug text-ink sm:text-lg">{ruleText}</p>
+          </div>
+        </div>
+
+        <div className="household-agreement-foot mt-4 flex items-end justify-between gap-3 border-t-2 border-olive/25 pt-3 sm:mt-5">
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold sm:text-xs">
+              Signed by
+            </p>
+            <p className="fridge-sign-line mt-2 border-b border-olive/50 text-base leading-none text-transparent sm:text-lg">
+              &nbsp;
+            </p>
+            {h.signedBy?.trim() ? (
+              <p className="mt-1 text-sm text-muted print:hidden">{h.signedBy}</p>
+            ) : null}
+          </div>
+          <p className="shrink-0 text-[10px] uppercase tracking-[0.14em] text-muted sm:text-xs">
             deepfocusfromhome.com
           </p>
         </div>
