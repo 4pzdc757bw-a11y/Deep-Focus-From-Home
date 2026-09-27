@@ -5,6 +5,15 @@ import { useFocusStore } from "@/lib/store";
 
 export const Route = createFileRoute("/setup")({ component: SetupPage });
 
+const EXAMPLES = {
+  location: "Spare room / kitchen corner / bedroom desk",
+  surface: "Clear desk — laptop + notebook only",
+  lighting: "Desk lamp on, overhead off, noise-cancelling or soft instrumental",
+  blockedApps: "Slack, email, social — closed until the first block ends",
+  morning: "Clear surface. Write 1–3 outcomes. Park the phone for the block. Start.",
+  shutdown: "Mark what finished. Capture tomorrow. Leave the space.",
+} as const;
+
 function SetupPage() {
   const setup = useFocusStore((s) => s.setup);
   const setSetup = useFocusStore((s) => s.setSetup);
@@ -21,39 +30,42 @@ function SetupPage() {
           <Input
             value={setup.location}
             onChange={(e) => setSetup({ location: e.target.value })}
-            placeholder="Spare room / kitchen corner / bedroom desk"
+            placeholder={EXAMPLES.location}
           />
         </Field>
         <Field label="Work-only surface">
           <Input
             value={setup.surface}
             onChange={(e) => setSetup({ surface: e.target.value })}
+            placeholder={EXAMPLES.surface}
           />
         </Field>
         <Field label="Light and sound">
           <Textarea
             value={setup.lighting}
             onChange={(e) => setSetup({ lighting: e.target.value })}
+            placeholder={EXAMPLES.lighting}
           />
         </Field>
         <Field label="Apps that stay closed until the first block ends">
           <Textarea
             value={setup.blockedApps}
             onChange={(e) => setSetup({ blockedApps: e.target.value })}
+            placeholder={EXAMPLES.blockedApps}
           />
         </Field>
         <Field label="Morning sequence (5–7 minutes)">
           <Textarea
             value={setup.morning}
             onChange={(e) => setSetup({ morning: e.target.value })}
-            placeholder="Clear surface. Write 1–3 outcomes. Park the phone for the block. Start."
+            placeholder={EXAMPLES.morning}
           />
         </Field>
         <Field label="Shutdown sequence (5 minutes)">
           <Textarea
             value={setup.shutdown}
             onChange={(e) => setSetup({ shutdown: e.target.value })}
-            placeholder="Mark what finished. Capture tomorrow. Leave the space."
+            placeholder={EXAMPLES.shutdown}
           />
         </Field>
       </Card>

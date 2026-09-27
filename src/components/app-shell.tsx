@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useFocusStore } from "@/lib/store";
 import { SessionWatcher } from "@/components/session-watcher";
+import { CloseDayButton } from "@/components/close-day-button";
 
 const TABS = [
   { to: "/", label: "Today", icon: House },
@@ -92,7 +93,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {marketing ? null : (
         <nav className="no-print fixed inset-x-0 bottom-0 z-20 border-t border-yellow bg-cream/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm">
-          <ul className="mx-auto grid max-w-3xl grid-cols-4">
+          <ul className="mx-auto grid max-w-3xl grid-cols-5">
             {TABS.map((tab) => {
               const active =
                 tab.to === "/"
@@ -114,6 +115,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </li>
               );
             })}
+            <li>
+              <CloseDayButton />
+            </li>
           </ul>
         </nav>
       )}

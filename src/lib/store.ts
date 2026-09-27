@@ -143,7 +143,7 @@ const emptyHousehold = (): HouseholdState => ({
   signal: "",
   emergency: "",
   chores: "",
-  kidVersion: "When the signal is on, I wait. If someone is hurt or I cannot find a grown-up, I interrupt. Everything else can wait.",
+  kidVersion: "",
   signedBy: "",
 });
 

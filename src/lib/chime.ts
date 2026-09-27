@@ -59,3 +59,29 @@ export function remainingLabel(ms: number) {
   if (h > 0) return `${h}:${pad(m)}:${pad(s)}`;
   return `${m}:${pad(s)}`;
 }
+
+/** Local wall-clock HH:MM for time inputs (24h). */
+export function stampClockNow(from = new Date()) {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${pad(from.getHours())}:${pad(from.getMinutes())}`;
+}
+
+/** Minutes between two HH:MM strings (same day). Null if either invalid. */
+export function durationMinutes(start: string, end: string) {
+  const a = parseClock(start);
+  const b = parseClock(end);
+  if (!a || !b) return null;
+  let ms = b.getTime() - a.getTime();
+  if (ms < 0) ms += 24 * 60 * 60 * 1000;
+  return Math.round(ms / 60_000);
+}
+
+export function durationLabel(start: string, end: string) {
+  const mins = durationMinutes(start, end);
+  if (mins == null) return "";
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  if (h <= 0) return `${m} min`;
+  if (m === 0) return `${h}h`;
+  return `${h}h ${m}m`;
+}

@@ -9,13 +9,14 @@ export function Checkbox({
   return (
     <CheckboxPrimitive.Root
       className={cn(
-        "flex size-6 shrink-0 items-center justify-center rounded-sm border border-gold bg-paper text-olive data-[state=checked]:bg-olive data-[state=checked]:text-cream",
+        "relative flex size-6 shrink-0 items-center justify-center rounded-sm border border-gold bg-paper text-olive data-[state=checked]:bg-olive data-[state=checked]:text-cream",
         className,
       )}
       {...props}
     >
-      <CheckboxPrimitive.Indicator>
+      <CheckboxPrimitive.Indicator className="flex items-center justify-center">
         <Check className="size-4" strokeWidth={3} />
+        <span className="sr-only">checked</span>
       </CheckboxPrimitive.Indicator>
     </CheckboxPrimitive.Root>
   );
@@ -31,9 +32,17 @@ export function CheckRow({
   label: string;
 }) {
   return (
-    <label className="flex min-h-12 cursor-pointer items-center gap-3 rounded-md bg-cream px-3 py-2">
+    <label className="flex min-h-12 cursor-pointer items-center gap-3 rounded-md bg-cream px-3 py-2 print:min-h-0 print:bg-transparent print:px-0 print:py-1">
       <Checkbox checked={checked} onCheckedChange={(v) => onCheckedChange(Boolean(v))} />
-      <span className="text-base text-ink">{label}</span>
+      <span
+        className={cn(
+          "text-base text-ink",
+          checked && "print:font-semibold",
+        )}
+      >
+        {label}
+        {checked ? <span className="hidden print:inline"> — done</span> : null}
+      </span>
     </label>
   );
 }

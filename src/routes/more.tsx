@@ -120,7 +120,7 @@ function MorePage() {
           <span>
             <span className="block font-display text-xl text-olive">Start here</span>
             <span className="mt-1 block text-ink">
-              The public funnel: free 7-day pack, then the $17 handbook + fillables (optional $37 app).
+              The public funnel: free 7-day pack, then the $17 handbook or the $37 app.
             </span>
           </span>
         </Card>
