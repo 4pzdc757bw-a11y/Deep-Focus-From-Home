@@ -5,7 +5,6 @@ import {
   CircleHelp,
   ClipboardList,
   Home,
-  Megaphone,
   NotebookPen,
   Scale,
   Users,
@@ -112,20 +111,12 @@ function MorePage() {
         />
         {status ? <p className="text-sm text-olive">{status}</p> : null}
       </Card>
-      {/* Primary funnel CTA — same olive fill as /buy handbook & app buttons */}
-      <Button asChild className="h-auto w-full justify-start gap-3 whitespace-normal px-4 py-4 text-left">
-        <Link to="/start">
-          <span className="grid size-11 shrink-0 place-items-center rounded-md bg-cream/15 text-cream">
-            <Megaphone className="size-5" />
-          </span>
-          <span className="min-w-0">
-            <span className="block font-display text-xl font-normal text-cream">Start here</span>
-            <span className="mt-1 block text-sm font-normal tracking-normal text-cream/85">
-              The public funnel: free 7-day pack, then the $17 handbook or the $37 app.
-            </span>
-          </span>
-        </Link>
-      </Button>
+      {/* Primary funnel CTA — compact default olive button (not full-width row) */}
+      <div className="flex justify-center">
+        <Button asChild>
+          <Link to="/start">Start here</Link>
+        </Button>
+      </div>
       {LINKS.map((item) => {
         const Icon = item.icon;
         return (
