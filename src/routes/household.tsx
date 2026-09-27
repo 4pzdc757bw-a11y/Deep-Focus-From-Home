@@ -9,7 +9,7 @@ export const Route = createFileRoute("/household")({ component: HouseholdPage })
 function SignalIcon({ kind }: { kind: "door" | "card" | "headphones" }) {
   if (kind === "door") {
     return (
-      <svg viewBox="0 0 80 80" className="size-16 sm:size-20" aria-hidden>
+      <svg viewBox="0 0 80 80" className="fridge-signal-icon" aria-hidden>
         <rect x="18" y="10" width="44" height="60" rx="3" fill="none" stroke="#3a4a32" strokeWidth="3" />
         <rect x="24" y="16" width="32" height="48" rx="2" fill="#d0dbc0" stroke="#3a4a32" strokeWidth="2" />
         <circle cx="48" cy="40" r="3" fill="#3a4a32" />
@@ -18,7 +18,7 @@ function SignalIcon({ kind }: { kind: "door" | "card" | "headphones" }) {
   }
   if (kind === "card") {
     return (
-      <svg viewBox="0 0 80 80" className="size-16 sm:size-20" aria-hidden>
+      <svg viewBox="0 0 80 80" className="fridge-signal-icon" aria-hidden>
         <rect x="22" y="14" width="36" height="52" rx="4" fill="#c45c4a" stroke="#3a4a32" strokeWidth="2.5" />
         <text
           x="40"
@@ -35,7 +35,7 @@ function SignalIcon({ kind }: { kind: "door" | "card" | "headphones" }) {
     );
   }
   return (
-    <svg viewBox="0 0 80 80" className="size-16 sm:size-20" aria-hidden>
+    <svg viewBox="0 0 80 80" className="fridge-signal-icon" aria-hidden>
       <path
         d="M22 36c0-10 8-18 18-18s18 8 18 18"
         fill="none"
@@ -53,19 +53,27 @@ function HouseholdPage() {
   const h = useFocusStore((s) => s.household);
   const set = useFocusStore((s) => s.setHousehold);
 
+  const emergencyText =
+    h.emergency?.trim() || "Hurt, fire, or you cannot find a grown-up";
+  const signalText =
+    h.signal?.trim() || "Closed door · red card · headphones";
+  const ruleText =
+    h.kidVersion?.trim() ||
+    "Interrupt only if someone is hurt, or you cannot find a grown-up.";
+
   return (
     <div className="flex flex-col gap-5">
       <PageTitle
         kicker="Chapter 2"
         title="Household focus agreement"
-        lede="Presence is not availability. Write the hours, the signal, and what counts as an emergency. Print the kid poster for the fridge."
+        lede="Presence is not availability. Write the hours, the signal, and what counts as an emergency. Print one fridge poster for the whole house."
       />
       <div className="no-print flex flex-wrap gap-2">
         <Button type="button" onClick={() => window.print()}>
           Print fridge poster
         </Button>
         <p className="self-center text-sm text-muted">
-          Page 1 = kids · page 2 = adult detail (optional)
+          One letter page · kids + adults
         </p>
       </div>
 
@@ -114,119 +122,125 @@ function HouseholdPage() {
         </Field>
       </Card>
 
-      {/* Kid-first fridge poster — print page 1 */}
-      <section className="fridge-kid-sheet rounded-lg border-2 border-olive bg-cream p-5 print:border-[2.5pt] print:p-6">
-        <p className="text-center text-xs font-semibold uppercase tracking-[0.2em] text-gold">
-          Fridge poster · ages ~3–7
-        </p>
-        <h2 className="mt-2 text-center font-display text-3xl text-olive sm:text-4xl">
-          Signal on = wait
-        </h2>
-
-        <div className="mt-6 grid grid-cols-3 gap-3 text-center">
-          <div className="flex flex-col items-center gap-2 rounded-md border border-yellow bg-paper p-3">
-            <SignalIcon kind="door" />
-            <p className="text-sm font-semibold text-olive">Door</p>
+      {/* Single full-page fridge poster — adults + kids */}
+      <section className="fridge-poster rounded-lg border-2 border-olive bg-cream p-5 sm:p-6">
+        <div className="fridge-poster-brand flex items-baseline justify-between gap-3 border-b-2 border-olive/25 pb-3">
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-gold sm:text-xs">
+              Deep Focus From Home
+            </p>
+            <p className="mt-0.5 text-[10px] uppercase tracking-[0.16em] text-muted sm:text-xs">
+              Household agreement · fridge poster
+            </p>
           </div>
-          <div className="flex flex-col items-center gap-2 rounded-md border border-yellow bg-paper p-3">
-            <SignalIcon kind="card" />
-            <p className="text-sm font-semibold text-olive">Red card</p>
-          </div>
-          <div className="flex flex-col items-center gap-2 rounded-md border border-yellow bg-paper p-3">
-            <SignalIcon kind="headphones" />
-            <p className="text-sm font-semibold text-olive">Headphones</p>
-          </div>
-        </div>
-
-        <div className="mt-6 rounded-md border-2 border-olive bg-paper p-4 text-center">
-          <p className="font-display text-2xl text-olive">One rule</p>
-          <p className="mt-2 text-xl font-semibold leading-snug text-ink">
-            Signal on = wait.
-          </p>
-          <p className="mt-3 text-lg text-ink">
-            Interrupt only if someone is hurt, or you cannot find a grown-up.
+          <p className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.14em] text-olive sm:text-xs">
+            Letter · one page
           </p>
         </div>
 
-        {h.hours ? (
-          <p className="mt-5 text-center text-base text-ink">
-            <span className="font-semibold text-olive">Work times: </span>
-            {h.hours}
-          </p>
-        ) : (
-          <p className="mt-5 text-center text-base text-muted print:hidden">
-            Add core hours above — they print here.
-          </p>
-        )}
+        <div className="fridge-poster-body mt-4 flex flex-1 flex-col gap-4 sm:mt-5 sm:gap-5">
+          <div className="text-center">
+            <h2 className="font-display text-3xl leading-tight text-olive sm:text-4xl">
+              Signal on = wait
+            </h2>
+            <p className="mt-1.5 text-sm text-muted sm:text-base">
+              Presence is not availability
+            </p>
+          </div>
 
-        {h.kidVersion ? (
-          <p className="mt-3 text-center text-base leading-relaxed text-ink">
-            {h.kidVersion}
-          </p>
-        ) : null}
-      </section>
-
-      {/* Adult detail — optional print page 2 */}
-      <section className="fridge-adult-sheet hidden print:block">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
-          Adult detail · keep off the fridge if kids only need page 1
-        </p>
-        <h2 className="mt-1 font-display text-2xl text-olive">Household agreement</h2>
-        <dl className="mt-4 flex flex-col gap-3 text-ink">
-          <div>
-            <dt className="text-xs font-semibold uppercase tracking-[0.14em] text-gold">
-              Core hours
-            </dt>
-            <dd className="mt-1 text-lg">{h.hours || "—"}</dd>
-          </div>
-          <div>
-            <dt className="text-xs font-semibold uppercase tracking-[0.14em] text-gold">
-              Visible signal
-            </dt>
-            <dd className="mt-1 text-lg">
-              {h.signal || "Closed door · red card · headphones"}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-xs font-semibold uppercase tracking-[0.14em] text-gold">
-              Emergency (interrupt OK)
-            </dt>
-            <dd className="mt-1 text-lg">
-              {h.emergency || "Hurt, fire, or cannot find a grown-up"}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-xs font-semibold uppercase tracking-[0.14em] text-gold">
-              Chores during work hours
-            </dt>
-            <dd className="mt-1 text-lg">{h.chores || "—"}</dd>
-          </div>
-          {h.signedBy ? (
-            <div>
-              <dt className="text-xs font-semibold uppercase tracking-[0.14em] text-gold">
-                Signed by
-              </dt>
-              <dd className="mt-1 text-lg">{h.signedBy}</dd>
+          <div className="grid grid-cols-3 gap-2 sm:gap-3">
+            <div className="flex flex-col items-center gap-1.5 rounded-md border border-yellow bg-paper p-2.5 sm:gap-2 sm:p-3">
+              <SignalIcon kind="door" />
+              <p className="text-xs font-semibold text-olive sm:text-sm">Door</p>
             </div>
-          ) : null}
-        </dl>
-      </section>
+            <div className="flex flex-col items-center gap-1.5 rounded-md border border-yellow bg-paper p-2.5 sm:gap-2 sm:p-3">
+              <SignalIcon kind="card" />
+              <p className="text-xs font-semibold text-olive sm:text-sm">Red card</p>
+            </div>
+            <div className="flex flex-col items-center gap-1.5 rounded-md border border-yellow bg-paper p-2.5 sm:gap-2 sm:p-3">
+              <SignalIcon kind="headphones" />
+              <p className="text-xs font-semibold text-olive sm:text-sm">Headphones</p>
+            </div>
+          </div>
 
-      {/* Screen preview of adult sheet */}
-      <Card className="print:hidden">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
-          Adult sheet preview
-        </p>
-        <p className="mt-2 text-ink">
-          Prints as page 2. Kid poster (page 1) stays simple — big signals, few
-          words, one interrupt rule. Adult detail stays here on the form.
-        </p>
-        <ul className="mt-3 flex flex-col gap-1 text-sm text-muted">
-          <li>Hours: {h.hours || "—"}</li>
-          <li>Signal: {h.signal || "Closed door · red card · headphones"}</li>
-          <li>Emergency: {h.emergency || "Hurt / cannot find a grown-up"}</li>
-        </ul>
-      </Card>
+          <div className="rounded-md border-2 border-olive bg-paper px-4 py-3 text-center sm:px-5 sm:py-4">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gold sm:text-xs">
+              One rule
+            </p>
+            <p className="mt-1.5 font-display text-xl leading-snug text-olive sm:text-2xl">
+              Signal on = wait.
+            </p>
+            <p className="mt-2 text-base leading-snug text-ink sm:text-lg">
+              {ruleText}
+            </p>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-md border border-yellow bg-paper px-3 py-2.5 sm:px-4 sm:py-3">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold sm:text-xs">
+                Work times
+              </p>
+              <p className="mt-1 text-base font-semibold leading-snug text-ink sm:text-lg">
+                {h.hours?.trim() || (
+                  <span className="font-normal text-muted print:hidden">
+                    Add core hours above
+                  </span>
+                )}
+                {!h.hours?.trim() ? (
+                  <span className="hidden print:inline">—</span>
+                ) : null}
+              </p>
+            </div>
+            <div className="rounded-md border border-yellow bg-paper px-3 py-2.5 sm:px-4 sm:py-3">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold sm:text-xs">
+                Our signal
+              </p>
+              <p className="mt-1 text-base font-semibold leading-snug text-ink sm:text-lg">
+                {signalText}
+              </p>
+            </div>
+            <div className="rounded-md border border-yellow bg-paper px-3 py-2.5 sm:px-4 sm:py-3">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold sm:text-xs">
+                Interrupt OK
+              </p>
+              <p className="mt-1 text-base leading-snug text-ink sm:text-lg">
+                {emergencyText}
+              </p>
+            </div>
+            <div className="rounded-md border border-yellow bg-paper px-3 py-2.5 sm:px-4 sm:py-3">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold sm:text-xs">
+                During work hours
+              </p>
+              <p className="mt-1 text-base leading-snug text-ink sm:text-lg">
+                {h.chores?.trim() || (
+                  <span className="font-normal text-muted print:hidden">
+                    Quiet play / outdoor / snack shelf
+                  </span>
+                )}
+                {!h.chores?.trim() ? (
+                  <span className="hidden print:inline">Quiet play · outdoor · snack shelf</span>
+                ) : null}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="fridge-poster-foot mt-4 flex items-end justify-between gap-3 border-t-2 border-olive/25 pt-3 sm:mt-5">
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold sm:text-xs">
+              Signed by
+            </p>
+            <p className="mt-1 truncate text-base text-ink sm:text-lg">
+              {h.signedBy?.trim() || (
+                <span className="text-muted">________________________</span>
+              )}
+            </p>
+          </div>
+          <p className="shrink-0 text-[10px] uppercase tracking-[0.14em] text-muted sm:text-xs">
+            deepfocusfromhome.com
+          </p>
+        </div>
+      </section>
     </div>
   );
 }
