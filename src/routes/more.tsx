@@ -112,33 +112,39 @@ function MorePage() {
         />
         {status ? <p className="text-sm text-olive">{status}</p> : null}
       </Card>
-      <Link to="/start" className="block">
-        <Card className="flex items-start gap-3 transition-colors hover:bg-paper">
-          <span className="grid size-11 place-items-center rounded-md bg-sage text-olive">
+      {/* Primary funnel CTA — same olive fill as /buy handbook & app buttons */}
+      <Button asChild className="h-auto w-full justify-start gap-3 whitespace-normal px-4 py-4 text-left">
+        <Link to="/start">
+          <span className="grid size-11 shrink-0 place-items-center rounded-md bg-cream/15 text-cream">
             <Megaphone className="size-5" />
           </span>
-          <span>
-            <span className="block font-display text-xl text-olive">Start here</span>
-            <span className="mt-1 block text-ink">
+          <span className="min-w-0">
+            <span className="block font-display text-xl font-normal text-cream">Start here</span>
+            <span className="mt-1 block text-sm font-normal tracking-normal text-cream/85">
               The public funnel: free 7-day pack, then the $17 handbook or the $37 app.
             </span>
           </span>
-        </Card>
-      </Link>
+        </Link>
+      </Button>
       {LINKS.map((item) => {
         const Icon = item.icon;
         return (
-          <Link key={item.to} to={item.to} className="block">
-            <Card className="flex items-start gap-3 transition-colors hover:bg-paper">
-              <span className="grid size-11 place-items-center rounded-md bg-sage text-olive">
+          <Button
+            key={item.to}
+            asChild
+            variant="outline"
+            className="h-auto w-full justify-start gap-3 whitespace-normal border-olive/35 bg-sage/50 px-4 py-3.5 text-left hover:bg-cream"
+          >
+            <Link to={item.to}>
+              <span className="grid size-11 shrink-0 place-items-center rounded-md bg-olive text-cream">
                 <Icon className="size-5" />
               </span>
-              <span>
-                <span className="block font-display text-xl text-olive">{item.title}</span>
-                <span className="mt-1 block text-ink">{item.copy}</span>
+              <span className="min-w-0">
+                <span className="block font-display text-xl font-normal text-olive">{item.title}</span>
+                <span className="mt-1 block text-sm font-normal tracking-normal text-ink">{item.copy}</span>
               </span>
-            </Card>
-          </Link>
+            </Link>
+          </Button>
         );
       })}
       <Card className="flex flex-col gap-3">
