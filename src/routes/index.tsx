@@ -7,8 +7,15 @@ import { Button } from "@/components/ui/button";
 import { APP_LINE, STARTER_DAYS } from "@/lib/content";
 import { remainingLabel } from "@/lib/chime";
 import { peakFrom, peakLine } from "@/lib/peak";
+import { HomeFocusSetupSheet } from "@/components/home-focus-setup-sheet";
 import { useFocusStore } from "@/lib/store";
-import { addDaysKey, todayKey, weekdayLong } from "@/lib/utils";
+import {
+  addDaysKey,
+  forceHomeFocusSetupPrompt,
+  isWeekTwo,
+  todayKey,
+  weekdayLong,
+} from "@/lib/utils";
 import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/")({ component: Home });
@@ -17,6 +24,7 @@ function Home() {
   const hydrated = useFocusStore((s) => s.hydrated);
   const starterStart = useFocusStore((s) => s.starterStart);
   const starterDone = useFocusStore((s) => s.starterDone);
+  const homeFocusWeekTwoPrompted = useFocusStore((s) => s.homeFocusWeekTwoPrompted);
   const session = useFocusStore((s) => s.session);
   const energy = useFocusStore((s) => s.energy);
   const nextDay = STARTER_DAYS.find((d) => !starterDone.includes(d.day));
@@ -25,6 +33,17 @@ function Home() {
   const nextDate = starterStart && nextDay ? addDaysKey(starterStart, nextDay.day - 1) : todayKey();
   const peak = peakFrom(energy);
   const [now, setNow] = useState(() => Date.now());
+  const [showHomeFocus, setShowHomeFocus] = useState(false);
+  const [homeFocusDismissed, setHomeFocusDismissed] = useState(false);
+
+  // Week one: never force. First start-of-day in week two: Home focus setup first.
+  useEffect(() => {
+    if (!hydrated || homeFocusDismissed) return;
+    const force = forceHomeFocusSetupPrompt();
+    const due =
+      force || (isWeekTwo(starterStart) && !homeFocusWeekTwoPrompted);
+    setShowHomeFocus(due);
+  }, [hydrated, starterStart, homeFocusWeekTwoPrompted, homeFocusDismissed]);
 
   useEffect(() => {
     if (!session.running || !session.endsAt) return;
@@ -133,6 +152,15 @@ function Home() {
       <DailyOs />
 
       {showWelcome ? <InstallCard /> : null}
+
+      {showHomeFocus ? (
+        <HomeFocusSetupSheet
+          onDone={() => {
+            setHomeFocusDismissed(true);
+            setShowHomeFocus(false);
+          }}
+        />
+      ) : null}
     </div>
   );
 }

@@ -69,3 +69,22 @@ export function nextWeekKey(d = new Date()) {
   next.setDate(next.getDate() + 7);
   return weekKey(next);
 }
+
+/** Calendar day 8+ of the starter week. Override with ?week2=1|0 for local testing. */
+export function isWeekTwo(starterStart: string | null, d = new Date()) {
+  if (typeof window !== "undefined") {
+    const force = new URLSearchParams(window.location.search).get("week2");
+    if (force === "1" || force === "true") return true;
+    if (force === "0" || force === "false") return false;
+  }
+  if (!starterStart) return false;
+  return todayKey(d) >= addDaysKey(starterStart, 7);
+}
+
+/** Force Home focus setup sheet. ?homeFocus=1 for local testing (re-show after Skip). */
+export function forceHomeFocusSetupPrompt() {
+  if (typeof window === "undefined") return false;
+  const force = new URLSearchParams(window.location.search).get("homeFocus");
+  return force === "1" || force === "true";
+}
+
