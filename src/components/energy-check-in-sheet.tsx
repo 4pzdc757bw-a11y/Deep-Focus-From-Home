@@ -66,8 +66,12 @@ export function EnergyCheckInSheet({
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
+      onClick={onDismiss}
     >
-      <div className="flex max-h-[min(92vh,40rem)] w-full max-w-md flex-col rounded-lg border border-yellow bg-cream p-5 shadow-lg">
+      <div
+        className="flex max-h-[min(92vh,40rem)] w-full max-w-md flex-col rounded-lg border border-yellow bg-cream p-5 shadow-lg"
+        onClick={(e) => e.stopPropagation()}
+      >
         {step === "ask" ? (
           <>
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">

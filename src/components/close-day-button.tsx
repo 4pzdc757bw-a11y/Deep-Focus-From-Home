@@ -1,6 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import { Moon } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FridayReviewSheet } from "@/components/friday-review-sheet";
 import { WeeklyPlannerSheet } from "@/components/weekly-planner-sheet";
 import { closeDay } from "@/lib/close-day";
@@ -73,6 +73,21 @@ export function CloseDayButton({ className }: { className?: string }) {
     }
   }
 
+  function dismissConfirm() {
+    setPhase("idle");
+  }
+
+  useEffect(() => {
+    if (phase !== "confirm" && phase !== "offer-pdf") return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key !== "Escape") return;
+      if (phase === "confirm") dismissConfirm();
+      else advance();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [phase, next]);
+
   return (
     <>
       <button
@@ -102,8 +117,12 @@ export function CloseDayButton({ className }: { className?: string }) {
           role="dialog"
           aria-modal="true"
           aria-labelledby="close-day-title"
+          onClick={dismissConfirm}
         >
-          <div className="flex max-h-[min(92vh,40rem)] w-full max-w-md flex-col rounded-lg border border-yellow bg-cream p-5 shadow-lg">
+          <div
+            className="flex max-h-[min(92vh,40rem)] w-full max-w-md flex-col rounded-lg border border-yellow bg-cream p-5 shadow-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="min-h-0 flex-1 overflow-y-auto pr-1">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
                 End of day
@@ -128,7 +147,7 @@ export function CloseDayButton({ className }: { className?: string }) {
               <button
                 type="button"
                 className="inline-flex h-11 items-center justify-center rounded-md border border-yellow bg-paper px-4 text-sm font-semibold text-olive"
-                onClick={() => setPhase("idle")}
+                onClick={dismissConfirm}
               >
                 Not yet
               </button>
@@ -143,8 +162,12 @@ export function CloseDayButton({ className }: { className?: string }) {
           role="dialog"
           aria-modal="true"
           aria-labelledby="save-pdf-title"
+          onClick={advance}
         >
-          <div className="flex max-h-[min(92vh,40rem)] w-full max-w-md flex-col rounded-lg border border-yellow bg-cream p-5 shadow-lg">
+          <div
+            className="flex max-h-[min(92vh,40rem)] w-full max-w-md flex-col rounded-lg border border-yellow bg-cream p-5 shadow-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="min-h-0 flex-1 overflow-y-auto pr-1">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
                 Day closed
