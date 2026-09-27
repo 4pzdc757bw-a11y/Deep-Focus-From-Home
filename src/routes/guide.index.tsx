@@ -13,6 +13,13 @@ function GuidePage() {
         title="Seven chapters you can use this week"
         lede="Read the chapter that names your biggest friction. Then do the action — not all seven at once."
       />
+      <div className="overflow-hidden rounded-lg border border-yellow">
+        <img
+          src="/images/cover.jpg"
+          alt="Deep Focus from Home handbook cover — remote worker at a clean desk"
+          className="hero-photo h-64 w-full sm:h-80"
+        />
+      </div>
       <p className="text-ink">
         New to the system?{" "}
         <Link to="/intro" className="font-semibold text-olive underline">
