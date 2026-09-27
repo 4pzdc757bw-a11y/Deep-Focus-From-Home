@@ -140,8 +140,6 @@ function PrivacyPage() {
         Alton, IL 62002-5224
         <br />
         Email: jeffrey@jeffsebiz.com
-        <br />
-        Phone: 618-900-1951
       </p>
     </LegalDoc>
   );
