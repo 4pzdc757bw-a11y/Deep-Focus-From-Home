@@ -62,12 +62,12 @@ export function EnergyCheckInSheet({
 
   return (
     <div
-      className="no-print fixed inset-0 z-50 flex items-end justify-center bg-olive/40 p-4 sm:items-center"
+      className="no-print fixed inset-0 z-50 flex items-end justify-center bg-olive/40 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:items-center"
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
     >
-      <div className="w-full max-w-md rounded-lg border border-yellow bg-cream p-5 shadow-lg">
+      <div className="flex max-h-[min(92vh,40rem)] w-full max-w-md flex-col rounded-lg border border-yellow bg-cream p-5 shadow-lg">
         {step === "ask" ? (
           <>
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
@@ -97,7 +97,7 @@ export function EnergyCheckInSheet({
             <h2 id={titleId} className="mt-1 font-display text-2xl text-olive">
               How was this block?
             </h2>
-            <div className="mt-3 flex flex-col gap-3">
+            <div className="mt-3 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-1">
               <Field label="Time of day">
                 <Input
                   value={slot}

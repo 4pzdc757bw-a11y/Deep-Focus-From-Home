@@ -34,12 +34,12 @@ export function FridayReviewSheet({ onDone }: { onDone: () => void }) {
 
   return (
     <div
-      className="no-print fixed inset-0 z-50 flex items-end justify-center bg-olive/40 p-4 sm:items-center"
+      className="no-print fixed inset-0 z-50 flex items-end justify-center bg-olive/40 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:items-center"
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
     >
-      <div className="w-full max-w-md rounded-lg border border-yellow bg-cream p-5 shadow-lg">
+      <div className="flex max-h-[min(92vh,40rem)] w-full max-w-md flex-col rounded-lg border border-yellow bg-cream p-5 shadow-lg">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
           Friday review
         </p>
@@ -50,7 +50,7 @@ export function FridayReviewSheet({ onDone }: { onDone: () => void }) {
           One short note is enough — what worked, what to keep next week. Same
           field as Tools → Weekly planner. Skip anytime.
         </p>
-        <div className="mt-3">
+        <div className="mt-3 min-h-0 flex-1 overflow-y-auto pr-1">
           <Field label="Friday review">
             <Textarea
               value={note}

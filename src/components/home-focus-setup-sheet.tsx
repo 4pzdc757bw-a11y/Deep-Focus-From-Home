@@ -63,7 +63,7 @@ export function HomeFocusSetupSheet({ onDone }: { onDone: () => void }) {
 
   return (
     <div
-      className="no-print fixed inset-0 z-50 flex items-end justify-center bg-olive/40 p-4 sm:items-center"
+      className="no-print fixed inset-0 z-50 flex items-end justify-center bg-olive/40 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:items-center"
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
