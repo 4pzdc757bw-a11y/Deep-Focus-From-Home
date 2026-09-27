@@ -2,62 +2,17 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Trash2 } from "lucide-react";
 import { useState } from "react";
 import { Card, PageTitle } from "@/components/app-shell";
+import {
+  EnergyScalePicker,
+  formatEnergyScore,
+} from "@/components/energy-scale";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Textarea } from "@/components/ui/input";
 import { peakFrom, peakLine } from "@/lib/peak";
 import { useFocusStore } from "@/lib/store";
-import { cn, prettyDate, todayKey } from "@/lib/utils";
+import { prettyDate, todayKey } from "@/lib/utils";
 
 export const Route = createFileRoute("/energy")({ component: EnergyPage });
-
-/** 1–5 with half steps: 1, 1.5, … 5 */
-const SCALE = [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5] as const;
-
-function ScalePicker({
-  label,
-  value,
-  onChange,
-  example,
-}: {
-  label: string;
-  value: number;
-  onChange: (v: number) => void;
-  example?: string;
-}) {
-  return (
-    <Field label={`${label}: ${formatScore(value)}`} hint={example}>
-      <div
-        className="flex flex-wrap gap-1.5"
-        role="group"
-        aria-label={`${label} 1 to 5`}
-      >
-        {SCALE.map((n) => {
-          const selected = value === n;
-          return (
-            <button
-              key={n}
-              type="button"
-              aria-pressed={selected}
-              onClick={() => onChange(n)}
-              className={cn(
-                "min-h-11 min-w-11 rounded-md border px-2 text-sm font-semibold tabular-nums transition-colors",
-                selected
-                  ? "border-olive bg-olive text-cream"
-                  : "border-yellow bg-paper text-olive hover:border-gold",
-              )}
-            >
-              {formatScore(n)}
-            </button>
-          );
-        })}
-      </div>
-    </Field>
-  );
-}
-
-function formatScore(n: number) {
-  return Number.isInteger(n) ? String(n) : n.toFixed(1);
-}
 
 function EnergyPage() {
   const rows = useFocusStore((s) => s.energy);
@@ -120,13 +75,13 @@ function EnergyPage() {
             placeholder="Morning / 9–11 / after lunch"
           />
         </Field>
-        <ScalePicker
+        <EnergyScalePicker
           label="Energy"
           value={energy}
           onChange={setEnergy}
           example="1 drained · 3 steady · 5 charged"
         />
-        <ScalePicker
+        <EnergyScalePicker
           label="Focus"
           value={focus}
           onChange={setFocus}
@@ -140,7 +95,8 @@ function EnergyPage() {
           />
         </Field>
         <p className="text-sm text-muted">
-          Selected: Energy {formatScore(energy)} · Focus {formatScore(focus)}
+          Selected: Energy {formatEnergyScore(energy)} · Focus{" "}
+          {formatEnergyScore(focus)}
         </p>
         <Button
           onClick={() => {
@@ -164,7 +120,8 @@ function EnergyPage() {
                 {prettyDate(r.date)} · {r.slot}
               </p>
               <p className="mt-1 text-olive">
-                Energy {formatScore(r.energy)} · Focus {formatScore(r.focus)}
+                Energy {formatEnergyScore(r.energy)} · Focus{" "}
+                {formatEnergyScore(r.focus)}
               </p>
               {r.note ? <p className="mt-1 text-ink">{r.note}</p> : null}
             </div>

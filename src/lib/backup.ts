@@ -7,6 +7,7 @@ const KEYS = [
   "dailies",
   "energy",
   "setup",
+  "homeFocusWeekTwoPrompted",
   "household",
   "weeks",
   "months",

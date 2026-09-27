@@ -14,7 +14,7 @@ function WeekPage() {
       <PageTitle
         kicker="Weekly planner"
         title="Protect the blocks before the week starts"
-        lede={`Week of ${key}. Two to four immovable sessions. One coworking appointment.`}
+        lede={`Week of ${key}. Two to four immovable sessions. One coworking appointment. Always editable here — Friday Close also opens this planner for next week.`}
       />
       <Card className="flex flex-col gap-3">
         <Field label="This week’s theme">

@@ -87,6 +87,9 @@ type FocusState = {
   removeEnergy: (id: string) => void;
   setup: SetupState;
   setSetup: (patch: Partial<SetupState>) => void;
+  /** True after Save/Skip on the week-two Home focus setup prompt (once). */
+  homeFocusWeekTwoPrompted: boolean;
+  markHomeFocusWeekTwoPrompted: () => void;
   household: HouseholdState;
   setHousehold: (patch: Partial<HouseholdState>) => void;
   weeks: Record<string, WeekState>;
@@ -247,6 +250,8 @@ export const useFocusStore = create<FocusState>()(
         set((s) => ({ energy: s.energy.filter((r) => r.id !== id) })),
       setup: emptySetup(),
       setSetup: (patch) => set((s) => ({ setup: { ...s.setup, ...patch } })),
+      homeFocusWeekTwoPrompted: false,
+      markHomeFocusWeekTwoPrompted: () => set({ homeFocusWeekTwoPrompted: true }),
       household: emptyHousehold(),
       setHousehold: (patch) =>
         set((s) => ({ household: { ...s.household, ...patch } })),

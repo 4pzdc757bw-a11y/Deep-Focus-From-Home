@@ -63,6 +63,7 @@ async function main() {
 
   await page.waitForSelector(".fridge-poster", { timeout: 30000 });
   await page.waitForSelector(".door-stop-sign", { timeout: 15000 });
+  await page.waitForSelector(".household-agreement", { timeout: 15000 });
   await page.waitForSelector(".fridge-sign-line", { timeout: 15000 });
   // Ensure sample content hydrated (hours) and no filled signature names
   await page.waitForFunction(() => {
@@ -81,7 +82,7 @@ async function main() {
     path: OUT,
     format: "Letter",
     printBackground: true,
-    margin: { top: "0.45in", right: "0.45in", bottom: "0.45in", left: "0.45in" },
+    margin: { top: "0.5in", right: "0.5in", bottom: "0.5in", left: "0.5in" },
     preferCSSPageSize: true,
   });
 
@@ -96,8 +97,8 @@ async function main() {
     pages = null;
   }
   console.log(JSON.stringify({ ok: true, out: OUT, bytes: st.size, pages }));
-  if (pages != null && pages !== 2) {
-    console.error("Expected 2 pages, got", pages);
+  if (pages != null && pages !== 3) {
+    console.error("Expected 3 pages, got", pages);
     process.exitCode = 1;
   }
   await browser.close();

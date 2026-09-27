@@ -13,7 +13,7 @@ function MonthPage() {
       <PageTitle
         kicker="Monthly review"
         title="Keep one or two changes. Drop the rest."
-        lede={`${key}. Look at the energy log and the daily OS. Adjust the system, not your character.`}
+        lede={`${key}. Look back at what went well and what didn’t. Decide what to do differently next month — not an autofill of weekly notes.`}
       />
       <Card className="flex flex-col gap-3">
         <Field label="What actually got deep work">

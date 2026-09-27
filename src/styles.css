@@ -69,8 +69,8 @@
 
 @media print {
   @page {
-    margin: 0.45in;
-    size: letter;
+    size: letter portrait;
+    margin: 0.5in;
   }
 
   header,
@@ -81,14 +81,18 @@
 
   body,
   html,
-  #app {
+  #app,
+  .min-h-dvh {
     background: #fffef8 !important;
     color: #2c3528 !important;
+    min-height: 0 !important;
   }
 
   main {
     padding: 0 !important;
+    margin: 0 !important;
     max-width: none !important;
+    width: 100% !important;
   }
 
   a {
@@ -175,87 +179,100 @@
     color: #3a4a32;
   }
 
-  /* Household fridge poster — one letter page, fill the sheet */
-  .fridge-poster {
+  /* Household print stack — each sheet fits one US Letter (Safari-safe slack) */
+  .household-print {
+    display: block !important;
+    gap: 0 !important;
+  }
+
+  .fridge-poster,
+  .door-stop-sign,
+  .household-agreement {
+    box-sizing: border-box !important;
     display: flex !important;
     flex-direction: column !important;
-    min-height: calc(11in - 0.9in) !important;
-    height: calc(11in - 0.9in) !important;
-    max-height: calc(11in - 0.9in) !important;
+    /* Printable area ≈ 10in with 0.5in @page margins; leave slack for Safari */
     width: 100% !important;
+    max-width: 100% !important;
+    height: 9.85in !important;
+    max-height: 9.85in !important;
+    min-height: 0 !important;
     margin: 0 !important;
-    padding: 0.35in 0.4in !important;
-    border: 2.5pt solid #3a4a32 !important;
     border-radius: 0 !important;
-    background: #f4f1e0 !important;
     box-shadow: none !important;
+    overflow: hidden !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
-    overflow: hidden !important;
+  }
+
+  .fridge-poster,
+  .door-stop-sign {
+    break-after: page !important;
+    page-break-after: always !important;
+  }
+
+  .household-agreement {
+    break-after: auto !important;
+    page-break-after: auto !important;
+  }
+
+  /* Page 1 — Signal fridge poster */
+  .fridge-poster {
+    padding: 0.22in 0.28in !important;
+    border: 2.5pt solid #3a4a32 !important;
+    background: #f4f1e0 !important;
   }
 
   .fridge-poster-body {
     flex: 1 1 auto !important;
-    justify-content: space-evenly !important;
-    gap: 0.28in !important;
-    margin-top: 0.22in !important;
+    justify-content: flex-start !important;
+    gap: 0.14in !important;
+    margin-top: 0.12in !important;
   }
 
   .fridge-poster-brand,
   .fridge-poster-foot {
     margin-top: 0 !important;
-    padding-top: 0.12in !important;
-    padding-bottom: 0.08in !important;
+    padding-top: 0.08in !important;
+    padding-bottom: 0.06in !important;
     border-color: #3a4a32 !important;
   }
 
   .fridge-poster-foot {
-    margin-top: 0.15in !important;
+    margin-top: auto !important;
   }
 
   .fridge-poster h2 {
-    font-size: 28pt !important;
-    line-height: 1.15 !important;
+    font-size: 24pt !important;
+    line-height: 1.12 !important;
   }
 
   .fridge-poster .fridge-signal-icon {
-    width: 1.15in !important;
-    height: 1.15in !important;
+    width: 0.85in !important;
+    height: 0.85in !important;
   }
 
   .fridge-poster .rounded-md {
-    border-radius: 0.15rem !important;
+    border-radius: 0.12rem !important;
   }
 
-  .fridge-poster .fridge-sign-line {
-    min-height: 0.35in !important;
+  .fridge-poster .grid {
+    gap: 0.12in !important;
+  }
+
+  .fridge-poster .fridge-sign-line,
+  .household-agreement .fridge-sign-line {
+    min-height: 0.28in !important;
     border-bottom: 1pt solid #3a4a32 !important;
     width: 70% !important;
     max-width: 4.5in !important;
   }
 
-  .fridge-poster {
-    break-after: page !important;
-    page-break-after: always !important;
-  }
-
-  /* Page 2 — door STOP sign, centered on letter */
+  /* Page 2 — door STOP sign */
   .door-stop-sign {
-    display: flex !important;
-    flex-direction: column !important;
-    min-height: calc(11in - 0.9in) !important;
-    height: calc(11in - 0.9in) !important;
-    max-height: calc(11in - 0.9in) !important;
-    width: 100% !important;
-    margin: 0 !important;
-    padding: 0.3in 0.4in !important;
+    padding: 0.22in 0.28in !important;
     border: none !important;
-    border-radius: 0 !important;
     background: #f4f1e0 !important;
-    box-shadow: none !important;
-    break-inside: avoid !important;
-    page-break-inside: avoid !important;
-    overflow: hidden !important;
   }
 
   .door-stop-stage {
@@ -265,19 +282,58 @@
   }
 
   .door-stop-octagon {
-    width: 6.4in !important;
-    height: 6.4in !important;
-    max-width: 90% !important;
+    width: 5.1in !important;
+    height: 5.1in !important;
+    max-width: 85% !important;
   }
 
   .door-stop-caption {
-    font-size: 12pt !important;
+    font-size: 11pt !important;
     color: #5c6b52 !important;
-    margin-top: 0.25in !important;
+    margin-top: 0.18in !important;
   }
 
   .door-stop-brand,
   .door-stop-foot {
     border-color: transparent !important;
+  }
+
+  /* Page 3 — household agreement */
+  .household-agreement {
+    padding: 0.22in 0.28in !important;
+    border: 2.5pt solid #3a4a32 !important;
+    background: #f4f1e0 !important;
+  }
+
+  .household-agreement-body {
+    flex: 1 1 auto !important;
+    justify-content: flex-start !important;
+    gap: 0.16in !important;
+    margin-top: 0.12in !important;
+  }
+
+  .household-agreement-brand,
+  .household-agreement-foot {
+    margin-top: 0 !important;
+    padding-top: 0.08in !important;
+    padding-bottom: 0.06in !important;
+    border-color: #3a4a32 !important;
+  }
+
+  .household-agreement-foot {
+    margin-top: auto !important;
+  }
+
+  .household-agreement h2 {
+    font-size: 22pt !important;
+    line-height: 1.15 !important;
+  }
+
+  .household-agreement .rounded-md {
+    border-radius: 0.12rem !important;
+  }
+
+  .household-agreement .grid {
+    gap: 0.12in !important;
   }
 }

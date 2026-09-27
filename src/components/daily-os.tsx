@@ -1,6 +1,8 @@
 import { Bell, BellRing, Plus } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Card } from "@/components/app-shell";
+import { EnergyCheckInSheet, type EnergyCheckInContext } from "@/components/energy-check-in-sheet";
+import { slotLabelFromBlock } from "@/components/energy-scale";
 import { Button } from "@/components/ui/button";
 import { CheckRow } from "@/components/ui/checkbox";
 import { Field, Input, Textarea } from "@/components/ui/input";
@@ -77,6 +79,10 @@ export function DailyOs({ date }: { date?: string }) {
   const [now, setNow] = useState(() => Date.now());
   const [ringing, setRinging] = useState(false);
   const [shareState, setShareState] = useState("");
+  const [energyPrompt, setEnergyPrompt] = useState<EnergyCheckInContext | null>(
+    null,
+  );
+  const wasRunningHere = useRef(false);
 
   const visible = Math.min(3, Math.max(1, entry.slotCount ?? 1)) as 1 | 2 | 3;
   const activeHere = session.running && session.date === osDate;
@@ -93,6 +99,27 @@ export function DailyOs({ date }: { date?: string }) {
     if (!activeHere || left > 0) return;
     void completeSession();
   }, [activeHere, left]);
+
+  // After Stop (manual or timer): offer optional energy log — never blocks Stop.
+  useEffect(() => {
+    const runningHere = session.running && session.date === osDate;
+    if (
+      wasRunningHere.current &&
+      !runningHere &&
+      session.phase === "done" &&
+      session.date === osDate
+    ) {
+      const idx = session.slotIndex;
+      const daily = useFocusStore.getState().dailies[osDate];
+      const slot = daily?.slots[idx] ?? emptySlot();
+      setEnergyPrompt({
+        date: osDate,
+        blockIndex: idx,
+        slotLabel: slotLabelFromBlock(slot, idx),
+      });
+    }
+    wasRunningHere.current = runningHere;
+  }, [session.running, session.phase, session.date, session.slotIndex, osDate]);
 
   async function startSlot(index: number) {
     const slot = entry.slots[index];
@@ -301,6 +328,13 @@ export function DailyOs({ date }: { date?: string }) {
         </div>
         {shareState ? <p className="no-print text-sm text-olive">{shareState}</p> : null}
       </Card>
+
+      {energyPrompt ? (
+        <EnergyCheckInSheet
+          context={energyPrompt}
+          onDismiss={() => setEnergyPrompt(null)}
+        />
+      ) : null}
     </div>
   );
 }
