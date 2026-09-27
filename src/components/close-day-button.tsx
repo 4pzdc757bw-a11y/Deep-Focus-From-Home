@@ -2,6 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { Moon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { FridayReviewSheet } from "@/components/friday-review-sheet";
+import { SheetPortal } from "@/components/sheet-portal";
 import { WeeklyPlannerSheet } from "@/components/weekly-planner-sheet";
 import { closeDay } from "@/lib/close-day";
 import { cn, isFriday, todayKey } from "@/lib/utils";
@@ -112,8 +113,9 @@ export function CloseDayButton({ className }: { className?: string }) {
       ) : null}
 
       {phase === "confirm" ? (
+        <SheetPortal>
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-olive/40 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:items-center"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-olive/40 p-4"
           role="dialog"
           aria-modal="true"
           aria-labelledby="close-day-title"
@@ -154,11 +156,13 @@ export function CloseDayButton({ className }: { className?: string }) {
             </div>
           </div>
         </div>
+        </SheetPortal>
       ) : null}
 
       {phase === "offer-pdf" ? (
+        <SheetPortal>
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-olive/40 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:items-center"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-olive/40 p-4"
           role="dialog"
           aria-modal="true"
           aria-labelledby="save-pdf-title"
@@ -198,6 +202,7 @@ export function CloseDayButton({ className }: { className?: string }) {
             </div>
           </div>
         </div>
+        </SheetPortal>
       ) : null}
     </>
   );

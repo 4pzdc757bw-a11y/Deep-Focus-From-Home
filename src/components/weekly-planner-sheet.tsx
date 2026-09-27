@@ -1,5 +1,6 @@
 import { useEffect, useId, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { SheetPortal } from "@/components/sheet-portal";
 import { Field, Input } from "@/components/ui/input";
 import { useFocusStore, type WeekState } from "@/lib/store";
 import { nextWeekKey, prettyDate } from "@/lib/utils";
@@ -63,8 +64,9 @@ export function WeeklyPlannerSheet({ onDone }: { onDone: () => void }) {
   }
 
   return (
+    <SheetPortal>
     <div
-      className="no-print fixed inset-0 z-50 flex items-end justify-center bg-olive/40 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:items-center"
+      className="no-print fixed inset-0 z-50 flex items-center justify-center bg-olive/40 p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
@@ -161,5 +163,6 @@ export function WeeklyPlannerSheet({ onDone }: { onDone: () => void }) {
         )}
       </div>
     </div>
+    </SheetPortal>
   );
 }
