@@ -53,8 +53,9 @@ function Home() {
 
   return (
     <div className="flex flex-col gap-5">
+      {/* Screen-only chrome: never print marketing / starter CTAs above the Daily OS sheet */}
       {returning ? (
-        <Card>
+        <Card className="no-print">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
             Continue week one
           </p>
@@ -94,7 +95,7 @@ function Home() {
       ) : null}
 
       {showWelcome ? (
-        <>
+        <div className="no-print flex flex-col gap-5">
           <PageTitle
             kicker="Welcome aboard"
             title="New here?"
@@ -140,18 +141,24 @@ function Home() {
               </Button>
             </div>
           </Card>
-        </>
+        </div>
       ) : null}
 
-      <PageTitle
-        kicker={weekdayLong()}
-        title="Today’s operating system"
-        lede={APP_LINE}
-      />
+      <div className="no-print">
+        <PageTitle
+          kicker={weekdayLong()}
+          title="Today’s operating system"
+          lede={APP_LINE}
+        />
+      </div>
 
       <DailyOs />
 
-      {showWelcome ? <InstallCard /> : null}
+      {showWelcome ? (
+        <div className="no-print">
+          <InstallCard />
+        </div>
+      ) : null}
 
       {showHomeFocus ? (
         <HomeFocusSetupSheet

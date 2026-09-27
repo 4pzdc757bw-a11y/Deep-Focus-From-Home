@@ -108,19 +108,31 @@
     print-color-adjust: exact !important;
   }
 
+  /* Daily OS: keep one Letter page when screen chrome is hidden (Safari-safe, no transforms) */
   .daily-os {
-    gap: 0.55rem !important;
+    gap: 0.4rem !important;
   }
 
   .daily-os .daily-block,
   .daily-os .daily-checks,
   .daily-os .daily-notes {
-    break-inside: avoid;
     border: 1.5pt solid #3a4a32 !important;
     background: #fffef8 !important;
-    padding: 0.55rem 0.7rem !important;
+    padding: 0.4rem 0.55rem !important;
     border-radius: 0.25rem !important;
     box-shadow: none !important;
+  }
+
+  /* Prefer keeping schedule/checks together; allow notes to split rather than orphan a blank page */
+  .daily-os .daily-block,
+  .daily-os .daily-checks {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .daily-os .daily-notes {
+    break-inside: auto;
+    page-break-inside: auto;
   }
 
   .daily-os input,
@@ -128,20 +140,34 @@
     border: 1pt solid #8b7a3e !important;
     background: #fff !important;
     color: #2c3528 !important;
-    font-size: 11pt !important;
+    font-size: 10.5pt !important;
     min-height: 0 !important;
-    padding: 0.2rem 0.35rem !important;
+    padding: 0.15rem 0.3rem !important;
   }
 
   .daily-os textarea {
-    min-height: 2.2rem !important;
+    min-height: 1.6rem !important;
+  }
+
+  .daily-os .daily-block .grid {
+    gap: 0.35rem !important;
+  }
+
+  .daily-os label.flex.flex-col,
+  .daily-os .flex.flex-col.gap-3 {
+    gap: 0.35rem !important;
   }
 
   .daily-print-header {
     display: block !important;
-    margin-bottom: 0.4rem;
+    margin-bottom: 0.3rem;
     border-bottom: 2pt solid #3a4a32;
-    padding-bottom: 0.25rem;
+    padding-bottom: 0.2rem;
+  }
+
+  .daily-print-header h1 {
+    font-size: 16pt !important;
+    line-height: 1.2 !important;
   }
 
   /* Checkbox: ink border + visible check without relying on fill alone */
