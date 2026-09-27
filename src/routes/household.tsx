@@ -20,17 +20,17 @@ function SignalIcon({ kind }: { kind: "door" | "card" | "headphones" }) {
     return (
       <svg viewBox="0 0 80 80" className="fridge-signal-icon" aria-hidden>
         {/* Landscape card so STOP reads cleanly */}
-        <rect x="8" y="24" width="64" height="36" rx="4" fill="#c45c4a" stroke="#3a4a32" strokeWidth="2.5" />
+        <rect x="4" y="26" width="72" height="32" rx="4" fill="#c45c4a" stroke="#3a4a32" strokeWidth="2.5" />
         <text
           x="40"
           y="48"
           textAnchor="middle"
           dominantBaseline="middle"
           fill="#fffef8"
-          fontSize="16"
+          fontSize="15"
           fontFamily="Georgia, serif"
           fontWeight="700"
-          letterSpacing="1.5"
+          letterSpacing="0.5"
         >
           STOP
         </text>
