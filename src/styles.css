@@ -233,4 +233,51 @@
     width: 70% !important;
     max-width: 4.5in !important;
   }
+
+  .fridge-poster {
+    break-after: page !important;
+    page-break-after: always !important;
+  }
+
+  /* Page 2 — door STOP sign, centered on letter */
+  .door-stop-sign {
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: calc(11in - 0.9in) !important;
+    height: calc(11in - 0.9in) !important;
+    max-height: calc(11in - 0.9in) !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0.3in 0.4in !important;
+    border: none !important;
+    border-radius: 0 !important;
+    background: #f4f1e0 !important;
+    box-shadow: none !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    overflow: hidden !important;
+  }
+
+  .door-stop-stage {
+    flex: 1 1 auto !important;
+    padding: 0 !important;
+    justify-content: center !important;
+  }
+
+  .door-stop-octagon {
+    width: 6.4in !important;
+    height: 6.4in !important;
+    max-width: 90% !important;
+  }
+
+  .door-stop-caption {
+    font-size: 12pt !important;
+    color: #5c6b52 !important;
+    margin-top: 0.25in !important;
+  }
+
+  .door-stop-brand,
+  .door-stop-foot {
+    border-color: transparent !important;
+  }
 }

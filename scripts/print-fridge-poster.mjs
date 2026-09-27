@@ -62,6 +62,7 @@ async function main() {
   console.log("status", resp?.status(), "url", page.url());
 
   await page.waitForSelector(".fridge-poster", { timeout: 30000 });
+  await page.waitForSelector(".door-stop-sign", { timeout: 15000 });
   await page.waitForSelector(".fridge-sign-line", { timeout: 15000 });
   // Ensure sample content hydrated (hours) and no filled signature names
   await page.waitForFunction(() => {
@@ -85,7 +86,20 @@ async function main() {
   });
 
   const st = await stat(OUT);
-  console.log(JSON.stringify({ ok: true, out: OUT, bytes: st.size }));
+  let pages = null;
+  try {
+    const { execFileSync } = await import("node:child_process");
+    const info = execFileSync("pdfinfo", [OUT], { encoding: "utf8" });
+    const m = info.match(/Pages:\s+(\d+)/);
+    pages = m ? Number(m[1]) : null;
+  } catch {
+    pages = null;
+  }
+  console.log(JSON.stringify({ ok: true, out: OUT, bytes: st.size, pages }));
+  if (pages != null && pages !== 2) {
+    console.error("Expected 2 pages, got", pages);
+    process.exitCode = 1;
+  }
   await browser.close();
 }
 

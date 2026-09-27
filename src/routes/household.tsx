@@ -76,7 +76,7 @@ function HouseholdPage() {
           Print fridge poster
         </Button>
         <p className="self-center text-sm text-muted">
-          One letter page · kids + adults
+          Page 1 = fridge poster · page 2 = door STOP sign
         </p>
       </div>
 
@@ -137,7 +137,7 @@ function HouseholdPage() {
             </p>
           </div>
           <p className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.14em] text-olive sm:text-xs">
-            Letter · one page
+            Page 1 · fridge
           </p>
         </div>
 
@@ -239,6 +239,66 @@ function HouseholdPage() {
             </p>
           </div>
           <p className="shrink-0 text-[10px] uppercase tracking-[0.14em] text-muted sm:text-xs">
+            deepfocusfromhome.com
+          </p>
+        </div>
+      </section>
+
+      {/* Page 2 — door STOP sign (tape on door) */}
+      <section className="door-stop-sign mt-5 rounded-lg border-2 border-olive bg-cream p-5 sm:p-6 print:mt-0">
+        <div className="door-stop-brand flex items-baseline justify-between gap-3">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-gold sm:text-xs">
+            Deep Focus From Home · door sign
+          </p>
+          <p className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.14em] text-olive sm:text-xs">
+            Page 2 · tape on door
+          </p>
+        </div>
+
+        <div className="door-stop-stage flex flex-1 flex-col items-center justify-center py-6 sm:py-8">
+          <svg
+            className="door-stop-octagon"
+            viewBox="0 0 200 200"
+            role="img"
+            aria-label="STOP"
+          >
+            {/* Classic flat-top octagon: cream field, strong red border + STOP */}
+            <polygon
+              points="62,14 138,14 186,62 186,138 138,186 62,186 14,138 14,62"
+              fill="#fffef8"
+              stroke="#c45c4a"
+              strokeWidth="10"
+              strokeLinejoin="round"
+            />
+            <polygon
+              points="68,26 132,26 174,68 174,132 132,174 68,174 26,132 26,68"
+              fill="none"
+              stroke="#c45c4a"
+              strokeWidth="2.5"
+              strokeLinejoin="round"
+              opacity="0.55"
+            />
+            <text
+              x="100"
+              y="112"
+              textAnchor="middle"
+              dominantBaseline="middle"
+              fill="#c45c4a"
+              fontSize="48"
+              fontFamily="Georgia, 'Iowan Old Style', Palatino, serif"
+              fontWeight="700"
+              letterSpacing="4"
+            >
+              STOP
+            </text>
+          </svg>
+          <p className="door-stop-caption mt-5 text-center text-sm text-muted sm:text-base">
+            Signal on = wait. Tape this on the door.
+          </p>
+        </div>
+
+        <div className="door-stop-foot flex justify-center border-t border-olive/20 pt-3">
+          <p className="text-[10px] uppercase tracking-[0.14em] text-muted sm:text-xs">
             deepfocusfromhome.com
           </p>
         </div>
