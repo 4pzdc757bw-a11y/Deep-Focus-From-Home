@@ -226,4 +226,11 @@
   .fridge-poster .rounded-md {
     border-radius: 0.15rem !important;
   }
+
+  .fridge-poster .fridge-sign-line {
+    min-height: 0.35in !important;
+    border-bottom: 1pt solid #3a4a32 !important;
+    width: 70% !important;
+    max-width: 4.5in !important;
+  }
 }

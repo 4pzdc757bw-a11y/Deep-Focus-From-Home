@@ -19,15 +19,18 @@ function SignalIcon({ kind }: { kind: "door" | "card" | "headphones" }) {
   if (kind === "card") {
     return (
       <svg viewBox="0 0 80 80" className="fridge-signal-icon" aria-hidden>
-        <rect x="22" y="14" width="36" height="52" rx="4" fill="#c45c4a" stroke="#3a4a32" strokeWidth="2.5" />
+        {/* Landscape card so STOP reads cleanly */}
+        <rect x="8" y="24" width="64" height="36" rx="4" fill="#c45c4a" stroke="#3a4a32" strokeWidth="2.5" />
         <text
           x="40"
-          y="46"
+          y="48"
           textAnchor="middle"
+          dominantBaseline="middle"
           fill="#fffef8"
-          fontSize="18"
+          fontSize="16"
           fontFamily="Georgia, serif"
           fontWeight="700"
+          letterSpacing="1.5"
         >
           STOP
         </text>
@@ -230,10 +233,9 @@ function HouseholdPage() {
             <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold sm:text-xs">
               Signed by
             </p>
-            <p className="mt-1 truncate text-base text-ink sm:text-lg">
-              {h.signedBy?.trim() || (
-                <span className="text-muted">________________________</span>
-              )}
+            {/* Always blank for handwriting — do not print filled names */}
+            <p className="fridge-sign-line mt-2 border-b border-olive/50 text-base leading-none text-transparent sm:text-lg">
+              &nbsp;
             </p>
           </div>
           <p className="shrink-0 text-[10px] uppercase tracking-[0.14em] text-muted sm:text-xs">
