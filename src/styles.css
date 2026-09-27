@@ -56,24 +56,118 @@
 }
 
 @media print {
+  @page {
+    margin: 0.45in;
+    size: letter;
+  }
+
   header,
   nav,
   .no-print {
     display: none !important;
   }
+
   body,
   html,
   #app {
     background: #fffef8 !important;
     color: #2c3528 !important;
   }
+
   main {
     padding: 0 !important;
     max-width: none !important;
   }
+
   a {
     text-decoration: none !important;
     color: inherit !important;
   }
-}
 
+  /* Force checked UI and borders to survive “print backgrounds: off”. */
+  *,
+  *::before,
+  *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .daily-os {
+    gap: 0.55rem !important;
+  }
+
+  .daily-os .daily-block,
+  .daily-os .daily-checks,
+  .daily-os .daily-notes {
+    break-inside: avoid;
+    border: 1.5pt solid #3a4a32 !important;
+    background: #fffef8 !important;
+    padding: 0.55rem 0.7rem !important;
+    border-radius: 0.25rem !important;
+    box-shadow: none !important;
+  }
+
+  .daily-os input,
+  .daily-os textarea {
+    border: 1pt solid #8b7a3e !important;
+    background: #fff !important;
+    color: #2c3528 !important;
+    font-size: 11pt !important;
+    min-height: 0 !important;
+    padding: 0.2rem 0.35rem !important;
+  }
+
+  .daily-os textarea {
+    min-height: 2.2rem !important;
+  }
+
+  .daily-print-header {
+    display: block !important;
+    margin-bottom: 0.4rem;
+    border-bottom: 2pt solid #3a4a32;
+    padding-bottom: 0.25rem;
+  }
+
+  /* Checkbox: ink border + visible check without relying on fill alone */
+  [data-slot="checkbox"],
+  button[role="checkbox"],
+  [role="checkbox"] {
+    border: 1.5pt solid #3a4a32 !important;
+    width: 14pt !important;
+    height: 14pt !important;
+    min-width: 14pt !important;
+    background: #fff !important;
+    color: #3a4a32 !important;
+  }
+
+  [role="checkbox"][data-state="checked"],
+  button[role="checkbox"][data-state="checked"] {
+    background: #3a4a32 !important;
+    color: #fffef8 !important;
+  }
+
+  [role="checkbox"][data-state="checked"] svg,
+  button[role="checkbox"][data-state="checked"] svg {
+    display: block !important;
+    stroke: #fffef8 !important;
+    color: #fffef8 !important;
+  }
+
+  /* Fallback glyph so checked still reads if fills are stripped */
+  [role="checkbox"][data-state="checked"]::after {
+    content: "✓";
+    position: absolute;
+    font-size: 11pt;
+    font-weight: 700;
+    line-height: 1;
+    color: #3a4a32;
+  }
+
+  .fridge-kid-sheet {
+    break-after: page;
+  }
+
+  .fridge-adult-sheet {
+    break-before: page;
+  }
+}

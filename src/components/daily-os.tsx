@@ -6,7 +6,12 @@ import { CheckRow } from "@/components/ui/checkbox";
 import { Field, Input, Textarea } from "@/components/ui/input";
 import { DAILY_CHECKS } from "@/lib/content";
 import type { DailyCheckId } from "@/lib/content";
-import { parseClock, remainingLabel } from "@/lib/chime";
+import {
+  durationLabel,
+  parseClock,
+  remainingLabel,
+  stampClockNow,
+} from "@/lib/chime";
 import { beginSession, completeSession } from "@/lib/session-runtime";
 import { partnerMessage } from "@/lib/backup";
 import { shareOrCopy } from "@/lib/share";
@@ -34,21 +39,29 @@ function TimeField({
   value,
   fallback,
   onChange,
+  readOnly,
 }: {
   label: string;
   value: string;
   fallback: string;
   onChange: (value: string) => void;
+  readOnly?: boolean;
 }) {
   return (
     <Field label={label}>
       {value ? (
-        <Input type="time" value={value} onChange={(e) => onChange(e.target.value)} />
+        <Input
+          type="time"
+          value={value}
+          readOnly={readOnly}
+          onChange={(e) => onChange(e.target.value)}
+        />
       ) : (
         <button
           type="button"
           className="h-11 w-full rounded-md border border-dashed border-yellow bg-paper px-3 text-left text-muted"
           onClick={() => onChange(fallback)}
+          disabled={readOnly}
         >
           Set time
         </button>
@@ -83,18 +96,22 @@ export function DailyOs({ date }: { date?: string }) {
 
   async function startSlot(index: number) {
     const slot = entry.slots[index];
+    const stampedStart = stampClockNow();
+    // Stamp actual start; keep planned end editable until Done rings.
+    patchSlot(index, { start: stampedStart });
     setRinging(true);
     window.setTimeout(() => setRinging(false), 1400);
     await beginSession({
       date: osDate,
       slotIndex: index,
-      endsAt: endTimestamp(slot.start, slot.end),
+      endsAt: endTimestamp(stampedStart, slot.end),
     });
   }
 
   async function finishNow() {
     setRinging(true);
     window.setTimeout(() => setRinging(false), 1800);
+    // completeSession stamps Ends with wall-clock time.
     await completeSession();
   }
 
@@ -111,13 +128,22 @@ export function DailyOs({ date }: { date?: string }) {
   }
 
   return (
-    <>
+    <div className="daily-os flex flex-col gap-5">
+      <div className="daily-print-header hidden print:block">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-olive">
+          Deep Focus · Daily OS
+        </p>
+        <h1 className="font-display text-2xl text-olive">{prettyDate(osDate)}</h1>
+      </div>
+
       {entry.slots.slice(0, visible).map((slot, i) => {
         const active = activeHere && session.slotIndex === i;
         const doneHere =
           session.phase === "done" && session.date === osDate && session.slotIndex === i;
+        const dur =
+          slot.start && slot.end ? durationLabel(slot.start, slot.end) : "";
         return (
-          <Card key={i} className="flex flex-col gap-3">
+          <Card key={i} className="daily-block flex flex-col gap-3">
             <div className="flex items-center justify-between gap-2">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
                 {SLOT_LABELS[i]}
@@ -126,12 +152,15 @@ export function DailyOs({ date }: { date?: string }) {
                 <span className="tabular-nums text-sm font-semibold text-olive">
                   {remainingLabel(left)} left
                 </span>
-              ) : doneHere ? (
-                <span className="text-sm font-semibold text-olive">Block complete</span>
+              ) : doneHere || dur ? (
+                <span className="text-sm font-semibold text-olive">
+                  {doneHere ? "Block complete" : null}
+                  {dur ? `${doneHere ? " · " : ""}${dur}` : null}
+                </span>
               ) : i > 0 && i === visible - 1 ? (
                 <button
                   type="button"
-                  className="text-sm font-semibold text-gold"
+                  className="no-print text-sm font-semibold text-gold"
                   onClick={removeLast}
                 >
                   Remove
@@ -144,14 +173,21 @@ export function DailyOs({ date }: { date?: string }) {
                 value={slot.start}
                 fallback={NEXT_DEFAULTS[i].start}
                 onChange={(start) => patchSlot(i, { start })}
+                readOnly={active}
               />
               <TimeField
                 label="Ends"
                 value={slot.end}
                 fallback={NEXT_DEFAULTS[i].end}
                 onChange={(end) => patchSlot(i, { end })}
+                readOnly={active}
               />
             </div>
+            {dur && (doneHere || (slot.start && slot.end && !active)) ? (
+              <p className="text-sm text-muted print:text-ink">
+                Duration: <span className="font-semibold text-olive">{dur}</span>
+              </p>
+            ) : null}
             <Field label="Task in this slot">
               <Input
                 value={slot.task}
@@ -169,12 +205,12 @@ export function DailyOs({ date }: { date?: string }) {
               />
             </Field>
             {active ? (
-              <p className="text-sm text-muted">
+              <p className="no-print text-sm text-muted">
                 The screen stays awake for this block. If you lock the phone, the
                 bell rings when you open the app again.
               </p>
             ) : null}
-            <div className="flex flex-wrap gap-2">
+            <div className="no-print flex flex-wrap gap-2">
               {active ? (
                 <Button type="button" onClick={() => void finishNow()}>
                   <BellRing className={cn("size-4", ringing && "animate-pulse")} />
@@ -198,13 +234,13 @@ export function DailyOs({ date }: { date?: string }) {
       })}
 
       {visible < 3 ? (
-        <Button type="button" variant="outline" onClick={addBlock}>
+        <Button type="button" variant="outline" className="no-print" onClick={addBlock}>
           <Plus className="size-4" />
           Add another block
         </Button>
       ) : null}
 
-      <Card className="flex flex-col gap-3">
+      <Card className="daily-checks flex flex-col gap-3">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
           Daily checks
         </p>
@@ -220,7 +256,7 @@ export function DailyOs({ date }: { date?: string }) {
         ))}
       </Card>
 
-      <Card className="flex flex-col gap-3">
+      <Card className="daily-notes flex flex-col gap-3">
         <Field label="Note to accountability partner">
           <Textarea
             value={entry.partnerNote}
@@ -265,6 +301,6 @@ export function DailyOs({ date }: { date?: string }) {
         </div>
         {shareState ? <p className="no-print text-sm text-olive">{shareState}</p> : null}
       </Card>
-    </>
+    </div>
   );
 }

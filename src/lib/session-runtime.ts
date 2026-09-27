@@ -1,4 +1,4 @@
-import { playDoneBell, playStartBell } from "./chime";
+import { playDoneBell, playStartBell, stampClockNow } from "./chime";
 import { useFocusStore } from "./store";
 
 let completing = false;
@@ -77,7 +77,14 @@ export async function completeSession() {
     const cur = date ? useFocusStore.getState().dailies[date] : undefined;
     useFocusStore.getState().setSession({ running: false, phase: "done" });
     if (cur && date) {
+      const stampedEnd = stampClockNow();
+      const slots = [...cur.slots] as typeof cur.slots;
+      const idx = s.slotIndex;
+      if (slots[idx]) {
+        slots[idx] = { ...slots[idx], end: stampedEnd };
+      }
       useFocusStore.getState().patchDaily(date, {
+        slots,
         checks: { ...cur.checks, block: true },
       });
     }

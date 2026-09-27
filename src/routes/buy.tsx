@@ -22,6 +22,7 @@ const HANDBOOK_INCLUDED = [
 const APP_INCLUDED = [
   "The installable app — Daily OS, starter week, bell, energy peak, household fridge copy",
   "Same system as the book, on your phone — forms already filled in",
+  "Includes handbook PDFs and fillables",
 ];
 
 function BuyPage() {
@@ -33,20 +34,19 @@ function BuyPage() {
   return (
     <div className="flex flex-col gap-6">
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold">
-        Handbook + fillables · {PRICE_LABEL}
+        Two clear offers · pay once
       </p>
       <h1 className="font-display text-4xl leading-tight text-olive">
         Remote Workers Deep Focus
       </h1>
       <p className="max-w-prose text-lg text-ink">
-        Not a course. Not a streak app. A practical handbook and the fillable
-        worksheets so you can rebuild focus from home — then an optional app
-        if you want the system on your phone.
+        Not a course. Not a streak app. Choose the handbook, or the app that
+        runs the same system on your phone.
       </p>
 
       <Card className="flex flex-col gap-3">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
-          Core offer
+          Handbook
         </p>
         <p className="font-display text-2xl text-olive">Handbook + fillables</p>
         <ul className="flex flex-col gap-2 text-ink">
@@ -61,7 +61,7 @@ function BuyPage() {
         {handbookCheckout ? (
           <Button asChild>
             <a href={handbookCheckout} rel="noopener noreferrer">
-              Pay {PRICE_LABEL} — get the handbook
+              Get the handbook — {PRICE_LABEL}
             </a>
           </Button>
         ) : (
@@ -69,12 +69,12 @@ function BuyPage() {
             <Button
               type="button"
               onClick={() => {
-                markPurchased();
+                markPurchased("handbook");
                 start();
-                void navigate({ to: "/starter" });
+                void navigate({ to: "/thanks", search: { paid: 1, product: "handbook" } });
               }}
             >
-              Pay {PRICE_LABEL} — get the handbook
+              Get the handbook — {PRICE_LABEL}
             </Button>
             <p className="text-sm text-muted">
               Preview unlock on this device. Live Stripe Payment Link is not
@@ -86,9 +86,9 @@ function BuyPage() {
 
       <Card className="flex flex-col gap-3">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
-          Optional upsell
+          The app
         </p>
-        <p className="font-display text-2xl text-olive">The app</p>
+        <p className="font-display text-2xl text-olive">Run it on your phone</p>
         <ul className="flex flex-col gap-2 text-ink">
           {APP_INCLUDED.map((item) => (
             <li key={item} className="border-l-2 border-yellow pl-3">
@@ -97,25 +97,24 @@ function BuyPage() {
           ))}
         </ul>
         <p className="text-3xl font-display text-olive">{APP_PRICE_LABEL}</p>
-        <p className="text-sm text-muted">One-time. After the handbook, if you want it.</p>
+        <p className="text-sm text-muted">One-time. Full system in the app.</p>
         {appCheckout ? (
-          <Button variant="outline" asChild>
+          <Button asChild>
             <a href={appCheckout} rel="noopener noreferrer">
-              Pay {APP_PRICE_LABEL} — unlock the app
+              Get the app — {APP_PRICE_LABEL}
             </a>
           </Button>
         ) : (
           <>
             <Button
               type="button"
-              variant="outline"
               onClick={() => {
-                markPurchased();
+                markPurchased("app");
                 start();
-                void navigate({ to: "/starter" });
+                void navigate({ to: "/thanks", search: { paid: 1, product: "app" } });
               }}
             >
-              Pay {APP_PRICE_LABEL} — unlock the app
+              Get the app — {APP_PRICE_LABEL}
             </Button>
             <p className="text-sm text-muted">
               Preview stub only. Live Stripe Payment Link is not configured yet
