@@ -11,13 +11,27 @@ export const OFFER_NAME = "Remote Workers Deep Focus";
  * Stripe Payment Link URLs (public buy.stripe.com /… links — not secret keys).
  * Set via Vercel env when products exist; empty keeps /buy as a preview stub.
  */
-export const STRIPE_HANDBOOK_PAYMENT_LINK = (
-  import.meta.env.VITE_STRIPE_HANDBOOK_PAYMENT_LINK as string | undefined
-)?.trim() ?? "";
+function sanitizeStripePaymentLink(raw: string | undefined): string {
+  const url = (raw ?? "").trim();
+  if (!url) return "";
+  // Never ship Stripe test-mode buy links on a production build.
+  if (import.meta.env.PROD && /buy\.stripe\.com\/test_/i.test(url)) {
+    console.error(
+      "[Deep Focus] Refusing Stripe TEST payment link in production build:",
+      url,
+    );
+    return "";
+  }
+  return url;
+}
 
-export const STRIPE_APP_PAYMENT_LINK = (
-  import.meta.env.VITE_STRIPE_APP_PAYMENT_LINK as string | undefined
-)?.trim() ?? "";
+export const STRIPE_HANDBOOK_PAYMENT_LINK = sanitizeStripePaymentLink(
+  import.meta.env.VITE_STRIPE_HANDBOOK_PAYMENT_LINK as string | undefined,
+);
+
+export const STRIPE_APP_PAYMENT_LINK = sanitizeStripePaymentLink(
+  import.meta.env.VITE_STRIPE_APP_PAYMENT_LINK as string | undefined,
+);
 
 export const stripeCheckoutReady =
   Boolean(STRIPE_HANDBOOK_PAYMENT_LINK) || Boolean(STRIPE_APP_PAYMENT_LINK);
