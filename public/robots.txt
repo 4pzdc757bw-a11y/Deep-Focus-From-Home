@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /thanks
+Disallow: /access
+
+Sitemap: https://deepfocus.jeffsebiz.com/sitemap.xml

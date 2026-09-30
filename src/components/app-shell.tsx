@@ -55,6 +55,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <Link to={marketing ? "/start" : "/"} className="flex min-w-0 items-center gap-3">
             <img
               src="/images/logo.jpg"
+              width={32} height={32} decoding="async"
               alt=""
               className="size-8 rounded-sm object-cover"
             />

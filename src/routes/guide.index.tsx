@@ -16,6 +16,7 @@ function GuidePage() {
       <div className="overflow-hidden rounded-lg border border-yellow">
         <img
           src="/images/cover.jpg"
+              width={800} height={1189} decoding="async"
           alt="Deep Focus from Home handbook cover — remote worker at a clean desk"
           className="hero-photo h-64 w-full sm:h-80"
         />

@@ -105,6 +105,7 @@ function Home() {
           <div className="overflow-hidden rounded-lg border border-yellow">
             <img
               src="/images/cover.jpg"
+              width={800} height={1189} fetchPriority="high" decoding="async"
               alt="A remote worker at a clean desk, looking at a computer, no phone in view"
               className="hero-photo h-64 w-full sm:h-80"
             />
