@@ -1,3 +1,4 @@
+import { LegalFooter } from "@/components/legal-footer";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { Card, PageTitle } from "@/components/app-shell";
@@ -75,6 +76,7 @@ function StarterPage() {
           </Card>
         );
       })}
+      <LegalFooter className="mt-8" />
     </div>
   );
 }

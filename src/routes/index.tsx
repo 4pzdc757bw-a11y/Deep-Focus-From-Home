@@ -1,3 +1,4 @@
+import { LegalFooter } from "@/components/legal-footer";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { InstallCard } from "@/components/install-card";
@@ -169,6 +170,7 @@ function Home() {
           }}
         />
       ) : null}
+      <LegalFooter className="mt-8" />
     </div>
   );
 }
