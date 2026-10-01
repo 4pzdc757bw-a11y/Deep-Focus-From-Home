@@ -19,7 +19,7 @@ function PrivacyPage() {
   return (
     <LegalDoc kicker="Legal" title="Privacy Policy">
       <p>
-        JEFFSEBIZ LLC (“we,” “us,” “jeffsebiz”) runs Deep Focus From Home and
+        JEFFSEBIZ LLC (“we,” “us,” “Jeffsebiz”) runs Deep Focus From Home and
         related digital products. This page explains what information we collect
         and how we use it.
       </p>
@@ -44,6 +44,10 @@ function PrivacyPage() {
           Basic technical data such as browser type, device type, and pages
           visited (if our site or tools collect it)
         </li>
+        <li>
+          Anonymous or aggregated visitor stats (page views and performance), when
+          we use our hosting provider’s analytics tools — see section 4
+        </li>
       </ul>
       <p>
         We do not intentionally collect sensitive health data. Our handbook is
@@ -60,7 +64,10 @@ function PrivacyPage() {
           Apply store credit when you request it under our{" "}
           <Link to="/store-credit">Store Credit Policy</Link>
         </li>
-        <li>Improve the site and fix problems</li>
+        <li>
+          See how the site is used (traffic and performance) so we can improve it
+          and fix problems
+        </li>
         <li>Meet legal or tax requirements</li>
       </ul>
       <p>We do not sell your personal information.</p>
@@ -68,9 +75,16 @@ function PrivacyPage() {
       <h2>3. Who else may see it</h2>
       <p>We may share information with:</p>
       <ul>
-        <li>Payment processors that handle checkout</li>
         <li>
-          Email or hosting tools that help us send downloads or newsletters
+          Payment processors that handle checkout (for example, Stripe)
+        </li>
+        <li>
+          Hosting and site tools that run the website (for example, Vercel),
+          including visitor stats described below
+        </li>
+        <li>
+          Email tools that help us send downloads, newsletters, or signup
+          messages you asked for (for example, Kit, when we turn on email signup)
         </li>
         <li>
           Service providers who help us run the business, under limits that
@@ -80,15 +94,45 @@ function PrivacyPage() {
       </ul>
       <p>We do not sell customer lists.</p>
 
-      <h2>4. Cookies and tracking</h2>
+      <h2>4. Cookies, visitor stats, and tracking</h2>
       <p>
         The site may use cookies or similar tools for basic function, security,
         and (if you later approve ads) measuring ads. You can control cookies in
-        your browser. If we turn on advertising pixels later, we will update this
-        page before that goes live.
+        your browser. We do not currently run Meta or Google advertising pixels.
+        If we turn on advertising pixels later, we will update this page before
+        that goes live.
+      </p>
+      <p>
+        <strong>Visitor stats (Vercel Analytics).</strong> When enabled, we may
+        use Vercel Analytics (or a similar tool from our host) to see anonymous
+        or aggregated page views and performance data — for example, which pages
+        are visited and how fast they load. This helps us understand traffic and
+        improve the site. It is not used to sell your personal data. Vercel acts
+        as a service provider (processor) that hosts the site and provides these
+        stats on our behalf.
       </p>
 
-      <h2>5. How long we keep it</h2>
+      <h2>5. Email signup (when added)</h2>
+      <p>
+        When we offer an email signup on the site, we collect the email address
+        you submit. We use it to send the free 7-day starter information and
+        launch heads-up messages you asked for. You can unsubscribe anytime using
+        the link in those emails. We do not sell the list. Our email tool (for
+        example, Kit) acts as a processor that helps us send those messages. This
+        section applies once signup is turned on; until then, we only collect
+        email when you buy or contact us directly.
+      </p>
+
+      <h2>6. App data on your device</h2>
+      <p>
+        The Deep Focus From Home web app may store notes, focus or energy logs,
+        and similar entries on your own device or browser (local storage). That
+        information stays on your device unless you choose to share it with us
+        (for example, by emailing us). We do not pull those local notes onto our
+        servers as part of normal app use.
+      </p>
+
+      <h2>7. How long we keep it</h2>
       <p>
         We keep order and account records as long as needed for the product,
         store credit (up to 12 months from purchase, plus a reasonable record
@@ -96,7 +140,7 @@ function PrivacyPage() {
         contacts; we may keep what the law requires.
       </p>
 
-      <h2>6. Your choices</h2>
+      <h2>8. Your choices</h2>
       <p>You can:</p>
       <ul>
         <li>
@@ -113,25 +157,25 @@ function PrivacyPage() {
         </li>
       </ul>
 
-      <h2>7. Children</h2>
+      <h2>9. Children</h2>
       <p>
         Our products are for adults and working professionals. We do not
         knowingly collect information from children under 13.
       </p>
 
-      <h2>8. Security</h2>
+      <h2>10. Security</h2>
       <p>
         We take reasonable steps to protect information, but no online system is
         perfectly secure.
       </p>
 
-      <h2>9. Changes</h2>
+      <h2>11. Changes</h2>
       <p>
         If we change this policy in a material way, we will update the effective
         date on this page.
       </p>
 
-      <h2>10. Contact</h2>
+      <h2>12. Contact</h2>
       <p>
         JEFFSEBIZ LLC
         <br />
