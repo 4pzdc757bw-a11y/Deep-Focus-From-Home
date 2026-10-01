@@ -21,7 +21,7 @@ function StoreCreditPage() {
     <LegalDoc kicker="Legal" title="Store Credit Policy">
       <h2>The short version</h2>
       <p>
-        jeffsebiz digital products are delivered electronically. We do not offer
+        Jeffsebiz digital products are delivered electronically. We do not offer
         automatic cash refunds on digital downloads or digital access.
       </p>
       <p>
