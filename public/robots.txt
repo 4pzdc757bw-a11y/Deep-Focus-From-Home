@@ -1,5 +1,6 @@
 User-agent: *
 Disallow: /downloads/handbook/
+Disallow: /api/download
 Allow: /
 Disallow: /thanks
 Disallow: /access

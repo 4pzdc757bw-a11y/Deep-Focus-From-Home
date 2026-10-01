@@ -1,10 +1,20 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Download } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/app-shell";
 import { InstallCard } from "@/components/install-card";
 import { LegalFooter } from "@/components/legal-footer";
 import { Button } from "@/components/ui/button";
+import {
+  DOWNLOAD_FILE_LIST,
+  DOWNLOAD_SUPPORT_EMAIL,
+  type DownloadFileKey,
+} from "@/lib/downloads/catalog";
+import {
+  downloadErrorMessage,
+  mintPaidDownloadUrls,
+  type MintedDownloadLink,
+} from "@/lib/downloads/mint";
 import {
   APP_PRICE_LABEL,
   getPurchasedProduct,
@@ -19,6 +29,8 @@ type ThanksSearch = {
   /** Raw search value — TanStack JSON-parses `?paid=1` as number 1. */
   paid?: string | number | boolean;
   product?: PurchaseProduct;
+  /** Stripe Checkout Session id from `{CHECKOUT_SESSION_ID}` success URL. */
+  session_id?: string;
 };
 
 /**
@@ -37,6 +49,12 @@ function keepPaidParam(raw: unknown): ThanksSearch["paid"] | undefined {
   return undefined;
 }
 
+function keepSessionId(raw: unknown): string | undefined {
+  if (typeof raw !== "string") return undefined;
+  const trimmed = raw.trim();
+  return trimmed || undefined;
+}
+
 function isPaidUnlock(paid: ThanksSearch["paid"]): boolean {
   return paid === 1 || paid === "1" || paid === true || paid === "true";
 }
@@ -45,31 +63,134 @@ export const Route = createFileRoute("/thanks")({
   validateSearch: (search: Record<string, unknown>): ThanksSearch => {
     const paid = keepPaidParam(search.paid);
     const product = parsePurchaseProduct(search.product);
+    const session_id = keepSessionId(search.session_id);
     const out: ThanksSearch = {};
     if (paid !== undefined) out.paid = paid;
     if (product) out.product = product;
+    if (session_id) out.session_id = session_id;
     return out;
   },
   component: ThanksPage,
 });
 
-const HANDBOOK_DOWNLOADS = [
-  {
-    href: "/downloads/handbook/Deep_Focus_from_Home.pdf",
-    label: "Download handbook (desktop PDF)",
-  },
-  {
-    href: "/downloads/handbook/Deep_Focus_from_Home_Mobile.pdf",
-    label: "Download handbook (phone PDF)",
-  },
-  {
-    href: "/downloads/handbook/Fillables.zip",
-    label: "Download fillable worksheets (ZIP)",
-  },
-] as const;
+function sessionDownloadHref(sessionId: string, key: DownloadFileKey): string {
+  const q = new URLSearchParams({
+    session_id: sessionId,
+    file: key,
+  });
+  return `/api/download?${q.toString()}`;
+}
+
+function HandbookDownloadButtons({
+  sessionId,
+}: {
+  sessionId: string | undefined;
+}) {
+  const [links, setLinks] = useState<MintedDownloadLink[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!sessionId) {
+      setLinks(null);
+      setError(null);
+      setLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+
+    void mintPaidDownloadUrls({ data: { sessionId } })
+      .then((result) => {
+        if (cancelled) return;
+        setLinks(result.links);
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        // Session links still work as a fallback if minting fails (e.g. signing).
+        setLinks(null);
+        setError(downloadErrorMessage(err));
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [sessionId]);
+
+  const items = useMemo(() => {
+    if (links && links.length > 0) {
+      return links.map((link) => ({
+        key: link.key,
+        href: link.url,
+        label: link.label,
+      }));
+    }
+    if (sessionId) {
+      return DOWNLOAD_FILE_LIST.map((meta) => ({
+        key: meta.key,
+        href: sessionDownloadHref(sessionId, meta.key),
+        label: meta.label,
+      }));
+    }
+    return [];
+  }, [links, sessionId]);
+
+  if (!sessionId) {
+    return (
+      <div className="flex flex-col gap-2 rounded-lg border border-gold/30 bg-cream/40 p-4 text-ink">
+        <p className="font-medium">Downloads need your checkout link</p>
+        <p className="text-sm">
+          This page was opened without a Stripe checkout session id, so we cannot
+          unlock the paid handbook files here. Email{" "}
+          <a
+            className="underline underline-offset-2"
+            href={`mailto:${DOWNLOAD_SUPPORT_EMAIL}?subject=Deep%20Focus%20handbook%20download`}
+          >
+            {DOWNLOAD_SUPPORT_EMAIL}
+          </a>{" "}
+          with your Stripe receipt and we will send your files.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      {loading && (
+        <p className="text-sm text-muted">Preparing secure download links…</p>
+      )}
+      {error && !loading && (
+        <p className="text-sm text-muted">
+          {error} You can still try the buttons below — each click re-checks your
+          payment with Stripe.
+        </p>
+      )}
+      {items.map((item) => (
+        <Button key={item.key} variant="outline" asChild>
+          <a href={item.href}>
+            <Download className="size-4" /> {item.label}
+          </a>
+        </Button>
+      ))}
+      <p className="text-xs text-muted">
+        Links expire in about 30 minutes. Refresh this page to get new ones, or
+        email {DOWNLOAD_SUPPORT_EMAIL} with your receipt if you need help.
+      </p>
+    </div>
+  );
+}
 
 function ThanksPage() {
-  const { paid, product: productParam } = Route.useSearch();
+  const {
+    paid,
+    product: productParam,
+    session_id: sessionId,
+  } = Route.useSearch();
   const start = useFocusStore((s) => s.startStarter);
   const fromCheckout = isPaidUnlock(paid);
   const product: PurchaseProduct | null =
@@ -138,15 +259,7 @@ function ThanksPage() {
               Secondary to the app. Keep the Stripe receipt email — that is your
               proof of purchase.
             </p>
-            <div className="flex flex-col gap-2">
-              {HANDBOOK_DOWNLOADS.map((item) => (
-                <Button key={item.href} variant="outline" asChild>
-                  <a href={item.href} download>
-                    <Download className="size-4" /> {item.label}
-                  </a>
-                </Button>
-              ))}
-            </div>
+            <HandbookDownloadButtons sessionId={sessionId} />
           </Card>
         </>
       ) : (
@@ -163,15 +276,7 @@ function ThanksPage() {
                 Phone PDF, desktop PDF, and every fillable worksheet. Keep the
                 Stripe receipt email — that is your proof of purchase.
               </p>
-              <div className="flex flex-col gap-2">
-                {HANDBOOK_DOWNLOADS.map((item) => (
-                  <Button key={item.href} variant="outline" asChild>
-                    <a href={item.href} download>
-                      <Download className="size-4" /> {item.label}
-                    </a>
-                  </Button>
-                ))}
-              </div>
+              <HandbookDownloadButtons sessionId={sessionId} />
             </Card>
           )}
 

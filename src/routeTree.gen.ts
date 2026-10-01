@@ -27,6 +27,7 @@ import { Route as StoreCreditRouteImport } from './routes/store-credit'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as ThanksRouteImport } from './routes/thanks'
 import { Route as WeekRouteImport } from './routes/week'
+import { Route as ApiDownloadRouteImport } from './routes/api/download'
 import { Route as GuideIndexRouteImport } from './routes/guide.index'
 import { Route as GuideSlugRouteImport } from './routes/guide.$slug'
 
@@ -120,6 +121,11 @@ const WeekRoute = WeekRouteImport.update({
   path: '/week',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiDownloadRoute = ApiDownloadRouteImport.update({
+  id: '/api/download',
+  path: '/api/download',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GuideIndexRoute = GuideIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -150,6 +156,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/thanks': typeof ThanksRoute
   '/week': typeof WeekRoute
+  '/api/download': typeof ApiDownloadRoute
   '/guide/$slug': typeof GuideSlugRoute
   '/guide/': typeof GuideIndexRoute
 }
@@ -171,6 +178,7 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/thanks': typeof ThanksRoute
   '/week': typeof WeekRoute
+  '/api/download': typeof ApiDownloadRoute
   '/guide/$slug': typeof GuideSlugRoute
   '/guide': typeof GuideIndexRoute
 }
@@ -194,6 +202,7 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/thanks': typeof ThanksRoute
   '/week': typeof WeekRoute
+  '/api/download': typeof ApiDownloadRoute
   '/guide/$slug': typeof GuideSlugRoute
   '/guide/': typeof GuideIndexRoute
 }
@@ -218,6 +227,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/thanks'
     | '/week'
+    | '/api/download'
     | '/guide/$slug'
     | '/guide/'
   fileRoutesByTo: FileRoutesByTo
@@ -239,6 +249,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/thanks'
     | '/week'
+    | '/api/download'
     | '/guide/$slug'
     | '/guide'
   id:
@@ -261,6 +272,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/thanks'
     | '/week'
+    | '/api/download'
     | '/guide/$slug'
     | '/guide/'
   fileRoutesById: FileRoutesById
@@ -284,6 +296,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   ThanksRoute: typeof ThanksRoute
   WeekRoute: typeof WeekRoute
+  ApiDownloadRoute: typeof ApiDownloadRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -414,6 +427,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WeekRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/download': {
+      id: '/api/download'
+      path: '/api/download'
+      fullPath: '/api/download'
+      preLoaderRoute: typeof ApiDownloadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/guide/': {
       id: '/guide/'
       path: '/'
@@ -462,7 +482,17 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   ThanksRoute: ThanksRoute,
   WeekRoute: WeekRoute,
+  ApiDownloadRoute: ApiDownloadRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
