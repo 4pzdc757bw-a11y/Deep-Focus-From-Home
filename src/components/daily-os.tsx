@@ -73,6 +73,7 @@ function TimeField({
 }
 
 export function DailyOs({ date }: { date?: string }) {
+  const hydrated = useFocusStore((s) => s.hydrated);
   const osDate = date ?? todayKey();
   const { entry, patch, patchSlot } = useDaily(osDate);
   const session = useFocusStore((s) => s.session);
@@ -160,7 +161,7 @@ export function DailyOs({ date }: { date?: string }) {
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-olive">
           Deep Focus · Daily OS
         </p>
-        <h1 className="font-display text-2xl text-olive">{prettyDate(osDate)}</h1>
+        <h1 className="font-display text-2xl text-olive">{hydrated ? prettyDate(osDate) : "Today"}</h1>
       </div>
 
       {entry.slots.slice(0, visible).map((slot, i) => {

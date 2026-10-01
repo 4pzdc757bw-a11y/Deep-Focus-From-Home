@@ -148,7 +148,7 @@ function Home() {
 
       <div className="no-print">
         <PageTitle
-          kicker={weekdayLong()}
+          kicker={hydrated ? weekdayLong() : "Today"}
           title="Today’s operating system"
           lede={APP_LINE}
         />

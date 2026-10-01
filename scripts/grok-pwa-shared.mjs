@@ -447,7 +447,9 @@ export function injectGrokPwaHead(html, ctx = {}) {
     grokOgHeadTags({ host, appName, site, documentTitle, cwd }).join(""),
   );
 
-  if (!next.includes("/grok-app-builder/extensions.js")) {
+  // Deep Focus: the grok.com builder extensions script is not needed on the
+  // public site, so it is no longer injected (Vera privacy item, Sep 30).
+  if (false) {
     missing.push(...grokExtensionsHeadTags(projectId));
   } else if (projectId && !next.includes('name="grok-project-id"')) {
     missing.push(`<meta name="grok-project-id" content="${escapeHtml(projectId)}">`);
