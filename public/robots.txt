@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /downloads/handbook/
+Allow: /
+Disallow: /thanks
+Disallow: /access
+
+Sitemap: https://deepfocus.jeffsebiz.com/sitemap.xml

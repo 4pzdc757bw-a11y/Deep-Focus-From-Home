@@ -1,3 +1,4 @@
+import { LegalFooter } from "@/components/legal-footer";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { Card, PageTitle } from "@/components/app-shell";
@@ -16,6 +17,7 @@ function GuidePage() {
       <div className="overflow-hidden rounded-lg border border-yellow">
         <img
           src="/images/cover.jpg"
+              width={800} height={1189} decoding="async"
           alt="Deep Focus from Home handbook cover — remote worker at a clean desk"
           className="hero-photo h-64 w-full sm:h-80"
         />
@@ -41,6 +43,7 @@ function GuidePage() {
           </Card>
         </Link>
       ))}
+      <LegalFooter className="mt-8" />
     </div>
   );
 }

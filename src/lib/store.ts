@@ -90,6 +90,12 @@ type FocusState = {
   /** True after Save/Skip on the week-two Home focus setup prompt (once). */
   homeFocusWeekTwoPrompted: boolean;
   markHomeFocusWeekTwoPrompted: () => void;
+  /** True after the first-open walkthrough is finished or skipped. */
+  tourDone: boolean;
+  setTourDone: (v: boolean) => void;
+  /** Not saved: true while the walkthrough is replaying from Tools. */
+  tourOpen: boolean;
+  setTourOpen: (v: boolean) => void;
   household: HouseholdState;
   setHousehold: (patch: Partial<HouseholdState>) => void;
   weeks: Record<string, WeekState>;
@@ -252,6 +258,10 @@ export const useFocusStore = create<FocusState>()(
       setSetup: (patch) => set((s) => ({ setup: { ...s.setup, ...patch } })),
       homeFocusWeekTwoPrompted: false,
       markHomeFocusWeekTwoPrompted: () => set({ homeFocusWeekTwoPrompted: true }),
+      tourDone: false,
+      setTourDone: (v) => set({ tourDone: v }),
+      tourOpen: false,
+      setTourOpen: (v) => set({ tourOpen: v }),
       household: emptyHousehold(),
       setHousehold: (patch) =>
         set((s) => ({ household: { ...s.household, ...patch } })),
@@ -294,7 +304,7 @@ export const useFocusStore = create<FocusState>()(
         }
       }),
       partialize: (state) => {
-        const { hydrated, ...rest } = state;
+        const { hydrated, tourOpen, ...rest } = state;
         return rest;
       },
       migrate: (persisted) => {

@@ -57,6 +57,7 @@ function StartPage() {
       <div className="overflow-hidden rounded-lg border border-yellow">
         <img
           src="/images/cover.jpg"
+              width={800} height={1189} fetchPriority="high" decoding="async"
           alt="A remote worker at a clean desk, looking at a computer"
           className="hero-photo h-56 w-full sm:h-72"
         />

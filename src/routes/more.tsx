@@ -1,4 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useFocusStore } from "@/lib/store";
 import {
   Battery,
   CalendarRange,
@@ -65,6 +66,7 @@ const LINKS = [
 
 function MorePage() {
   const fileRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
   const [status, setStatus] = useState("");
 
   return (
@@ -112,9 +114,18 @@ function MorePage() {
         {status ? <p className="text-sm text-olive">{status}</p> : null}
       </Card>
       {/* Primary funnel CTA — compact default olive button (not full-width row) */}
-      <div className="flex justify-center">
+      <div className="flex flex-wrap justify-center gap-2">
         <Button asChild>
           <Link to="/start">Start here</Link>
+        </Button>
+        <Button
+          variant="outline"
+          onClick={() => {
+            useFocusStore.getState().setTourOpen(true);
+            void navigate({ to: "/" });
+          }}
+        >
+          Replay getting started
         </Button>
       </div>
       {LINKS.map((item) => {
