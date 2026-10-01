@@ -15,9 +15,9 @@ export function getStripeSecretKey(): string {
       "STRIPE_SECRET_KEY is not set. Paid downloads stay locked until a restricted Stripe secret key is added in Vercel env.",
     );
   }
-  if (!key.startsWith("sk_")) {
+  if (!key.startsWith("sk_") && !key.startsWith("rk_")) {
     throw new DownloadConfigError(
-      "STRIPE_SECRET_KEY does not look like a Stripe secret key (expected sk_…).",
+      "STRIPE_SECRET_KEY does not look like a Stripe secret or restricted key (expected sk_… or rk_…).",
     );
   }
   return key;
