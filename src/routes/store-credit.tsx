@@ -21,13 +21,36 @@ function StoreCreditPage() {
     <LegalDoc kicker="Legal" title="Store Credit Policy">
       <h2>The short version</h2>
       <p>
-        jeffsebiz digital products are delivered electronically. We do not offer
+        Jeffsebiz digital products are delivered electronically. We do not offer
         automatic cash refunds on digital downloads or digital access.
       </p>
       <p>
         If something went wrong with your order, email jeffrey@jeffsebiz.com,
-        explain what happened, and we will review it. We may offer store credit,
-        replace or fix a file, or in rare cases issue a refund.
+        explain what happened, and we will review it. Delivery problems and
+        duplicate charges are always fixed (see below). Other requests are
+        reviewed case by case: we may offer store credit, replace or fix a file,
+        or in rare cases issue a refund.
+      </p>
+
+      <h2>Didn’t get your files, or charged twice?</h2>
+      <p>
+        Email jeffrey@jeffsebiz.com with the email you used to buy and your
+        Stripe receipt (or the date and amount).
+      </p>
+      <ul>
+        <li>
+          Files never arrived or won’t open: we’ll resend them or send a working
+          download link.
+        </li>
+        <li>
+          Charged more than once for the same order: we’ll refund the extra
+          charge to your original payment method.
+        </li>
+      </ul>
+      <p>
+        These fixes are separate from store credit. They’re not case-by-case.
+        We aim to reply within 3 business days (Monday to Friday, US Central
+        time, excluding US holidays).
       </p>
 
       <h2>What this covers</h2>
@@ -52,8 +75,8 @@ function StoreCreditPage() {
         <li>We review the message and reply with what we can do.</li>
       </ol>
       <p>
-        Please give us a reasonable amount of time to respond. Keep your order
-        email handy.
+        We aim to reply within 3 business days (Monday to Friday, US Central
+        time, excluding US holidays). Keep your order email handy.
       </p>
 
       <h2>If we grant store credit</h2>
