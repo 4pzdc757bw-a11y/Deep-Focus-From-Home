@@ -9,6 +9,7 @@ import { APP_LINE, STARTER_DAYS } from "@/lib/content";
 import { remainingLabel } from "@/lib/chime";
 import { peakFrom, peakLine } from "@/lib/peak";
 import { HomeFocusSetupSheet } from "@/components/home-focus-setup-sheet";
+import { GettingStartedSheet } from "@/components/getting-started-sheet";
 import { useFocusStore } from "@/lib/store";
 import {
   addDaysKey,
@@ -28,6 +29,10 @@ function Home() {
   const homeFocusWeekTwoPrompted = useFocusStore((s) => s.homeFocusWeekTwoPrompted);
   const session = useFocusStore((s) => s.session);
   const energy = useFocusStore((s) => s.energy);
+  const tourDone = useFocusStore((s) => s.tourDone);
+  const tourOpen = useFocusStore((s) => s.tourOpen);
+  const setTourOpen = useFocusStore((s) => s.setTourOpen);
+  const [tourClosed, setTourClosed] = useState(false);
   const nextDay = STARTER_DAYS.find((d) => !starterDone.includes(d.day));
   const returning = hydrated && Boolean(starterStart);
   const showWelcome = hydrated && !starterStart;
@@ -117,8 +122,16 @@ function Home() {
               Four steps, a 7-day starter, and answers to the usual questions —
               kids, missed days, the phone, where your notes live.
             </p>
-            <div className="mt-4">
-              <Button asChild>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Button
+                onClick={() => {
+                  setTourClosed(false);
+                  setTourOpen(true);
+                }}
+              >
+                Show me how to start
+              </Button>
+              <Button variant="outline" asChild>
                 <Link to="/intro" preload="intent">
                   How this works + FAQ <ArrowRight className="size-4" />
                 </Link>
@@ -160,6 +173,10 @@ function Home() {
         <div className="no-print">
           <InstallCard />
         </div>
+      ) : null}
+
+      {hydrated && !showHomeFocus && !tourClosed && (tourOpen || (!tourDone && !starterStart)) ? (
+        <GettingStartedSheet onDone={() => setTourClosed(true)} />
       ) : null}
 
       {showHomeFocus ? (
