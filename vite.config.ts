@@ -175,6 +175,13 @@ export default defineConfig(({ command, isPreview }) => ({
             // manifest + head-tag middleware). Nitro v3 defaults serverDir to
             // false, so removing this silently unwires /?install=1 on deploys.
             serverDir: "./server",
+            // Paid handbook PDFs/ZIP — not in public/; streamed via /api/download.
+            serverAssets: [
+              {
+                baseName: "downloads",
+                dir: "./private/downloads",
+              },
+            ],
           }),
         ]
       : []),
