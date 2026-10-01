@@ -45,8 +45,9 @@ function PrivacyPage() {
           visited (if our site or tools collect it)
         </li>
         <li>
-          Anonymous or aggregated visitor stats (page views and performance), when
-          we use our hosting provider’s analytics tools — see section 4
+          Visitor stats counted in total (pages viewed, the site you came from,
+          country, device and browser type), when we turn on our hosting
+          provider’s analytics tool. See section 4
         </li>
       </ul>
       <p>
@@ -65,7 +66,7 @@ function PrivacyPage() {
           <Link to="/store-credit">Store Credit Policy</Link>
         </li>
         <li>
-          See how the site is used (traffic and performance) so we can improve it
+          See how the site is used (visits and pages viewed) so we can improve it
           and fix problems
         </li>
         <li>Meet legal or tax requirements</li>
@@ -103,24 +104,27 @@ function PrivacyPage() {
         that goes live.
       </p>
       <p>
-        <strong>Visitor stats (Vercel Analytics).</strong> When enabled, we may
-        use Vercel Analytics (or a similar tool from our host) to see anonymous
-        or aggregated page views and performance data — for example, which pages
-        are visited and how fast they load. This helps us understand traffic and
-        improve the site. It is not used to sell your personal data. Vercel acts
-        as a service provider (processor) that hosts the site and provides these
-        stats on our behalf.
+        <strong>Visitor stats (Vercel Analytics).</strong> When turned on, we use
+        Vercel Web Analytics to count visits and see which pages are viewed, the
+        site you came from, your country, and your device and browser type. It
+        doesn’t use cookies, and we only see totals, not individual people. To
+        count unique visits, Vercel uses a short-lived, non-reversible code made
+        from your connection details, which it discards within about a day.
+        Vercel provides these stats as our service provider.
       </p>
 
       <h2>5. Email signup (when added)</h2>
       <p>
         When we offer an email signup on the site, we collect the email address
-        you submit. We use it to send the free 7-day starter information and
-        launch heads-up messages you asked for. You can unsubscribe anytime using
-        the link in those emails. We do not sell the list. Our email tool (for
-        example, Kit) acts as a processor that helps us send those messages. This
-        section applies once signup is turned on; until then, we only collect
-        email when you buy or contact us directly.
+        you submit and the date and time you signed up. We use it only to send
+        the updates you asked for, such as launch news and the free 7-day
+        starter. We don’t sell or rent the list. Our email tool (for example,
+        Kit) stores your address and sends these messages for us. Every email has
+        an unsubscribe link, or you can email jeffrey@jeffsebiz.com to be
+        removed; we’ll stop within 10 business days. Our emails may use standard
+        open and click tracking to help us improve them. We don’t add buyers to
+        this list unless they sign up themselves. Until signup is turned on, we
+        only collect email when you buy or contact us directly.
       </p>
 
       <h2>6. App data on your device</h2>
@@ -129,7 +133,8 @@ function PrivacyPage() {
         and similar entries on your own device or browser (local storage). That
         information stays on your device unless you choose to share it with us
         (for example, by emailing us). We do not pull those local notes onto our
-        servers as part of normal app use.
+        servers as part of normal app use. If you clear your browser data or
+        switch devices, those entries may be lost, and we can’t recover them.
       </p>
 
       <h2>7. How long we keep it</h2>
@@ -137,7 +142,8 @@ function PrivacyPage() {
         We keep order and account records as long as needed for the product,
         store credit (up to 12 months from purchase, plus a reasonable record
         period), taxes, and legal duties. You can ask us to delete marketing
-        contacts; we may keep what the law requires.
+        contacts; we may keep what the law requires. Email signup addresses are
+        kept until you unsubscribe or ask us to remove them.
       </p>
 
       <h2>8. Your choices</h2>

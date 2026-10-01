@@ -51,24 +51,25 @@ function TermsPage() {
         before that sale goes live.
       </p>
 
-      <h2>3. Deep Focus From Home app ($37)</h2>
+      <h2>3. Deep Focus From Home app</h2>
       <p>
-        When you buy the Deep Focus From Home app offer shown at checkout (often
-        priced at $37), you get access to the installable web app — including
-        tools such as the Daily OS, focus bells, energy log, and household fridge
-        tools — plus the handbook downloads included with that offer as listed on
-        the checkout and thanks pages for your purchase.
+        When you buy the Deep Focus From Home app at the price shown at checkout,
+        you get access to the installable web app, including tools such as the
+        Daily OS, focus bells, and energy log, plus any handbook downloads listed
+        on the checkout and thank-you pages for your purchase.
       </p>
       <p>
         You receive a personal license to use the app for yourself. You do not
         own the app’s code, design, or brand. You may not redistribute, resell,
         share paid access, or claim the app as your own product. Section 5
-        (License) also applies.
+        (License) also applies. Keep your access link or code private; it’s for
+        your use only.
       </p>
       <p>
-        The app is meant for modern phone and computer browsers and can be
-        installed where the browser supports it. We aim to keep it working, but
-        we do not guarantee every device or browser forever.
+        The app is built for current phone and computer browsers and can be
+        installed where your browser supports it. We work to keep it running, but
+        we can’t promise it will work on every device or browser, or that every
+        feature will stay the same.
       </p>
       <p>
         Notes, focus or energy logs, and similar entries you make in the app are
@@ -78,11 +79,12 @@ function TermsPage() {
         <Link to="/privacy">Privacy Policy</Link>.
       </p>
       <p>
-        If the app stops working for you or we discontinue it, we will try to
-        keep any included downloads available where that is reasonable. For
-        delivery problems, missing files, or related issues, email
-        jeffrey@jeffsebiz.com — store credit and related options are covered in
-        section 8 and our{" "}
+        If we discontinue the app, we’ll try to give at least 30 days’ notice by
+        email. If that happens within 12 months of your purchase, you can ask for
+        store credit under section 8. For delivery problems, missing files, or
+        duplicate charges, email jeffrey@jeffsebiz.com. We reply within 3
+        business days, fix delivery problems, and refund duplicate charges. Other
+        requests are handled under section 8 and our{" "}
         <Link to="/store-credit">Store Credit Policy</Link>. The app and
         handbook share practical work habits for general information. As in
         section 6, we do not promise income, medical outcomes, or specific
