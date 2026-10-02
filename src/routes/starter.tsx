@@ -4,7 +4,7 @@ import { ArrowRight } from "lucide-react";
 import { Card, PageTitle } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { CheckRow } from "@/components/ui/checkbox";
-import { Textarea } from "@/components/ui/input";
+import { Input, Textarea } from "@/components/ui/input";
 import { STARTER_DAYS } from "@/lib/content";
 import { useFocusStore } from "@/lib/store";
 import { addDaysKey, prettyDate, todayKey } from "@/lib/utils";
@@ -17,6 +17,7 @@ function StarterPage() {
   const toggle = useFocusStore((s) => s.toggleStarterDay);
   const setNote = useFocusStore((s) => s.setStarterNote);
   const start = useFocusStore((s) => s.startStarter);
+  const setStart = useFocusStore((s) => s.setStarterStart);
   const started = useFocusStore((s) => s.starterStart);
   const origin = started ?? todayKey();
 
@@ -30,7 +31,31 @@ function StarterPage() {
       {!started ? (
         <Button onClick={start}>Start week one today</Button>
       ) : (
-        <p className="text-sm text-muted">Started {prettyDate(started)}</p>
+        <div className="flex flex-wrap items-center gap-2 text-sm text-muted">
+          <label htmlFor="starter-start" className="font-semibold text-olive">
+            Week one starts
+          </label>
+          <Input
+            id="starter-start"
+            type="date"
+            value={started}
+            onChange={(e) => setStart(e.target.value)}
+            className="h-10 w-auto"
+          />
+          <span>
+            {started === todayKey() ? "Today" : prettyDate(started)} · change it if this
+            isn’t when you began.
+          </span>
+          {started !== todayKey() ? (
+            <button
+              type="button"
+              className="min-h-10 font-semibold text-gold underline"
+              onClick={() => setStart(todayKey())}
+            >
+              Start today instead
+            </button>
+          ) : null}
+        </div>
       )}
       {STARTER_DAYS.map((d) => {
         const isDone = done.includes(d.day);

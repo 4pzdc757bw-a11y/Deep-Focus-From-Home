@@ -1,5 +1,5 @@
 import { Field } from "@/components/ui/input";
-import { durationMinutes } from "@/lib/chime";
+import { periodFromClock } from "@/lib/time-of-day";
 import { cn } from "@/lib/utils";
 
 /** 1–5 with half steps: 1, 1.5, … 5 — same scale as /energy */
@@ -52,41 +52,15 @@ export function EnergyScalePicker({
 }
 
 /**
- * Prefill time-of-day from a Daily OS block.
- * Prefers a start–end window when the block lasted long enough; otherwise
- * morning / midday / afternoon from the start clock (stop stamps can be short).
+ * Prefill time-of-day from a Daily OS block's actual start (local clock):
+ * Morning before 12:00, Afternoon 12:00–16:59, Evening 17:00 and later.
+ * The user can still change it in the check-in.
  */
 export function slotLabelFromBlock(
   slot: { start: string; end: string },
   blockIndex: number,
 ) {
-  const start = formatClockLabel(slot.start);
-  const end = formatClockLabel(slot.end);
-  const mins =
-    slot.start && slot.end ? durationMinutes(slot.start, slot.end) : null;
-  if (start && end && mins != null && mins >= 15) return `${start}–${end}`;
   const period = periodFromClock(slot.start);
   if (period) return period;
-  if (start) return `from ${start}`;
   return `Block ${blockIndex + 1}`;
-}
-
-function formatClockLabel(hhmm: string) {
-  const m = /^(\d{1,2}):(\d{2})$/.exec(hhmm.trim());
-  if (!m) return "";
-  const h = Number(m[1]);
-  const min = m[2];
-  if (!Number.isFinite(h) || h < 0 || h > 23) return hhmm.trim();
-  const hour12 = h % 12 === 0 ? 12 : h % 12;
-  return min === "00" ? String(hour12) : `${hour12}:${min}`;
-}
-
-function periodFromClock(hhmm: string) {
-  const m = /^(\d{1,2}):(\d{2})$/.exec(hhmm.trim());
-  if (!m) return "";
-  const h = Number(m[1]);
-  if (!Number.isFinite(h)) return "";
-  if (h < 11) return "Morning";
-  if (h < 14) return "Midday";
-  return "Afternoon";
 }

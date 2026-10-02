@@ -1,39 +1,60 @@
-import { Bell, BellRing, Plus } from "lucide-react";
+import { Bell, BellRing, Check, Plus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Card } from "@/components/app-shell";
+import { CloseDayButton } from "@/components/close-day-button";
 import { EnergyCheckInSheet, type EnergyCheckInContext } from "@/components/energy-check-in-sheet";
 import { slotLabelFromBlock } from "@/components/energy-scale";
 import { Button } from "@/components/ui/button";
 import { CheckRow } from "@/components/ui/checkbox";
 import { Field, Input, Textarea } from "@/components/ui/input";
-import { DAILY_CHECKS } from "@/lib/content";
-import type { DailyCheckId } from "@/lib/content";
+import { BLOCK_PREP_CHECKS, SHUTDOWN_STEPS } from "@/lib/content";
 import {
   durationLabel,
-  parseClock,
+  durationMinutes,
   remainingLabel,
   stampClockNow,
 } from "@/lib/chime";
+import { installPrintTextareaFit, printDaily } from "@/lib/print";
+import { blockDefaults, endForStart } from "@/lib/work-hours";
 import { beginSession, completeSession } from "@/lib/session-runtime";
 import { partnerMessage } from "@/lib/backup";
 import { shareOrCopy } from "@/lib/share";
-import { emptySlot, useDaily, useFocusStore } from "@/lib/store";
+import { emptyPrep, emptySlot, useDaily, useFocusStore } from "@/lib/store";
 import { cn, prettyDate, todayKey } from "@/lib/utils";
 
 const SLOT_LABELS = ["Block 1", "Block 2", "Block 3"] as const;
-const NEXT_DEFAULTS = [
-  { start: "09:00", end: "10:30" },
-  { start: "11:00", end: "12:30" },
-  { start: "14:00", end: "15:30" },
-] as const;
 
-function endTimestamp(start: string, end: string) {
-  const now = new Date();
-  const endAt = parseClock(end, now);
-  if (endAt && endAt.getTime() > now.getTime() + 30_000) return endAt.getTime();
-  const startAt = parseClock(start, now);
-  const from = startAt && startAt.getTime() > now.getTime() ? startAt : now;
-  return from.getTime() + 90 * 60 * 1000;
+const DEFAULT_BLOCK_MINUTES = 90;
+const MAX_BLOCK_MINUTES = 4 * 60;
+
+/** Planned length from the block's prefilled/typed times; 90 min if unusable. */
+function plannedMinutes(start: string, end: string) {
+  if (!start || !end || end <= start) return DEFAULT_BLOCK_MINUTES;
+  const mins = durationMinutes(start, end);
+  if (mins == null || mins < 5 || mins > MAX_BLOCK_MINUTES) return DEFAULT_BLOCK_MINUTES;
+  return mins;
+}
+
+/**
+ * When Start is pressed: stamp start = now. Keep the planned end only if it is
+ * still later today; otherwise end = now + planned length (cleared if that
+ * would cross midnight, so it shows "Set time"). Never leaves an end earlier
+ * than the start, so no negative / wrapped duration.
+ */
+function startPlan(slot: { start: string; end: string }, now = new Date()) {
+  const start = stampClockNow(now);
+  const planned = plannedMinutes(slot.start, slot.end);
+  const minEnd = stampClockNow(new Date(now.getTime() + 60_000));
+  if (slot.end && slot.end >= minEnd && slot.end > start) {
+    const [h, m] = slot.end.split(":").map(Number);
+    const endAt = new Date(now);
+    endAt.setHours(h, m, 0, 0);
+    return { start, end: slot.end, endsAt: endAt.getTime() };
+  }
+  const endsAt = now.getTime() + planned * 60_000;
+  const endDate = new Date(endsAt);
+  const sameDay = endDate.getDate() === now.getDate();
+  return { start, end: sameDay ? stampClockNow(endDate) : "", endsAt };
 }
 
 function TimeField({
@@ -72,11 +93,45 @@ function TimeField({
   );
 }
 
+function StatusLine({
+  done,
+  label,
+  pending,
+}: {
+  done: boolean;
+  label: string;
+  pending: string;
+}) {
+  return (
+    <p
+      className={cn(
+        "daily-status flex items-center gap-2 px-3 py-1 text-sm print:px-0",
+        done ? "font-semibold text-olive" : "text-muted",
+      )}
+    >
+      <span
+        className={cn(
+          "grid size-5 shrink-0 place-items-center rounded-sm border",
+          done ? "border-olive bg-olive text-cream" : "border-gold",
+        )}
+        aria-hidden="true"
+      >
+        {done ? <Check className="size-3.5" strokeWidth={3} /> : null}
+      </span>
+      <span>
+        {label}
+        {done ? " — done" : <span className="print:hidden"> — {pending}</span>}
+      </span>
+    </p>
+  );
+}
+
 export function DailyOs({ date }: { date?: string }) {
   const hydrated = useFocusStore((s) => s.hydrated);
   const osDate = date ?? todayKey();
   const { entry, patch, patchSlot } = useDaily(osDate);
   const session = useFocusStore((s) => s.session);
+  const workHours = useFocusStore((s) => s.household.hours);
   const [now, setNow] = useState(() => Date.now());
   const [ringing, setRinging] = useState(false);
   const [shareState, setShareState] = useState("");
@@ -84,6 +139,11 @@ export function DailyOs({ date }: { date?: string }) {
     null,
   );
   const wasRunningHere = useRef(false);
+
+  // Cmd+P / Ctrl+P too: fit notes to their content while printing.
+  useEffect(() => {
+    installPrintTextareaFit();
+  }, []);
 
   const visible = Math.min(3, Math.max(1, entry.slotCount ?? 1)) as 1 | 2 | 3;
   const activeHere = session.running && session.date === osDate;
@@ -124,15 +184,15 @@ export function DailyOs({ date }: { date?: string }) {
 
   async function startSlot(index: number) {
     const slot = entry.slots[index];
-    const stampedStart = stampClockNow();
-    // Stamp actual start; keep planned end editable until Done rings.
-    patchSlot(index, { start: stampedStart });
+    // Stamp actual start; end follows the planned length (Done stamps the real end).
+    const plan = startPlan(slot);
+    patchSlot(index, { start: plan.start, end: plan.end });
     setRinging(true);
     window.setTimeout(() => setRinging(false), 1400);
     await beginSession({
       date: osDate,
       slotIndex: index,
-      endsAt: endTimestamp(stampedStart, slot.end),
+      endsAt: plan.endsAt,
     });
   }
 
@@ -170,6 +230,12 @@ export function DailyOs({ date }: { date?: string }) {
           session.phase === "done" && session.date === osDate && session.slotIndex === i;
         const dur =
           slot.start && slot.end ? durationLabel(slot.start, slot.end) : "";
+        // "Set time" fills from the work day: block 1 at day start, later
+        // blocks 30 min after the previous block ends.
+        const defaults = blockDefaults(i, workHours, entry.slots[i - 1]?.end);
+        const endFallback = slot.start
+          ? endForStart(slot.start, workHours) || defaults.end
+          : defaults.end;
         return (
           <Card key={i} className="daily-block flex flex-col gap-3">
             <div className="flex items-center justify-between gap-2">
@@ -195,24 +261,24 @@ export function DailyOs({ date }: { date?: string }) {
                 </button>
               ) : null}
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="daily-times grid grid-cols-2 gap-3">
               <TimeField
                 label="Starts"
                 value={slot.start}
-                fallback={NEXT_DEFAULTS[i].start}
+                fallback={defaults.start}
                 onChange={(start) => patchSlot(i, { start })}
                 readOnly={active}
               />
               <TimeField
                 label="Ends"
                 value={slot.end}
-                fallback={NEXT_DEFAULTS[i].end}
+                fallback={endFallback}
                 onChange={(end) => patchSlot(i, { end })}
                 readOnly={active}
               />
             </div>
             {dur && (doneHere || (slot.start && slot.end && !active)) ? (
-              <p className="text-sm text-muted print:text-ink">
+              <p className="daily-duration text-sm text-muted print:text-ink">
                 Duration: <span className="font-semibold text-olive">{dur}</span>
               </p>
             ) : null}
@@ -238,11 +304,27 @@ export function DailyOs({ date }: { date?: string }) {
                 bell rings when you open the app again.
               </p>
             ) : null}
+            <div className="daily-prep flex flex-col gap-1.5">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
+                Before you ring the bell
+              </p>
+              {BLOCK_PREP_CHECKS.map((c) => {
+                const prep = slot.prep ?? emptyPrep();
+                return (
+                  <CheckRow
+                    key={c.id}
+                    label={c.label}
+                    checked={prep[c.id]}
+                    onCheckedChange={(v) => patchSlot(i, { prep: { ...prep, [c.id]: v } })}
+                  />
+                );
+              })}
+            </div>
             <div className="no-print flex flex-wrap gap-2">
               {active ? (
                 <Button type="button" onClick={() => void finishNow()}>
                   <BellRing className={cn("size-4", ringing && "animate-pulse")} />
-                  Done — ring the bell
+                  End · ring the bell
                 </Button>
               ) : (
                 <Button
@@ -268,22 +350,6 @@ export function DailyOs({ date }: { date?: string }) {
         </Button>
       ) : null}
 
-      <Card className="daily-checks flex flex-col gap-3">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
-          Daily checks
-        </p>
-        {DAILY_CHECKS.map((c) => (
-          <CheckRow
-            key={c.id}
-            label={c.label}
-            checked={entry.checks[c.id]}
-            onCheckedChange={(v) =>
-              patch({ checks: { ...entry.checks, [c.id as DailyCheckId]: v } })
-            }
-          />
-        ))}
-      </Card>
-
       <Card className="daily-notes flex flex-col gap-3">
         <Field label="Note to accountability partner">
           <Textarea
@@ -299,6 +365,36 @@ export function DailyOs({ date }: { date?: string }) {
             placeholder="What finished. What waits until tomorrow."
           />
         </Field>
+        <div className="daily-endday flex flex-col gap-1.5">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
+            End of day
+          </p>
+          <StatusLine
+            done={entry.checks.block}
+            label="Deep-work block started"
+            pending="ticks itself when a start bell rings"
+          />
+          <p className="daily-subhead mt-1 text-xs font-semibold uppercase tracking-[0.14em] text-gold">
+            Shutdown · 5 minutes
+          </p>
+          {SHUTDOWN_STEPS.map((step) => (
+            <CheckRow
+              key={step.id}
+              label={step.label}
+              checked={entry.shutdownSteps[step.id]}
+              onCheckedChange={(v) => {
+                const shutdownSteps = { ...entry.shutdownSteps, [step.id]: v };
+                const all = SHUTDOWN_STEPS.every((x) => shutdownSteps[x.id]);
+                patch({ shutdownSteps, checks: { ...entry.checks, shutdown: all } });
+              }}
+            />
+          ))}
+          <StatusLine
+            done={entry.checks.shutdown}
+            label="Shutdown sequence done"
+            pending="ticks itself when all steps are ticked, or when you close the day"
+          />
+        </div>
         <div className="no-print flex flex-wrap gap-2">
           <Button
             type="button"
@@ -323,9 +419,10 @@ export function DailyOs({ date }: { date?: string }) {
           >
             Send to partner
           </Button>
-          <Button type="button" variant="outline" onClick={() => window.print()}>
+          <Button type="button" variant="outline" onClick={() => printDaily(osDate)}>
             Print this day
           </Button>
+          <CloseDayButton variant="inline" />
         </div>
         {shareState ? <p className="no-print text-sm text-olive">{shareState}</p> : null}
       </Card>
