@@ -243,6 +243,20 @@ export const BLOCK_PREP_CHECKS = [
 
 export type BlockPrepId = (typeof BLOCK_PREP_CHECKS)[number]["id"];
 
+/**
+ * End-of-day shutdown, from the handbook's "Daily Focus Checklist → END-OF-DAY
+ * SHUTDOWN (5 minutes)" (same routine as Chapter 4.3, End-of-Day Shutdown
+ * Ritual). The checklist's optional fifth item is left out.
+ */
+export const SHUTDOWN_STEPS = [
+  { id: "outcomes", label: "Review and mark the day’s top outcomes" },
+  { id: "loops", label: "Capture open loops for tomorrow" },
+  { id: "apps", label: "Close work apps and browser profiles" },
+  { id: "space", label: "Leave or cover the workspace" },
+] as const;
+
+export type ShutdownStepId = (typeof SHUTDOWN_STEPS)[number]["id"];
+
 export const HOW_IT_WORKS = [
   {
     step: "1",

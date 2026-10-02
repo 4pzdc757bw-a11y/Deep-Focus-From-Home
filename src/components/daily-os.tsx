@@ -7,7 +7,7 @@ import { slotLabelFromBlock } from "@/components/energy-scale";
 import { Button } from "@/components/ui/button";
 import { CheckRow } from "@/components/ui/checkbox";
 import { Field, Input, Textarea } from "@/components/ui/input";
-import { BLOCK_PREP_CHECKS } from "@/lib/content";
+import { BLOCK_PREP_CHECKS, SHUTDOWN_STEPS } from "@/lib/content";
 import {
   durationLabel,
   durationMinutes,
@@ -90,6 +90,39 @@ function TimeField({
         </button>
       )}
     </Field>
+  );
+}
+
+function StatusLine({
+  done,
+  label,
+  pending,
+}: {
+  done: boolean;
+  label: string;
+  pending: string;
+}) {
+  return (
+    <p
+      className={cn(
+        "daily-status flex items-center gap-2 px-3 py-1 text-sm print:px-0",
+        done ? "font-semibold text-olive" : "text-muted",
+      )}
+    >
+      <span
+        className={cn(
+          "grid size-5 shrink-0 place-items-center rounded-sm border",
+          done ? "border-olive bg-olive text-cream" : "border-gold",
+        )}
+        aria-hidden="true"
+      >
+        {done ? <Check className="size-3.5" strokeWidth={3} /> : null}
+      </span>
+      <span>
+        {label}
+        {done ? " — done" : <span className="print:hidden"> — {pending}</span>}
+      </span>
+    </p>
   );
 }
 
@@ -336,32 +369,30 @@ export function DailyOs({ date }: { date?: string }) {
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
             End of day
           </p>
-          <p
-            className={cn(
-              "flex items-center gap-2 px-3 py-1 text-sm print:px-0",
-              entry.checks.block ? "font-semibold text-olive" : "text-muted",
-            )}
-          >
-            <span
-              className={cn(
-                "grid size-5 shrink-0 place-items-center rounded-sm border",
-                entry.checks.block ? "border-olive bg-olive text-cream" : "border-gold",
-              )}
-              aria-hidden="true"
-            >
-              {entry.checks.block ? <Check className="size-3.5" strokeWidth={3} /> : null}
-            </span>
-            Deep-work block started
-            {entry.checks.block ? (
-              " — done"
-            ) : (
-              <span className="print:hidden"> — ticks itself when a start bell rings</span>
-            )}
+          <StatusLine
+            done={entry.checks.block}
+            label="Deep-work block started"
+            pending="ticks itself when a start bell rings"
+          />
+          <p className="daily-subhead mt-1 text-xs font-semibold uppercase tracking-[0.14em] text-gold">
+            Shutdown · 5 minutes
           </p>
-          <CheckRow
+          {SHUTDOWN_STEPS.map((step) => (
+            <CheckRow
+              key={step.id}
+              label={step.label}
+              checked={entry.shutdownSteps[step.id]}
+              onCheckedChange={(v) => {
+                const shutdownSteps = { ...entry.shutdownSteps, [step.id]: v };
+                const all = SHUTDOWN_STEPS.every((x) => shutdownSteps[x.id]);
+                patch({ shutdownSteps, checks: { ...entry.checks, shutdown: all } });
+              }}
+            />
+          ))}
+          <StatusLine
+            done={entry.checks.shutdown}
             label="Shutdown sequence done"
-            checked={entry.checks.shutdown}
-            onCheckedChange={(v) => patch({ checks: { ...entry.checks, shutdown: v } })}
+            pending="ticks itself when all steps are ticked, or when you close the day"
           />
         </div>
         <div className="no-print flex flex-wrap gap-2">

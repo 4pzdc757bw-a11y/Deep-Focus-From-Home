@@ -262,7 +262,8 @@ html[data-df-starter] .df-pre-welcome {
   }
 
   .daily-os .daily-prep > p,
-  .daily-os .daily-endday > p:first-child {
+  .daily-os .daily-endday > p:first-child,
+  .daily-os .daily-endday > p.daily-subhead {
     font-size: 7pt !important;
     line-height: 1.2 !important;
     flex-basis: 100%;
@@ -278,8 +279,12 @@ html[data-df-starter] .df-pre-welcome {
 
   .daily-os .daily-prep label > span,
   .daily-os .daily-endday label > span,
-  .daily-os .daily-endday > p {
+  .daily-os .daily-endday > p.daily-status {
     font-size: 9pt !important;
+  }
+
+  .daily-os .daily-endday > p.daily-subhead {
+    margin-top: 0.1rem !important;
   }
 
   .daily-os .daily-endday > p > span[aria-hidden] {

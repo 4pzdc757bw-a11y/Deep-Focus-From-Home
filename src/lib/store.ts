@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { isDateKey, monthKey, todayKey, weekKey } from "./utils";
 import { blockDefaults } from "./work-hours";
-import type { BlockPrepId, DailyCheckId } from "./content";
+import type { BlockPrepId, DailyCheckId, ShutdownStepId } from "./content";
 
 export type BlockPrep = Record<BlockPrepId, boolean>;
 
@@ -16,6 +16,21 @@ export type DailySlot = {
 };
 
 export const emptyPrep = (): BlockPrep => ({ surface: false, phone: false, signal: false });
+
+export const emptyShutdownSteps = (): Record<ShutdownStepId, boolean> => ({
+  outcomes: false,
+  loops: false,
+  apps: false,
+  space: false,
+});
+
+function readShutdownSteps(raw: unknown): Record<ShutdownStepId, boolean> {
+  const base = emptyShutdownSteps();
+  if (!raw || typeof raw !== "object") return base;
+  const r = raw as Record<string, unknown>;
+  for (const k of Object.keys(base) as ShutdownStepId[]) base[k] = Boolean(r[k]);
+  return base;
+}
 
 function readPrep(raw: unknown): BlockPrep | undefined {
   if (!raw || typeof raw !== "object") return undefined;
@@ -32,6 +47,8 @@ export type DailyEntry = {
    * per block in `slot.prep` and old values seed Block 1 (see migrateDaily).
    */
   checks: Record<DailyCheckId, boolean>;
+  /** Handbook shutdown steps ticked today (all ticked → checks.shutdown). */
+  shutdownSteps: Record<ShutdownStepId, boolean>;
   note: string;
   partnerNote: string;
 };
@@ -161,6 +178,7 @@ const emptyDaily = (hours?: string): DailyEntry => ({
     block: false,
     shutdown: false,
   },
+  shutdownSteps: emptyShutdownSteps(),
   note: "",
   partnerNote: "",
 });
@@ -227,6 +245,7 @@ function migrateDaily(raw: Record<string, unknown>): DailyEntry {
       slots,
       slotCount: inferSlotCount(slots, raw.slotCount),
       checks: { ...base.checks, ...(raw.checks as DailyEntry["checks"]) },
+      shutdownSteps: readShutdownSteps(raw.shutdownSteps),
       note: String(raw.note ?? ""),
       partnerNote: String(raw.partnerNote ?? ""),
     };
@@ -250,6 +269,7 @@ function migrateDaily(raw: Record<string, unknown>): DailyEntry {
     slots,
     slotCount: inferSlotCount(slots, raw.slotCount),
     checks: { ...base.checks, ...(raw.checks as DailyEntry["checks"]) },
+    shutdownSteps: readShutdownSteps(raw.shutdownSteps),
     note: String(raw.note ?? ""),
     partnerNote: String(raw.partnerNote ?? ""),
   };
