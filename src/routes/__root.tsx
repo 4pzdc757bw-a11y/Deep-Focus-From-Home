@@ -6,6 +6,13 @@ import appCss from "../styles.css?url";
 
 const APP_NAME = "Deep Focus from Home";
 
+/**
+ * Runs before first paint: marks <html data-df-starter> when this browser has
+ * a starter week saved, so Home can reserve the right space before the store
+ * hydrates (avoids the big layout shift of the Daily OS on load).
+ */
+const PREPAINT_SCRIPT = `try{var s=JSON.parse(localStorage.getItem("deep-focus-from-home")||"null");if(s&&s.state&&s.state.starterStart)document.documentElement.setAttribute("data-df-starter","1")}catch(e){}`;
+
 export const Route = createRootRoute({
   head: () => ({
     meta: [
@@ -29,6 +36,7 @@ export const Route = createRootRoute({
   component: () => (
     <html lang="en" className="antialiased" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: PREPAINT_SCRIPT }} />
         <HeadContent />
       </head>
       <body className="bg-sage text-ink">

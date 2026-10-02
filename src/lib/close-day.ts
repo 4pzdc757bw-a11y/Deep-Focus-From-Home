@@ -14,6 +14,16 @@ export function starterDayForDate(
   return null;
 }
 
+/**
+ * Next Daily OS date after closing `closedDate`: the following calendar day,
+ * but never earlier than today (local time). Never jumps backward, whatever
+ * stale starter-week state is in local storage.
+ */
+export function nextDateAfterClose(closedDate: string, today = todayKey()) {
+  const dayAfter = addDaysKey(closedDate, 1);
+  return dayAfter > today ? dayAfter : today;
+}
+
 export type CloseDayResult = {
   starterDay: number | null;
   nextDay: number | null;
@@ -27,15 +37,11 @@ export type CloseDayResult = {
  */
 export function closeDay(osDate = todayKey()): CloseDayResult {
   const store = useFocusStore.getState();
-  if (!store.starterStart) store.startStarter();
-  const started = useFocusStore.getState().starterStart ?? todayKey();
+  const started = store.starterStart;
 
-  let day = starterDayForDate(started, osDate);
-  // If viewing a non-starter date during week one, close the current unfinished day.
-  if (day == null) {
-    const unfinished = STARTER_DAYS.find((d) => !store.starterDone.includes(d.day));
-    day = unfinished?.day ?? null;
-  }
+  // Only touch the starter week when this date is one of its seven days.
+  // No starter week set (or a stale one) → just close the Daily OS.
+  const day = started ? starterDayForDate(started, osDate) : null;
 
   const entry = store.dailies[osDate];
   const shutdown = (entry?.note ?? "").trim();
@@ -65,10 +71,8 @@ export function closeDay(osDate = todayKey()): CloseDayResult {
   }
 
   const fresh = useFocusStore.getState();
-  const next = STARTER_DAYS.find((d) => !fresh.starterDone.includes(d.day));
-  const nextDay = next?.day ?? null;
-  const nextDate =
-    nextDay != null ? addDaysKey(fresh.starterStart ?? started, nextDay - 1) : osDate;
+  const nextDate = nextDateAfterClose(osDate);
+  const nextDay = fresh.starterStart ? starterDayForDate(fresh.starterStart, nextDate) : null;
 
   return { starterDay: day, nextDay, nextDate, noteCopied };
 }

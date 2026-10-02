@@ -1,6 +1,7 @@
 import { Bell, BellRing, Plus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Card } from "@/components/app-shell";
+import { CloseDayButton } from "@/components/close-day-button";
 import { EnergyCheckInSheet, type EnergyCheckInContext } from "@/components/energy-check-in-sheet";
 import { slotLabelFromBlock } from "@/components/energy-scale";
 import { Button } from "@/components/ui/button";
@@ -10,10 +11,11 @@ import { DAILY_CHECKS } from "@/lib/content";
 import type { DailyCheckId } from "@/lib/content";
 import {
   durationLabel,
-  parseClock,
+  durationMinutes,
   remainingLabel,
   stampClockNow,
 } from "@/lib/chime";
+import { installPrintTextareaFit, printDaily } from "@/lib/print";
 import { beginSession, completeSession } from "@/lib/session-runtime";
 import { partnerMessage } from "@/lib/backup";
 import { shareOrCopy } from "@/lib/share";
@@ -27,13 +29,37 @@ const NEXT_DEFAULTS = [
   { start: "14:00", end: "15:30" },
 ] as const;
 
-function endTimestamp(start: string, end: string) {
-  const now = new Date();
-  const endAt = parseClock(end, now);
-  if (endAt && endAt.getTime() > now.getTime() + 30_000) return endAt.getTime();
-  const startAt = parseClock(start, now);
-  const from = startAt && startAt.getTime() > now.getTime() ? startAt : now;
-  return from.getTime() + 90 * 60 * 1000;
+const DEFAULT_BLOCK_MINUTES = 90;
+const MAX_BLOCK_MINUTES = 4 * 60;
+
+/** Planned length from the block's prefilled/typed times; 90 min if unusable. */
+function plannedMinutes(start: string, end: string) {
+  if (!start || !end || end <= start) return DEFAULT_BLOCK_MINUTES;
+  const mins = durationMinutes(start, end);
+  if (mins == null || mins < 5 || mins > MAX_BLOCK_MINUTES) return DEFAULT_BLOCK_MINUTES;
+  return mins;
+}
+
+/**
+ * When Start is pressed: stamp start = now. Keep the planned end only if it is
+ * still later today; otherwise end = now + planned length (cleared if that
+ * would cross midnight, so it shows "Set time"). Never leaves an end earlier
+ * than the start, so no negative / wrapped duration.
+ */
+function startPlan(slot: { start: string; end: string }, now = new Date()) {
+  const start = stampClockNow(now);
+  const planned = plannedMinutes(slot.start, slot.end);
+  const minEnd = stampClockNow(new Date(now.getTime() + 60_000));
+  if (slot.end && slot.end >= minEnd && slot.end > start) {
+    const [h, m] = slot.end.split(":").map(Number);
+    const endAt = new Date(now);
+    endAt.setHours(h, m, 0, 0);
+    return { start, end: slot.end, endsAt: endAt.getTime() };
+  }
+  const endsAt = now.getTime() + planned * 60_000;
+  const endDate = new Date(endsAt);
+  const sameDay = endDate.getDate() === now.getDate();
+  return { start, end: sameDay ? stampClockNow(endDate) : "", endsAt };
 }
 
 function TimeField({
@@ -85,6 +111,11 @@ export function DailyOs({ date }: { date?: string }) {
   );
   const wasRunningHere = useRef(false);
 
+  // Cmd+P / Ctrl+P too: fit notes to their content while printing.
+  useEffect(() => {
+    installPrintTextareaFit();
+  }, []);
+
   const visible = Math.min(3, Math.max(1, entry.slotCount ?? 1)) as 1 | 2 | 3;
   const activeHere = session.running && session.date === osDate;
 
@@ -124,15 +155,15 @@ export function DailyOs({ date }: { date?: string }) {
 
   async function startSlot(index: number) {
     const slot = entry.slots[index];
-    const stampedStart = stampClockNow();
-    // Stamp actual start; keep planned end editable until Done rings.
-    patchSlot(index, { start: stampedStart });
+    // Stamp actual start; end follows the planned length (Done stamps the real end).
+    const plan = startPlan(slot);
+    patchSlot(index, { start: plan.start, end: plan.end });
     setRinging(true);
     window.setTimeout(() => setRinging(false), 1400);
     await beginSession({
       date: osDate,
       slotIndex: index,
-      endsAt: endTimestamp(stampedStart, slot.end),
+      endsAt: plan.endsAt,
     });
   }
 
@@ -195,7 +226,7 @@ export function DailyOs({ date }: { date?: string }) {
                 </button>
               ) : null}
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="daily-times grid grid-cols-2 gap-3">
               <TimeField
                 label="Starts"
                 value={slot.start}
@@ -212,7 +243,7 @@ export function DailyOs({ date }: { date?: string }) {
               />
             </div>
             {dur && (doneHere || (slot.start && slot.end && !active)) ? (
-              <p className="text-sm text-muted print:text-ink">
+              <p className="daily-duration text-sm text-muted print:text-ink">
                 Duration: <span className="font-semibold text-olive">{dur}</span>
               </p>
             ) : null}
@@ -323,9 +354,10 @@ export function DailyOs({ date }: { date?: string }) {
           >
             Send to partner
           </Button>
-          <Button type="button" variant="outline" onClick={() => window.print()}>
+          <Button type="button" variant="outline" onClick={() => printDaily(osDate)}>
             Print this day
           </Button>
+          <CloseDayButton variant="inline" />
         </div>
         {shareState ? <p className="no-print text-sm text-olive">{shareState}</p> : null}
       </Card>

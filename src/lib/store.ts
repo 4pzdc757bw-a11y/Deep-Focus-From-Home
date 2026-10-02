@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { monthKey, todayKey, weekKey } from "./utils";
+import { isDateKey, monthKey, todayKey, weekKey } from "./utils";
 import type { DailyCheckId } from "./content";
 
 export type DailySlot = {
@@ -75,6 +75,8 @@ type FocusState = {
   starterDone: number[];
   starterNotes: Record<number, string>;
   startStarter: () => void;
+  /** Move week one to start on `date` (YYYY-MM-DD). */
+  setStarterStart: (date: string) => void;
   toggleStarterDay: (day: number) => void;
   setStarterNote: (day: number, note: string) => void;
   dailies: Record<string, DailyEntry>;
@@ -220,6 +222,8 @@ export const useFocusStore = create<FocusState>()(
       starterNotes: {},
       startStarter: () =>
         set((s) => ({ starterStart: s.starterStart ?? todayKey() })),
+      setStarterStart: (date) =>
+        set(() => (isDateKey(date) ? { starterStart: date } : {})),
       toggleStarterDay: (day) =>
         set((s) => ({
           starterDone: s.starterDone.includes(day)
