@@ -54,7 +54,7 @@ function TermsPage() {
       <h2>3. Deep Focus From Home app</h2>
       <p>
         When you buy the Deep Focus From Home app at the price shown at checkout,
-        you get access to the installable web app, including tools such as the
+        you get access to the browser-based web app, including tools such as the
         Daily OS, focus bells, and energy log, plus any handbook downloads listed
         on the checkout and thank-you pages for your purchase.
       </p>
@@ -66,8 +66,8 @@ function TermsPage() {
         your use only.
       </p>
       <p>
-        The app is built for current phone and computer browsers and can be
-        installed where your browser supports it. We work to keep it running, but
+        The app runs in current phone and computer web browsers; there is
+        nothing to download or install. We work to keep it running, but
         we can’t promise it will work on every device or browser, or that every
         feature will stay the same.
       </p>

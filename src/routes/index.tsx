@@ -1,8 +1,8 @@
 import { LegalFooter } from "@/components/legal-footer";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
-import { InstallCard } from "@/components/install-card";
 import { DailyOs } from "@/components/daily-os";
+import { LockScreen, useHasAccess } from "@/components/lock-screen";
 import { Card, PageTitle } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { APP_LINE, STARTER_DAYS } from "@/lib/content";
@@ -41,6 +41,8 @@ function Home() {
   const [now, setNow] = useState(() => Date.now());
   const [showHomeFocus, setShowHomeFocus] = useState(false);
   const [homeFocusDismissed, setHomeFocusDismissed] = useState(false);
+  // Home stays free; the Daily OS on it is an app tool.
+  const appUnlocked = useHasAccess("app");
 
   // Week one: never force. First start-of-day in week two: Home focus setup first.
   useEffect(() => {
@@ -167,19 +169,13 @@ function Home() {
         />
       </div>
 
-      <DailyOs />
-
-      {showWelcome ? (
-        <div className="no-print">
-          <InstallCard />
-        </div>
-      ) : null}
+      {appUnlocked ? <DailyOs /> : <LockScreen need="app" compact />}
 
       {hydrated && !showHomeFocus && !tourClosed && (tourOpen || (!tourDone && !starterStart)) ? (
         <GettingStartedSheet onDone={() => setTourClosed(true)} />
       ) : null}
 
-      {showHomeFocus ? (
+      {showHomeFocus && appUnlocked ? (
         <HomeFocusSetupSheet
           onDone={() => {
             setHomeFocusDismissed(true);

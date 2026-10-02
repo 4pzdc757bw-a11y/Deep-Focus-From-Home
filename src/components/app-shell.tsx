@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { useFocusStore } from "@/lib/store";
 import { SessionWatcher } from "@/components/session-watcher";
 import { CloseDayButton } from "@/components/close-day-button";
+import { useHasAccess } from "@/components/lock-screen";
 
 const TABS = [
   { to: "/", label: "Today", icon: House },
@@ -18,6 +19,7 @@ const MARKETING = new Set(["/start", "/thanks", "/buy", "/terms", "/privacy", "/
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const router = useRouter();
+  const appUnlocked = useHasAccess("app");
 
   useEffect(() => {
     let finished = false;
@@ -116,9 +118,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </li>
               );
             })}
-            <li>
-              <CloseDayButton />
-            </li>
+            <li>{appUnlocked ? <CloseDayButton /> : null}</li>
           </ul>
         </nav>
       )}

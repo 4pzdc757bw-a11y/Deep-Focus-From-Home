@@ -20,8 +20,8 @@ const HANDBOOK_INCLUDED = [
 ];
 
 const APP_INCLUDED = [
-  "The installable app — Daily OS, starter week, bell, energy peak, household fridge copy",
-  "Same system as the book, on your phone — forms already filled in",
+  "The browser-based app — Daily OS, starter week, bell, energy peak, household fridge copy",
+  "Same system as the book, in your phone or computer browser — forms already filled in",
   "Includes handbook PDFs and fillables",
 ];
 
@@ -41,7 +41,7 @@ function BuyPage() {
       </h1>
       <p className="max-w-prose text-lg text-ink">
         Not a course. Not a streak app. Choose the handbook, or the app that
-        runs the same system on your phone.
+        runs the same system in your browser.
       </p>
 
       <Card className="flex flex-col gap-3">
@@ -88,7 +88,7 @@ function BuyPage() {
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
           The app
         </p>
-        <p className="font-display text-2xl text-olive">Run it on your phone</p>
+        <p className="font-display text-2xl text-olive">Run it in your browser</p>
         <ul className="flex flex-col gap-2 text-ink">
           {APP_INCLUDED.map((item) => (
             <li key={item} className="border-l-2 border-yellow pl-3">

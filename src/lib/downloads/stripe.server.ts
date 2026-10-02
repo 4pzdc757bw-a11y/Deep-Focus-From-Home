@@ -23,11 +23,24 @@ export function getStripeSecretKey(): string {
   return key;
 }
 
-function stripeClient(): Stripe {
+export function stripeClient(): Stripe {
   return new Stripe(getStripeSecretKey(), {
     apiVersion: "2025-02-24.acacia",
     typescript: true,
   });
+}
+
+/** Paid, or a completed $0 checkout (beta-helper link). */
+export function isPaidCheckoutSession(
+  session: Pick<Stripe.Checkout.Session, "payment_status" | "status">,
+): boolean {
+  const paymentStatus = session.payment_status ?? "";
+  const status = session.status ?? "";
+  return (
+    paymentStatus === "paid" ||
+    paymentStatus === "no_payment_required" ||
+    status === "complete"
+  );
 }
 
 /**
@@ -36,7 +49,11 @@ function stripeClient(): Stripe {
  */
 export async function assertPaidCheckoutSession(
   sessionId: string,
-): Promise<{ sessionId: string; paymentStatus: string }> {
+): Promise<{
+  sessionId: string;
+  paymentStatus: string;
+  session: Stripe.Checkout.Session;
+}> {
   const id = sessionId.trim();
   if (!id || !id.startsWith("cs_")) {
     throw new DownloadAuthError(
@@ -58,16 +75,12 @@ export async function assertPaidCheckoutSession(
 
   const paymentStatus = session.payment_status ?? "";
   const status = session.status ?? "";
-  const paid =
-    paymentStatus === "paid" ||
-    paymentStatus === "no_payment_required" ||
-    status === "complete";
 
-  if (!paid) {
+  if (!isPaidCheckoutSession(session)) {
     throw new DownloadAuthError(
       `This checkout session is not paid yet (status: ${status || "unknown"}, payment: ${paymentStatus || "unknown"}).`,
     );
   }
 
-  return { sessionId: session.id, paymentStatus };
+  return { sessionId: session.id, paymentStatus, session };
 }

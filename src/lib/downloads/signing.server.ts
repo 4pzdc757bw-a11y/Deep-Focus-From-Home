@@ -1,8 +1,8 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { isDownloadFileKey, type DownloadFileKey } from "./catalog";
-import { DownloadAuthError, DownloadConfigError } from "./errors";
+import { isDownloadFileKey, type DownloadFileKey } from "./catalog.ts";
+import { DownloadAuthError, DownloadConfigError } from "./errors.ts";
 
-export { DownloadAuthError, DownloadConfigError } from "./errors";
+export { DownloadAuthError, DownloadConfigError } from "./errors.ts";
 
 /** Signed download links expire after 30 minutes (within 15–60 launch window). */
 export const DOWNLOAD_LINK_TTL_SECONDS = 30 * 60;
