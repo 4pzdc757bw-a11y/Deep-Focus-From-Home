@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { isDateKey, monthKey, todayKey, weekKey } from "./utils";
+import { blockDefaults } from "./work-hours";
 import type { DailyCheckId } from "./content";
 
 export type DailySlot = {
@@ -128,8 +129,13 @@ function inferSlotCount(slots: DailyEntry["slots"], stored?: unknown): 1 | 2 | 3
   return n;
 }
 
-const emptyDaily = (): DailyEntry => ({
-  slots: [emptySlot("09:00", "10:30"), emptySlot(), emptySlot()],
+/** New day: Block 1 is prefilled at the start of the work day (9:00 if unset). */
+const emptyDaily = (hours?: string): DailyEntry => ({
+  slots: [
+    emptySlot(blockDefaults(0, hours).start, blockDefaults(0, hours).end),
+    emptySlot(),
+    emptySlot(),
+  ],
   slotCount: 1,
   checks: {
     surface: false,
@@ -237,12 +243,12 @@ export const useFocusStore = create<FocusState>()(
       dailies: {},
       patchDaily: (date, patch) =>
         set((s) => {
-          const cur = s.dailies[date] ?? emptyDaily();
+          const cur = s.dailies[date] ?? emptyDaily(s.household?.hours);
           return { dailies: { ...s.dailies, [date]: { ...cur, ...patch } } };
         }),
       patchSlot: (date, index, patch) =>
         set((s) => {
-          const cur = s.dailies[date] ?? emptyDaily();
+          const cur = s.dailies[date] ?? emptyDaily(s.household?.hours);
           const slots = [...cur.slots] as DailyEntry["slots"];
           slots[index] = { ...slots[index], ...patch };
           return { dailies: { ...s.dailies, [date]: { ...cur, slots } } };
@@ -348,7 +354,10 @@ export const useFocusStore = create<FocusState>()(
 
 export function useDaily(date = todayKey()) {
   const raw = useFocusStore((s) => s.dailies[date]);
-  const entry = raw ? migrateDaily(raw as unknown as Record<string, unknown>) : emptyDaily();
+  const hours = useFocusStore((s) => s.household?.hours);
+  const entry = raw
+    ? migrateDaily(raw as unknown as Record<string, unknown>)
+    : emptyDaily(hours);
   const patchDaily = useFocusStore((s) => s.patchDaily);
   const patchSlot = useFocusStore((s) => s.patchSlot);
   return {

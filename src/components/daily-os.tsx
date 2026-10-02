@@ -16,6 +16,7 @@ import {
   stampClockNow,
 } from "@/lib/chime";
 import { installPrintTextareaFit, printDaily } from "@/lib/print";
+import { blockDefaults, endForStart } from "@/lib/work-hours";
 import { beginSession, completeSession } from "@/lib/session-runtime";
 import { partnerMessage } from "@/lib/backup";
 import { shareOrCopy } from "@/lib/share";
@@ -23,11 +24,6 @@ import { emptySlot, useDaily, useFocusStore } from "@/lib/store";
 import { cn, prettyDate, todayKey } from "@/lib/utils";
 
 const SLOT_LABELS = ["Block 1", "Block 2", "Block 3"] as const;
-const NEXT_DEFAULTS = [
-  { start: "09:00", end: "10:30" },
-  { start: "11:00", end: "12:30" },
-  { start: "14:00", end: "15:30" },
-] as const;
 
 const DEFAULT_BLOCK_MINUTES = 90;
 const MAX_BLOCK_MINUTES = 4 * 60;
@@ -103,6 +99,7 @@ export function DailyOs({ date }: { date?: string }) {
   const osDate = date ?? todayKey();
   const { entry, patch, patchSlot } = useDaily(osDate);
   const session = useFocusStore((s) => s.session);
+  const workHours = useFocusStore((s) => s.household.hours);
   const [now, setNow] = useState(() => Date.now());
   const [ringing, setRinging] = useState(false);
   const [shareState, setShareState] = useState("");
@@ -201,6 +198,12 @@ export function DailyOs({ date }: { date?: string }) {
           session.phase === "done" && session.date === osDate && session.slotIndex === i;
         const dur =
           slot.start && slot.end ? durationLabel(slot.start, slot.end) : "";
+        // "Set time" fills from the work day: block 1 at day start, later
+        // blocks 30 min after the previous block ends.
+        const defaults = blockDefaults(i, workHours, entry.slots[i - 1]?.end);
+        const endFallback = slot.start
+          ? endForStart(slot.start, workHours) || defaults.end
+          : defaults.end;
         return (
           <Card key={i} className="daily-block flex flex-col gap-3">
             <div className="flex items-center justify-between gap-2">
@@ -230,14 +233,14 @@ export function DailyOs({ date }: { date?: string }) {
               <TimeField
                 label="Starts"
                 value={slot.start}
-                fallback={NEXT_DEFAULTS[i].start}
+                fallback={defaults.start}
                 onChange={(start) => patchSlot(i, { start })}
                 readOnly={active}
               />
               <TimeField
                 label="Ends"
                 value={slot.end}
-                fallback={NEXT_DEFAULTS[i].end}
+                fallback={endFallback}
                 onChange={(end) => patchSlot(i, { end })}
                 readOnly={active}
               />
