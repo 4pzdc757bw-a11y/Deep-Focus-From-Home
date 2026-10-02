@@ -1,4 +1,4 @@
-import { Bell, BellRing, Plus } from "lucide-react";
+import { Bell, BellRing, Check, Plus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Card } from "@/components/app-shell";
 import { CloseDayButton } from "@/components/close-day-button";
@@ -7,8 +7,7 @@ import { slotLabelFromBlock } from "@/components/energy-scale";
 import { Button } from "@/components/ui/button";
 import { CheckRow } from "@/components/ui/checkbox";
 import { Field, Input, Textarea } from "@/components/ui/input";
-import { DAILY_CHECKS } from "@/lib/content";
-import type { DailyCheckId } from "@/lib/content";
+import { BLOCK_PREP_CHECKS } from "@/lib/content";
 import {
   durationLabel,
   durationMinutes,
@@ -20,7 +19,7 @@ import { blockDefaults, endForStart } from "@/lib/work-hours";
 import { beginSession, completeSession } from "@/lib/session-runtime";
 import { partnerMessage } from "@/lib/backup";
 import { shareOrCopy } from "@/lib/share";
-import { emptySlot, useDaily, useFocusStore } from "@/lib/store";
+import { emptyPrep, emptySlot, useDaily, useFocusStore } from "@/lib/store";
 import { cn, prettyDate, todayKey } from "@/lib/utils";
 
 const SLOT_LABELS = ["Block 1", "Block 2", "Block 3"] as const;
@@ -272,11 +271,27 @@ export function DailyOs({ date }: { date?: string }) {
                 bell rings when you open the app again.
               </p>
             ) : null}
+            <div className="daily-prep flex flex-col gap-1.5">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
+                Before you ring the bell
+              </p>
+              {BLOCK_PREP_CHECKS.map((c) => {
+                const prep = slot.prep ?? emptyPrep();
+                return (
+                  <CheckRow
+                    key={c.id}
+                    label={c.label}
+                    checked={prep[c.id]}
+                    onCheckedChange={(v) => patchSlot(i, { prep: { ...prep, [c.id]: v } })}
+                  />
+                );
+              })}
+            </div>
             <div className="no-print flex flex-wrap gap-2">
               {active ? (
                 <Button type="button" onClick={() => void finishNow()}>
                   <BellRing className={cn("size-4", ringing && "animate-pulse")} />
-                  Done — ring the bell
+                  End · ring the bell
                 </Button>
               ) : (
                 <Button
@@ -302,22 +317,6 @@ export function DailyOs({ date }: { date?: string }) {
         </Button>
       ) : null}
 
-      <Card className="daily-checks flex flex-col gap-3">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
-          Daily checks
-        </p>
-        {DAILY_CHECKS.map((c) => (
-          <CheckRow
-            key={c.id}
-            label={c.label}
-            checked={entry.checks[c.id]}
-            onCheckedChange={(v) =>
-              patch({ checks: { ...entry.checks, [c.id as DailyCheckId]: v } })
-            }
-          />
-        ))}
-      </Card>
-
       <Card className="daily-notes flex flex-col gap-3">
         <Field label="Note to accountability partner">
           <Textarea
@@ -333,6 +332,38 @@ export function DailyOs({ date }: { date?: string }) {
             placeholder="What finished. What waits until tomorrow."
           />
         </Field>
+        <div className="daily-endday flex flex-col gap-1.5">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
+            End of day
+          </p>
+          <p
+            className={cn(
+              "flex items-center gap-2 px-3 py-1 text-sm print:px-0",
+              entry.checks.block ? "font-semibold text-olive" : "text-muted",
+            )}
+          >
+            <span
+              className={cn(
+                "grid size-5 shrink-0 place-items-center rounded-sm border",
+                entry.checks.block ? "border-olive bg-olive text-cream" : "border-gold",
+              )}
+              aria-hidden="true"
+            >
+              {entry.checks.block ? <Check className="size-3.5" strokeWidth={3} /> : null}
+            </span>
+            Deep-work block started
+            {entry.checks.block ? (
+              " — done"
+            ) : (
+              <span className="print:hidden"> — ticks itself when a start bell rings</span>
+            )}
+          </p>
+          <CheckRow
+            label="Shutdown sequence done"
+            checked={entry.checks.shutdown}
+            onCheckedChange={(v) => patch({ checks: { ...entry.checks, shutdown: v } })}
+          />
+        </div>
         <div className="no-print flex flex-wrap gap-2">
           <Button
             type="button"

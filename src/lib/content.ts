@@ -234,6 +234,15 @@ export const DAILY_CHECKS = [
 
 export type DailyCheckId = (typeof DAILY_CHECKS)[number]["id"];
 
+/** Ticked per block, right above "Start · ring the bell". */
+export const BLOCK_PREP_CHECKS = [
+  { id: "surface", label: "Work-only surface is clear" },
+  { id: "phone", label: "Phone parked for the block (off desk / out of reach)" },
+  { id: "signal", label: "Household signal is on" },
+] as const;
+
+export type BlockPrepId = (typeof BLOCK_PREP_CHECKS)[number]["id"];
+
 export const HOW_IT_WORKS = [
   {
     step: "1",

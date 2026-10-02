@@ -235,7 +235,7 @@ export function GettingStartedSheet({ onDone }: { onDone: () => void }) {
 
             {step === 3 ? (
               <>
-                <p>On Today, tap <strong>Start · ring the bell</strong> when your block begins. It rings and writes down the time. Tap <strong>Done — ring the bell</strong> when you stop.</p>
+                <p>On Today, tap <strong>Start · ring the bell</strong> when your block begins. It rings and writes down the time. The button then changes to <strong>End · ring the bell</strong> — tap it when you stop.</p>
                 <p>Try the sounds now so you know them:</p>
                 <div className="flex flex-wrap gap-2">
                   <Button variant="outline" onClick={() => void playStartBell()}>
@@ -250,7 +250,8 @@ export function GettingStartedSheet({ onDone }: { onDone: () => void }) {
 
             {step === 4 ? (
               <>
-                <p>When your work day is over, tap <strong>Close day</strong> at the bottom right. Write one line about how it went, and the app marks the day done and gets tomorrow ready.</p>
+                <p>When your work day is over, write one line in the <strong>Shutdown note</strong> on Today, then tap <strong>Close day</strong>. It’s the moon icon at the far right of the toolbar along the bottom of the screen (next to Tools). The same <strong>Close day</strong> button also sits under the Shutdown note, beside Send to partner and Print this day.</p>
+                <p>Close day marks the day done, offers to save a PDF, and opens tomorrow’s page.</p>
                 <p>That’s it. Tapping the button below starts Day 1 of your 7-day starter.</p>
               </>
             ) : null}

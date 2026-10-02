@@ -2,18 +2,35 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { isDateKey, monthKey, todayKey, weekKey } from "./utils";
 import { blockDefaults } from "./work-hours";
-import type { DailyCheckId } from "./content";
+import type { BlockPrepId, DailyCheckId } from "./content";
+
+export type BlockPrep = Record<BlockPrepId, boolean>;
 
 export type DailySlot = {
   start: string;
   end: string;
   task: string;
   outcome: string;
+  /** "Before you ring the bell" ticks for this block. */
+  prep?: BlockPrep;
 };
+
+export const emptyPrep = (): BlockPrep => ({ surface: false, phone: false, signal: false });
+
+function readPrep(raw: unknown): BlockPrep | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const r = raw as Record<string, unknown>;
+  return { surface: Boolean(r.surface), phone: Boolean(r.phone), signal: Boolean(r.signal) };
+}
 
 export type DailyEntry = {
   slots: [DailySlot, DailySlot, DailySlot];
   slotCount: 1 | 2 | 3;
+  /**
+   * Day-level checks. `block` (auto when a start bell rings) and `shutdown`
+   * (end of day) are live; surface/phone/signal are legacy — they now live
+   * per block in `slot.prep` and old values seed Block 1 (see migrateDaily).
+   */
   checks: Record<DailyCheckId, boolean>;
   note: string;
   partnerNote: string;
@@ -184,13 +201,25 @@ const emptyMonth = (): MonthState => ({
 function migrateDaily(raw: Record<string, unknown>): DailyEntry {
   const base = emptyDaily();
   if (Array.isArray(raw.slots) && raw.slots.length) {
+    const legacy = (raw.checks ?? {}) as Partial<Record<DailyCheckId, boolean>>;
     const slots = [0, 1, 2].map((i) => {
       const s = (raw.slots as DailySlot[])[i];
+      // Old saves kept surface/phone/signal once per day: carry them onto Block 1.
+      const prep =
+        readPrep(s?.prep) ??
+        (i === 0
+          ? {
+              surface: Boolean(legacy.surface),
+              phone: Boolean(legacy.phone),
+              signal: Boolean(legacy.signal),
+            }
+          : emptyPrep());
       return {
         start: s?.start ?? (i === 0 ? "09:00" : ""),
         end: s?.end ?? (i === 0 ? "10:30" : ""),
         task: s?.task ?? "",
         outcome: s?.outcome ?? "",
+        prep,
       };
     }) as DailyEntry["slots"];
     return {
@@ -206,7 +235,13 @@ function migrateDaily(raw: Record<string, unknown>): DailyEntry {
   const start = String(raw.blockStart ?? "09:00");
   const end = String(raw.blockEnd ?? "10:30");
   const slots: DailyEntry["slots"] = [
-    { start, end, task: "", outcome: String(outcomes[0] ?? "") },
+    {
+      start,
+      end,
+      task: "",
+      outcome: String(outcomes[0] ?? ""),
+      prep: readPrep(raw.checks) ?? emptyPrep(),
+    },
     { start: "", end: "", task: "", outcome: String(outcomes[1] ?? "") },
     { start: "", end: "", task: "", outcome: String(outcomes[2] ?? "") },
   ];

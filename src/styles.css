@@ -250,6 +250,44 @@ html[data-df-starter] .df-pre-welcome {
     font-size: 9.5pt !important;
   }
 
+  /* Per-block "Before you ring the bell" + end-of-day checks: one compact row */
+  .daily-os .daily-prep,
+  .daily-os .daily-endday {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    align-items: center;
+    column-gap: 0.75rem !important;
+    row-gap: 0 !important;
+  }
+
+  .daily-os .daily-prep > p,
+  .daily-os .daily-endday > p:first-child {
+    font-size: 7pt !important;
+    line-height: 1.2 !important;
+    flex-basis: 100%;
+  }
+
+  .daily-os .daily-prep label,
+  .daily-os .daily-endday label,
+  .daily-os .daily-endday > p {
+    padding: 0 !important;
+    gap: 0.3rem !important;
+    min-height: 0 !important;
+  }
+
+  .daily-os .daily-prep label > span,
+  .daily-os .daily-endday label > span,
+  .daily-os .daily-endday > p {
+    font-size: 9pt !important;
+  }
+
+  .daily-os .daily-endday > p > span[aria-hidden] {
+    width: 11pt !important;
+    height: 11pt !important;
+    border: 1.5pt solid #3a4a32 !important;
+  }
+
   .daily-print-header {
     display: block !important;
     margin-bottom: 0.15rem;
