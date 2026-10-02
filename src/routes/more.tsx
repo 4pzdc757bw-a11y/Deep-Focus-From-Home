@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import { useRef, useState } from "react";
 import { Card, PageTitle } from "@/components/app-shell";
-import { InstallCard } from "@/components/install-card";
 import { LegalFooter } from "@/components/legal-footer";
 import { Button } from "@/components/ui/button";
 import { downloadBackup, importBackup } from "@/lib/backup";
@@ -174,7 +173,6 @@ function MorePage() {
           </Link>
         </div>
       </Card>
-      <InstallCard />
       <LegalFooter />
     </div>
   );
