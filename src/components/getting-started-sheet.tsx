@@ -250,7 +250,7 @@ export function GettingStartedSheet({ onDone }: { onDone: () => void }) {
 
             {step === 4 ? (
               <>
-                <p>When your work day is over, write one line in the <strong>Shutdown note</strong> on Today, then tap <strong>Close day</strong>. It’s the moon icon at the far right of the toolbar along the bottom of the screen (next to Tools). The same <strong>Close day</strong> button also sits under the Shutdown note, beside Send to partner and Print this day.</p>
+                <p>When your work day is over, scroll down Today to the <strong>Shutdown note</strong> and write one line. Tick the shutdown steps under <strong>End of day</strong>, then tap the <strong>Close day</strong> button just below them, beside Send to partner and Print this day.</p>
                 <p>Close day marks the day done, offers to save a PDF, and opens tomorrow’s page.</p>
                 <p>That’s it. Tapping the button below starts Day 1 of your 7-day starter.</p>
               </>
