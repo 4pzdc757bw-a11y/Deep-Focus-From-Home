@@ -33,6 +33,8 @@ export type EnergyRow = {
   energy: number;
   focus: number;
   note: string;
+  /** When it was saved (ms). Older rows fall back to the time in `id`. */
+  at?: number;
 };
 
 export type SetupState = {
@@ -252,7 +254,11 @@ export const useFocusStore = create<FocusState>()(
       addEnergy: (row) =>
         set((s) => ({
           energy: [
-            { ...row, id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}` },
+            {
+              ...row,
+              at: row.at ?? Date.now(),
+              id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+            },
             ...s.energy,
           ].slice(0, 90),
         })),

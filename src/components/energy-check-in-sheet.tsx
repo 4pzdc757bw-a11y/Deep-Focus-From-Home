@@ -7,6 +7,7 @@ import {
   formatEnergyScore,
 } from "@/components/energy-scale";
 import { useFocusStore } from "@/lib/store";
+import { TIME_OF_DAY_OPTIONS } from "@/lib/time-of-day";
 import { cn, todayKey } from "@/lib/utils";
 
 export type EnergyCheckInContext = {
@@ -16,9 +17,6 @@ export type EnergyCheckInContext = {
 };
 
 type Step = "ask" | "form";
-
-/** Quick picks; the block's start time pre-selects one (see slotLabelFromBlock). */
-const TIME_OF_DAY_OPTIONS = ["Morning", "Afternoon", "Evening"] as const;
 
 /**
  * After a focus block stops: optional energy check-in.

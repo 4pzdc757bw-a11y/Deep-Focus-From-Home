@@ -1,4 +1,5 @@
 import { Field } from "@/components/ui/input";
+import { periodFromClock } from "@/lib/time-of-day";
 import { cn } from "@/lib/utils";
 
 /** 1–5 with half steps: 1, 1.5, … 5 — same scale as /energy */
@@ -62,14 +63,4 @@ export function slotLabelFromBlock(
   const period = periodFromClock(slot.start);
   if (period) return period;
   return `Block ${blockIndex + 1}`;
-}
-
-function periodFromClock(hhmm: string) {
-  const m = /^(\d{1,2}):(\d{2})$/.exec(hhmm.trim());
-  if (!m) return "";
-  const h = Number(m[1]);
-  if (!Number.isFinite(h) || h < 0 || h > 23) return "";
-  if (h < 12) return "Morning";
-  if (h < 17) return "Afternoon";
-  return "Evening";
 }
