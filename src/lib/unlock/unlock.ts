@@ -7,15 +7,23 @@ import { NO_PURCHASE_MESSAGE, type UnlockByEmailResult } from "./unlock-result";
  * handlers so this file is safe to import from React components.
  */
 
-export type UnlockStatus = { product: UnlockProduct | null };
+export type UnlockStatus = {
+  product: UnlockProduct | null;
+  /** When this device's unlock was issued (ms, from the signed token's iat). */
+  unlockedAt?: number | null;
+};
 
 
-async function readCookieProduct(): Promise<UnlockProduct | null> {
+async function readCookieToken() {
   const { getCookie } = await import("@tanstack/react-start/server");
   const { UNLOCK_COOKIE_NAME, verifyUnlockToken } = await import(
     "./token.server"
   );
-  return verifyUnlockToken(getCookie(UNLOCK_COOKIE_NAME))?.p ?? null;
+  return verifyUnlockToken(getCookie(UNLOCK_COOKIE_NAME));
+}
+
+async function readCookieProduct(): Promise<UnlockProduct | null> {
+  return (await readCookieToken())?.p ?? null;
 }
 
 /** Save the signed unlock cookie (never downgrades app → handbook). */
@@ -39,10 +47,14 @@ async function saveUnlock(product: UnlockProduct): Promise<UnlockProduct> {
 export const getUnlockStatus = createServerFn({ method: "GET" }).handler(
   async (): Promise<UnlockStatus> => {
     try {
-      return { product: await readCookieProduct() };
+      const token = await readCookieToken();
+      return {
+        product: token?.p ?? null,
+        unlockedAt: token?.iat ? token.iat * 1000 : null,
+      };
     } catch (err) {
       console.error("[unlock] status check failed:", err);
-      return { product: null };
+      return { product: null, unlockedAt: null };
     }
   },
 );

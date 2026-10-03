@@ -2,7 +2,9 @@ import { LegalFooter } from "@/components/legal-footer";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, BookOpen } from "lucide-react";
 import { DailyOs } from "@/components/daily-os";
-import { LockScreen, useHasAccess } from "@/components/lock-screen";
+import { useHasAccess, useUnlockedProduct } from "@/components/lock-screen";
+import { HandbookFirstCard, HandbookUnlockedCard } from "@/components/home-offer";
+import { PRICE_LABEL } from "@/lib/offer";
 import { Card, PageTitle } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { APP_LINE, STARTER_DAYS } from "@/lib/content";
@@ -47,6 +49,8 @@ function Home() {
   const [homeFocusDismissed, setHomeFocusDismissed] = useState(false);
   // Home stays free; the Daily OS on it is an app tool.
   const appUnlocked = useHasAccess("app");
+  const product = useUnlockedProduct();
+  const handbookBuyer = !appUnlocked && product === "handbook";
 
   // Week one: never force. First start-of-day in week two: Home focus setup first.
   // Never for visitors who have not unlocked the app (it would end at a lock).
@@ -129,7 +133,13 @@ function Home() {
           <PageTitle
             kicker="Welcome aboard"
             title="New here?"
-            lede="This is a small system for working from home — not a character test. Read how it works, then fill in today’s page."
+            lede={
+              appUnlocked
+                ? "This is a small system for working from home — not a character test. Read how it works, then fill in today’s page."
+                : handbookBuyer
+                  ? "This is a small system for working from home — not a character test. Your handbook is ready: start with Chapter 1."
+                  : "This is a small system for working from home — not a character test. Read how it works, then start with the handbook."
+            }
           />
 
           <div className="overflow-hidden rounded-lg border border-yellow">
@@ -143,8 +153,9 @@ function Home() {
 
           <Card>
             <p className="text-ink">
-              Five quick setup steps, a 7-day starter, and answers to the usual questions —
-              kids, missed days, the phone, where your notes live.
+              {appUnlocked
+                ? "Five quick setup steps, a 7-day starter, and answers to the usual questions — kids, missed days, the phone, where your notes live."
+                : "Seven short chapters, one action each, and answers to the usual questions — kids, missed days, the phone, where your notes live."}
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
               {appUnlocked ? (
@@ -156,9 +167,13 @@ function Home() {
                 >
                   Show me how to start
                 </Button>
+              ) : handbookBuyer ? (
+                <Button asChild>
+                  <Link to="/guide">Read the handbook</Link>
+                </Button>
               ) : (
                 <Button asChild>
-                  <Link to="/buy">See what’s included</Link>
+                  <Link to="/buy">Get the handbook ({PRICE_LABEL})</Link>
                 </Button>
               )}
               <Button variant="outline" asChild>
@@ -200,7 +215,13 @@ function Home() {
         />
       </div>
 
-      {appUnlocked ? <DailyOs /> : <LockScreen need="app" compact />}
+      {appUnlocked ? (
+        <DailyOs />
+      ) : handbookBuyer ? (
+        <HandbookUnlockedCard />
+      ) : (
+        <HandbookFirstCard />
+      )}
 
       {hydrated &&
       appUnlocked &&

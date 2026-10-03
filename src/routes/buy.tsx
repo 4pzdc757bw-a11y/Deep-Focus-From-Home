@@ -41,13 +41,13 @@ function BuyPage() {
         Remote Workers Deep Focus
       </h1>
       <p className="max-w-prose text-lg text-ink">
-        Not a course. Not a streak app. Choose the handbook, or the app that
-        runs the same system in your browser.
+        Not a course. Not a streak app. Start with the handbook. If you want
+        it to run in your browser too, there’s an app that goes with it.
       </p>
 
-      <Card className="flex flex-col gap-3">
+      <Card className="flex flex-col gap-3 border-2 border-olive">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
-          Handbook
+          Start here · Handbook
         </p>
         <p className="font-display text-2xl text-olive">Handbook + fillables</p>
         <ul className="flex flex-col gap-2 text-ink">
@@ -90,6 +90,7 @@ function BuyPage() {
           The app
         </p>
         <p className="font-display text-2xl text-olive">Run it in your browser</p>
+        <p className="text-sm text-muted">Optional. Goes with the handbook and includes it.</p>
         <ul className="flex flex-col gap-2 text-ink">
           {APP_INCLUDED.map((item) => (
             <li key={item} className="border-l-2 border-yellow pl-3">
@@ -100,7 +101,7 @@ function BuyPage() {
         <p className="text-3xl font-display text-olive">{APP_PRICE_LABEL}</p>
         <p className="text-sm text-muted">One-time. Full system in the app.</p>
         {appCheckout ? (
-          <Button asChild>
+          <Button variant="outline" asChild>
             <a href={appCheckout} rel="noopener noreferrer">
               Get the app — {APP_PRICE_LABEL}
             </a>
@@ -109,6 +110,7 @@ function BuyPage() {
           <>
             <Button
               type="button"
+              variant="outline"
               onClick={() => {
                 markPurchased("app");
                 start();
