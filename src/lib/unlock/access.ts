@@ -20,6 +20,9 @@ const FREE_PATHS = new Set([
   "/access",
   "/store-credit",
   "/guide",
+  // The free 7-day pack (from /start) is the starter week: readable without
+  // buying. Its "Open Day N OS" links to the Daily OS stay app-only.
+  "/starter",
 ]);
 
 /** Guide chapters readable without a purchase (free sample). */

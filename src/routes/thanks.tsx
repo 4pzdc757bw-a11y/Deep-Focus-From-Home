@@ -15,7 +15,6 @@ import {
   type MintedDownloadLink,
 } from "@/lib/downloads/mint";
 import {
-  APP_PRICE_LABEL,
   getPurchasedProduct,
   markPurchased,
   parsePurchaseProduct,
@@ -278,7 +277,7 @@ function ThanksPage() {
           ? isAppBuyer
             ? "Open Day 1 now. The app runs in your web browser — bookmark this site so the Daily OS is one tap away."
             : "Your handbook and fillables are ready below. Do only Day 1 today: claim one work-only surface and park the phone for the first deep-work block."
-          : "Do only Day 1 today: claim one work-only surface and park the phone for the first deep-work block (use the app to start, then phone off the desk). That is the whole job."}
+          : "Do only Day 1 today: claim one work-only surface and park the phone off the desk for the first deep-work block. That is the whole job."}
       </p>
       <DeviceUnlockNote status={unlock} />
 
@@ -341,7 +340,8 @@ function ThanksPage() {
           <div className="flex flex-col gap-2 sm:flex-row">
             <Button asChild>
               <Link to="/starter" onClick={() => start()}>
-                Open Day 1 in the app <ArrowRight className="size-4" />
+                {fromCheckout ? "Open Day 1 in the app" : "Open the 7-day starter"}{" "}
+                <ArrowRight className="size-4" />
               </Link>
             </Button>
             {!fromCheckout && (
@@ -382,24 +382,6 @@ function ThanksPage() {
             <p className="text-sm text-muted">No webinar. Keep it if Day 1 already helped.</p>
           </Card>
 
-          <Card className="flex flex-col gap-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
-              The app
-            </p>
-            <h2 className="font-display text-2xl text-olive">
-              Run it on your phone. {APP_PRICE_LABEL}.
-            </h2>
-            <p className="text-ink">
-              The browser-based app (Daily OS, starter week, bell, energy peak,
-              household fridge copy), plus handbook downloads. One-time{" "}
-              {APP_PRICE_LABEL}.
-            </p>
-            <div>
-              <Button variant="outline" asChild>
-                <Link to="/buy">See the {APP_PRICE_LABEL} app</Link>
-              </Button>
-            </div>
-          </Card>
         </>
       )}
       <LegalFooter />

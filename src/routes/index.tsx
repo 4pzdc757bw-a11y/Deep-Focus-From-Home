@@ -27,6 +27,8 @@ export const Route = createFileRoute("/")({ component: Home });
 
 function Home() {
   const hydrated = useFocusStore((s) => s.hydrated);
+  // Home stays free; the Daily OS on it is an app tool.
+  const appUnlocked = useHasAccess("app");
   const starterStart = useFocusStore((s) => s.starterStart);
   const starterDone = useFocusStore((s) => s.starterDone);
   const homeFocusWeekTwoPrompted = useFocusStore((s) => s.homeFocusWeekTwoPrompted);
@@ -38,7 +40,9 @@ function Home() {
   const [tourClosed, setTourClosed] = useState(false);
   const nextDay = STARTER_DAYS.find((d) => !starterDone.includes(d.day));
   const returning = hydrated && Boolean(starterStart);
-  const showWelcome = hydrated && !starterStart;
+  // Visitors without the app always get the welcome (the free starter week can
+  // set starterStart, but the Continue card is app-only).
+  const showWelcome = hydrated && (!starterStart || !appUnlocked);
   // Before the store hydrates, render the welcome (CSS hides it for returning
   // browsers) or a same-size placeholder, so the Daily OS below does not jump.
   const preHydration = !hydrated;
@@ -47,8 +51,6 @@ function Home() {
   const [now, setNow] = useState(() => Date.now());
   const [showHomeFocus, setShowHomeFocus] = useState(false);
   const [homeFocusDismissed, setHomeFocusDismissed] = useState(false);
-  // Home stays free; the Daily OS on it is an app tool.
-  const appUnlocked = useHasAccess("app");
   const product = useUnlockedProduct();
   const handbookBuyer = !appUnlocked && product === "handbook";
 
@@ -129,7 +131,12 @@ function Home() {
       ) : null}
 
       {showWelcome || preHydration ? (
-        <div className={cn("no-print flex flex-col gap-5", preHydration && "df-pre-welcome")}>
+        <div
+          className={cn(
+            "no-print flex flex-col gap-5",
+            preHydration && appUnlocked && "df-pre-welcome",
+          )}
+        >
           <PageTitle
             kicker="Welcome aboard"
             title="New here?"

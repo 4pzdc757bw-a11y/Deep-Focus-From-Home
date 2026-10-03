@@ -9,12 +9,12 @@ const ORIGINAL_ENV = { ...process.env };
 
 describe("paywall path rules", () => {
   it("keeps marketing, legal, checkout and guide index free", () => {
-    for (const p of ["/", "/intro", "/buy", "/start", "/more", "/terms", "/privacy", "/thanks", "/access", "/store-credit", "/guide", "/guide/", "/guide/intro"]) {
+    for (const p of ["/", "/intro", "/buy", "/start", "/more", "/terms", "/privacy", "/thanks", "/access", "/store-credit", "/guide", "/guide/", "/guide/intro", "/starter"]) {
       assert.equal(requiredAccessForPath(p), "none", p);
     }
   });
   it("locks app tools (and unknown routes) behind the app", () => {
-    for (const p of ["/daily", "/setup", "/starter", "/week", "/month", "/energy", "/household", "/daily/", "/some-new-tool"]) {
+    for (const p of ["/daily", "/setup", "/week", "/month", "/energy", "/household", "/daily/", "/some-new-tool"]) {
       assert.equal(requiredAccessForPath(p), "app", p);
     }
   });

@@ -29,9 +29,6 @@ export function HandbookFirstCard() {
           </Link>
         </Button>
       </div>
-      <p className="text-sm text-muted">
-        There’s also a browser app that goes with it, {APP_PRICE_LABEL}.
-      </p>
       <div className="border-t border-yellow pt-4">
         <UnlockDeviceForm />
       </div>
@@ -42,7 +39,7 @@ export function HandbookFirstCard() {
 const ADDON_DISMISSED_KEY = "df-app-addon-dismissed";
 
 /**
- * Home for handbook buyers (no app). No app pitch for the first 4 days after
+ * Home for handbook buyers (no app). No app pitch for the first 7 days after
  * the unlock; after that, one small dismissible add-on line.
  */
 export function HandbookUnlockedCard() {
@@ -85,8 +82,8 @@ export function HandbookUnlockedCard() {
       {pitchAllowed && !dismissed ? (
         <div className="flex items-start gap-2 rounded-md border border-yellow bg-paper p-3 text-sm text-ink">
           <p className="flex-1">
-            Settling in? There’s an optional browser app that runs the same system for you
-            each day, {APP_PRICE_LABEL}.{" "}
+            Optional add-on: the Deep Focus app is a daily planner, focus bell, energy log and
+            weekly planner in your browser. {APP_PRICE_LABEL}, pay once.{" "}
             <Link to="/buy" className="font-semibold text-olive underline underline-offset-4">
               Have a look
             </Link>

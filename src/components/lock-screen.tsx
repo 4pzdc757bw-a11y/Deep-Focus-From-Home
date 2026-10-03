@@ -23,8 +23,8 @@ export function useHasAccess(need: AccessNeed): boolean {
 }
 
 const HANDBOOK_SEEN_KEY = "df-handbook-unlocked-at";
-/** Handbook buyers see no app pitch for this long after their unlock. */
-export const APP_PITCH_DELAY_MS = 4 * 24 * 60 * 60 * 1000;
+/** Handbook buyers see no app pitch for this long after their unlock (7 days). */
+export const APP_PITCH_DELAY_MS = 7 * 24 * 60 * 60 * 1000;
 
 /**
  * When the handbook was unlocked on this device (ms): the earlier of the
@@ -55,7 +55,7 @@ export function useHandbookUnlockedAt(): number | null {
   return tokenAt ? Math.min(tokenAt, seenAt) : seenAt;
 }
 
-/** Handbook-only buyer whose unlock is at least 4 days old. */
+/** Handbook-only buyer whose unlock is at least 7 days old. */
 export function useAppPitchAllowed(now = Date.now()): boolean {
   const at = useHandbookUnlockedAt();
   return at != null && now - at >= APP_PITCH_DELAY_MS;
@@ -186,20 +186,27 @@ export function LockScreen({
         <div className="flex items-center gap-2 text-gold">
           <Lock className="size-4" />
           <p className="text-xs font-semibold uppercase tracking-[0.16em]">
-            {isApp ? (handbookBuyer ? "Optional add-on" : "Deep Focus app") : "Deep Focus handbook"}
+            {handbookBuyer ? "Optional add-on" : "Deep Focus handbook"}
           </p>
         </div>
+        {isApp && !handbookBuyer ? (
+          <p className="-mb-2 text-sm text-muted">
+            {toolNameForPath(pathname)} isn’t part of the free preview.
+          </p>
+        ) : null}
         <Heading className="font-display text-3xl leading-tight text-olive text-balance">
-          {isApp
-            ? `${toolNameForPath(pathname)} is part of the Deep Focus app`
-            : "This chapter is in the handbook"}
+          {!isApp
+            ? "This chapter is in the handbook"
+            : handbookBuyer
+              ? `${toolNameForPath(pathname)} is part of the Deep Focus app`
+              : "Start with the handbook"}
         </Heading>
         <p className="max-w-prose text-pretty text-ink">
           {!isApp
-            ? `Chapter 1 is free to read. The rest of the guide is in the handbook (${PRICE_LABEL}) or the app (${APP_PRICE_LABEL}).`
+            ? `Chapter 1 is free to read. The rest of the guide is in the handbook: ${PRICE_LABEL}, pay once.`
             : handbookBuyer
-              ? `Your handbook is unlocked, and everything in it works on paper. The app is an optional add-on that runs the same system in your browser: a daily planner, focus bell, energy log and weekly planner. ${APP_PRICE_LABEL}, pay once.`
-              : `Start with the handbook (${PRICE_LABEL}): the whole system, chapter by chapter, plus the PDF. There’s also a browser app that goes with it (${APP_PRICE_LABEL}): a daily planner, focus bell, energy log and weekly planner.`}
+              ? `Your handbook is unlocked, and everything in it works on paper. The Deep Focus app is an optional add-on to the handbook: a daily planner, focus bell, energy log and weekly planner in your browser. ${APP_PRICE_LABEL}, pay once.`
+              : `Seven short chapters on working from home: your workspace, household, phone, daily rituals, deep work, people and energy. One action per chapter. Online guide plus the PDF, ${PRICE_LABEL}, pay once.`}
         </p>
         <div className="flex flex-col gap-2 sm:flex-row">
           {handbookBuyer ? (
@@ -217,7 +224,9 @@ export function LockScreen({
                 <Link to="/buy">Get the handbook ({PRICE_LABEL})</Link>
               </Button>
               <Button variant="outline" asChild>
-                <Link to="/buy">Get the app ({APP_PRICE_LABEL})</Link>
+                <Link to="/guide/$slug" params={{ slug: "intro" }}>
+                  Read Chapter 1 free
+                </Link>
               </Button>
             </>
           )}
@@ -225,7 +234,7 @@ export function LockScreen({
         <div className="border-t border-yellow pt-4">
           <UnlockDeviceForm />
         </div>
-        {handbookBuyer ? null : <NotReadyLinks compact showHome={!onHome} />}
+        {handbookBuyer ? null : <NotReadyLinks compact showHome={!onHome} showChapter={false} />}
       </Card>
       {compact ? null : (
         <p className="text-sm text-muted">

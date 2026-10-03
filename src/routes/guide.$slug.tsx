@@ -5,7 +5,7 @@ import { LegalFooter } from "@/components/legal-footer";
 import { useHasAccess } from "@/components/lock-screen";
 import { Button } from "@/components/ui/button";
 import { CHAPTERS } from "@/lib/content";
-import { APP_PRICE_LABEL, PRICE_LABEL } from "@/lib/offer";
+import { PRICE_LABEL } from "@/lib/offer";
 
 export const Route = createFileRoute("/guide/$slug")({
   component: ChapterPage,
@@ -47,15 +47,12 @@ function ChapterPage() {
           </p>
           <p className="font-display text-2xl text-olive">Want the rest of the handbook?</p>
           <p className="text-ink">
-            The rest of the guide is in the handbook ({PRICE_LABEL}) or the app ({APP_PRICE_LABEL}).
-            Pay once.
+            The rest of the guide is in the handbook: all seven chapters plus the PDF, {PRICE_LABEL},
+            pay once.
           </p>
           <div className="flex flex-col gap-2 sm:flex-row">
             <Button asChild>
               <Link to="/buy">Get the handbook ({PRICE_LABEL})</Link>
-            </Button>
-            <Button variant="outline" asChild>
-              <Link to="/buy">Get the app ({APP_PRICE_LABEL})</Link>
             </Button>
           </div>
         </Card>

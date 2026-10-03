@@ -7,17 +7,21 @@ import { Button } from "@/components/ui/button";
 export function NotReadyLinks({
   compact = false,
   showHome = true,
+  showChapter = true,
 }: {
   compact?: boolean;
   showHome?: boolean;
+  showChapter?: boolean;
 }) {
   const links = (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-      <Button variant="outline" asChild>
-        <Link to="/guide/$slug" params={{ slug: "intro" }}>
-          <BookOpen className="size-4" /> Read Chapter 1 free
-        </Link>
-      </Button>
+      {showChapter ? (
+        <Button variant="outline" asChild>
+          <Link to="/guide/$slug" params={{ slug: "intro" }}>
+            <BookOpen className="size-4" /> Read Chapter 1 free
+          </Link>
+        </Button>
+      ) : null}
       {showHome ? (
         <Link
           to="/"
