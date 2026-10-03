@@ -5,6 +5,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, BookOpen } from "lucide-react";
 import { DailyOs } from "@/components/daily-os";
 import { useWorkdayKey } from "@/lib/workday";
+import { starterDayDate } from "@/lib/work-hours";
 import { useHasAccess, useUnlockedProduct } from "@/components/lock-screen";
 import { HandbookFirstCard, HandbookUnlockedCard } from "@/components/home-offer";
 import { StarterSignupCard } from "@/components/starter-signup";
@@ -18,7 +19,6 @@ import { HomeFocusSetupSheet } from "@/components/home-focus-setup-sheet";
 import { GettingStartedSheet } from "@/components/getting-started-sheet";
 import { useFocusStore } from "@/lib/store";
 import {
-  addDaysKey,
   cn,
   forceHomeFocusSetupPrompt,
   isWeekTwo,
@@ -51,7 +51,9 @@ function Home() {
   // browsers) or a same-size placeholder, so the Daily OS below does not jump.
   const preHydration = !hydrated;
   const workday = useWorkdayKey();
-  const nextDate = starterStart && nextDay ? addDaysKey(starterStart, nextDay.day - 1) : workday;
+  const workDays = useFocusStore((s) => s.household?.workDays);
+  const nextDate =
+    starterStart && nextDay ? starterDayDate(starterStart, nextDay.day, workDays) : workday;
   const peak = peakFrom(energy);
   const [now, setNow] = useState(() => Date.now());
   const [showHomeFocus, setShowHomeFocus] = useState(false);
@@ -68,9 +70,9 @@ function Home() {
     }
     const force = forceHomeFocusSetupPrompt();
     const due =
-      force || (isWeekTwo(starterStart) && !homeFocusWeekTwoPrompted);
+      force || (isWeekTwo(starterStart, workday, workDays) && !homeFocusWeekTwoPrompted);
     setShowHomeFocus(due);
-  }, [hydrated, starterStart, homeFocusWeekTwoPrompted, homeFocusDismissed, appUnlocked]);
+  }, [hydrated, starterStart, homeFocusWeekTwoPrompted, homeFocusDismissed, appUnlocked, workday, workDays]);
 
   useEffect(() => {
     if (!session.running || !session.endsAt) return;

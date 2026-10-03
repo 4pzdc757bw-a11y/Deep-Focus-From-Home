@@ -282,3 +282,29 @@ export function nextWorkdayFrom(
   const next = nextWorkday(dateKey, workDays);
   return next > today ? next : today;
 }
+
+/* ---------- Starter week dates ---------- */
+
+/**
+ * Dates (YYYY-MM-DD) of starter Days 1–7. Day 1 is the start date (the day
+ * they began, even if it is not a picked work day); Days 2–7 fall on the next
+ * picked work days (Mon–Fri if none picked), skipping days off. Dates are work
+ * days, so for a night shift they are the days each shift starts.
+ */
+export function starterDayDates(start: string, workDays?: readonly number[] | null): string[] {
+  const out = [start];
+  while (out.length < 7) out.push(nextWorkday(out[out.length - 1]!, workDays));
+  return out;
+}
+
+/** Date of starter day `day` (1–7). */
+export function starterDayDate(start: string, day: number, workDays?: readonly number[] | null) {
+  return starterDayDates(start, workDays)[Math.min(7, Math.max(1, day)) - 1]!;
+}
+
+/** Starter day 1–7 that falls on `date`, or null. */
+export function starterDayOn(start: string | null, date: string, workDays?: readonly number[] | null) {
+  if (!start) return null;
+  const i = starterDayDates(start, workDays).indexOf(date);
+  return i >= 0 ? i + 1 : null;
+}

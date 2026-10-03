@@ -10,7 +10,8 @@ import { Textarea } from "@/components/ui/input";
 import { STARTER_DAYS } from "@/lib/content";
 import { useFocusStore } from "@/lib/store";
 import { StarterSignupCard } from "@/components/starter-signup";
-import { addDaysKey, prettyDate, todayKey } from "@/lib/utils";
+import { prettyDate, todayKey } from "@/lib/utils";
+import { starterDayDates } from "@/lib/work-hours";
 
 export const Route = createFileRoute("/starter")({ component: StarterPage });
 
@@ -23,6 +24,9 @@ function StarterPage() {
   const setStart = useFocusStore((s) => s.setStarterStart);
   const started = useFocusStore((s) => s.starterStart);
   const origin = started ?? todayKey();
+  const workDays = useFocusStore((s) => s.household?.workDays);
+  // Day 1 on the start date, Days 2–7 on the next picked work days.
+  const dayDates = starterDayDates(origin, workDays);
   // The starter week is the free 7-day pack. The Daily OS links are app-only.
   const appUnlocked = useHasAccess("app");
 
@@ -57,7 +61,7 @@ function StarterPage() {
       )}
       {STARTER_DAYS.map((d) => {
         const isDone = done.includes(d.day);
-        const date = addDaysKey(origin, d.day - 1);
+        const date = dayDates[d.day - 1]!;
         return (
           <Card key={d.day} className="flex flex-col gap-3">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">

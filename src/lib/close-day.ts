@@ -1,19 +1,18 @@
-import { STARTER_DAYS } from "./content";
 import { useFocusStore } from "./store";
-import { addDaysKey } from "./utils";
-import { currentWorkdayKey } from "./workday";
-import { nextWorkdayFrom } from "./work-hours";
 
-/** Map a calendar date to starter day 1–7, or null if outside week one. */
+import { currentWorkdayKey } from "./workday";
+import { nextWorkdayFrom, starterDayOn } from "./work-hours";
+
+/**
+ * Map a work-day date to starter day 1–7, or null if outside week one. Day 1
+ * is the start date; Days 2–7 are the next picked work days.
+ */
 export function starterDayForDate(
   starterStart: string | null,
   date: string,
+  workDays: readonly number[] | null | undefined = useFocusStore.getState().household?.workDays,
 ): number | null {
-  if (!starterStart) return null;
-  for (const d of STARTER_DAYS) {
-    if (addDaysKey(starterStart, d.day - 1) === date) return d.day;
-  }
-  return null;
+  return starterDayOn(starterStart, date, workDays);
 }
 
 /**

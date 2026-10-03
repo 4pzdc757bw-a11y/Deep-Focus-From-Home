@@ -162,3 +162,54 @@ describe("night-shift work day", () => {
     assert.equal(periodFromClock("13:00"), "Afternoon");
   });
 });
+
+describe("starter week dates", () => {
+  it("Fri start, Mon–Fri: Day 1 Fri, then next work days", async () => {
+    const { starterDayDates } = await import("./work-hours.ts");
+    assert.deepEqual(starterDayDates("2026-10-02", [1, 2, 3, 4, 5]), [
+      "2026-10-02", "2026-10-05", "2026-10-06", "2026-10-07", "2026-10-08", "2026-10-09", "2026-10-12",
+    ]);
+    // No days picked → Mon–Fri.
+    assert.deepEqual(starterDayDates("2026-10-02", []), starterDayDates("2026-10-02", [1, 2, 3, 4, 5]));
+    assert.deepEqual(starterDayDates("2026-10-02", null), starterDayDates("2026-10-02", [1, 2, 3, 4, 5]));
+  });
+  it("Mon–Thu worker skips Fri–Sun", async () => {
+    const { starterDayDates } = await import("./work-hours.ts");
+    assert.deepEqual(starterDayDates("2026-10-05", [1, 2, 3, 4]), [
+      "2026-10-05", "2026-10-06", "2026-10-07", "2026-10-08", "2026-10-12", "2026-10-13", "2026-10-14",
+    ]);
+  });
+  it("Day 1 stays on a non-work start day (Sat start)", async () => {
+    const { starterDayDates } = await import("./work-hours.ts");
+    assert.deepEqual(starterDayDates("2026-10-03", [1, 2, 3, 4, 5]), [
+      "2026-10-03", "2026-10-05", "2026-10-06", "2026-10-07", "2026-10-08", "2026-10-09", "2026-10-12",
+    ]);
+  });
+  it("night shift: dates are shift-start days", async () => {
+    const { starterDayDates, starterDayOn, workdayKey } = await import("./work-hours.ts");
+    // Sun–Thu nights, 10 PM–6:30 AM. Started Sunday night.
+    const nights = [0, 1, 2, 3, 4];
+    const start = workdayKey(new Date(2026, 9, 4, 22, 30), "10:00 PM - 6:30 AM");
+    assert.equal(start, "2026-10-04");
+    const dates = starterDayDates(start, nights);
+    assert.deepEqual(dates, [
+      "2026-10-04", "2026-10-05", "2026-10-06", "2026-10-07", "2026-10-08", "2026-10-11", "2026-10-12",
+    ]);
+    // 3 AM Tuesday is still Monday night's shift → Day 2.
+    const tue3am = workdayKey(new Date(2026, 9, 6, 3, 0), "10:00 PM - 6:30 AM");
+    assert.equal(starterDayOn(start, tue3am, nights), 2);
+    // Friday/Saturday are days off → not a starter day.
+    assert.equal(starterDayOn(start, "2026-10-09", nights), null);
+  });
+  it("maps dates back to day numbers", async () => {
+    const { starterDayOn, starterDayDate } = await import("./work-hours.ts");
+    const wd = [1, 2, 3, 4, 5];
+    assert.equal(starterDayOn("2026-10-02", "2026-10-02", wd), 1);
+    assert.equal(starterDayOn("2026-10-02", "2026-10-03", wd), null);
+    assert.equal(starterDayOn("2026-10-02", "2026-10-05", wd), 2);
+    assert.equal(starterDayOn("2026-10-02", "2026-10-12", wd), 7);
+    assert.equal(starterDayOn("2026-10-02", "2026-10-13", wd), null);
+    assert.equal(starterDayOn(null, "2026-10-02", wd), null);
+    assert.equal(starterDayDate("2026-10-02", 7, wd), "2026-10-12");
+  });
+});
