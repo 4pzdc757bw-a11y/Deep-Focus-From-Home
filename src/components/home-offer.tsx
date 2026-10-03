@@ -84,7 +84,7 @@ export function HandbookUnlockedCard() {
           <p className="flex-1">
             Optional add-on: the Deep Focus app is a daily planner, focus bell, energy log and
             weekly planner in your browser, nothing to install. {APP_PRICE_LABEL}. {APP_ACCESS_LINE}{" "}
-            <Link to="/buy" className="font-semibold text-olive underline underline-offset-4">
+            <Link to="/app" className="font-semibold text-olive underline underline-offset-4">
               Have a look
             </Link>
           </p>

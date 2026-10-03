@@ -345,7 +345,7 @@ function ThanksPage() {
           <div className="flex flex-col gap-2 sm:flex-row">
             <Button asChild>
               <Link to="/starter" onClick={() => start()}>
-                {fromCheckout ? "Open Day 1 in the app" : "Open the 7-day starter"}{" "}
+                {fromCheckout ? "Open Day 1 of the starter week" : "Open the 7-day starter"}{" "}
                 <ArrowRight className="size-4" />
               </Link>
             </Button>
@@ -359,7 +359,7 @@ function ThanksPage() {
           </div>
           <p className="text-sm text-muted">
             {fromCheckout
-              ? "Want the browser-based app tools too? See the app offer on the buy page."
+              ? "Read one handbook chapter at a time and do its action this week."
               : "The free pack is week one. The PDF is if you want it on paper."}
           </p>
         </>

@@ -21,7 +21,7 @@ const HEADER_LINKS = [
   { to: "/intro", label: "FAQ" },
 ] as const;
 
-const MARKETING = new Set(["/start", "/thanks", "/buy", "/terms", "/privacy", "/store-credit"]);
+const MARKETING = new Set(["/start", "/thanks", "/buy", "/app", "/terms", "/privacy", "/store-credit"]);
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });

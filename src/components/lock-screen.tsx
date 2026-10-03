@@ -215,7 +215,7 @@ export function LockScreen({
                 <Link to="/guide">Read the handbook</Link>
               </Button>
               <Button variant="outline" asChild>
-                <Link to="/buy">Add the app ({APP_PRICE_LABEL})</Link>
+                <Link to="/app">Add the app ({APP_PRICE_LABEL})</Link>
               </Button>
             </>
           ) : (
@@ -223,18 +223,26 @@ export function LockScreen({
               <Button asChild>
                 <Link to="/buy">Get the handbook ({PRICE_LABEL})</Link>
               </Button>
-              <Button variant="outline" asChild>
-                <Link to="/guide/$slug" params={{ slug: "intro" }}>
-                  Read Chapter 1 free
-                </Link>
-              </Button>
+              {isApp ? (
+                <Button variant="outline" asChild>
+                  <Link to="/start">Try the free 7-day starter</Link>
+                </Button>
+              ) : (
+                <Button variant="outline" asChild>
+                  <Link to="/guide/$slug" params={{ slug: "intro" }}>
+                    Read Chapter 1 free
+                  </Link>
+                </Button>
+              )}
             </>
           )}
         </div>
         <div className="border-t border-yellow pt-4">
           <UnlockDeviceForm />
         </div>
-        {handbookBuyer ? null : <NotReadyLinks compact showHome={!onHome} showChapter={false} />}
+        {handbookBuyer ? null : (
+          <NotReadyLinks compact showHome={!onHome} showChapter={isApp} showStarter={false} />
+        )}
       </Card>
       {compact ? null : (
         <p className="text-sm text-muted">

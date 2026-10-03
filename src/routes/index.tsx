@@ -159,10 +159,10 @@ function Home() {
                 </Link>
               </Button>
               <Link
-                to="/buy"
+                to="/start"
                 className="inline-flex min-h-11 items-center text-sm font-semibold text-olive underline underline-offset-4"
               >
-                See both offers
+                Or try the free 7-day starter
               </Link>
             </div>
           ) : null}

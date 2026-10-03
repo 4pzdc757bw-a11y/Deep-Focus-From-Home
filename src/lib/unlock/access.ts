@@ -12,6 +12,8 @@ const FREE_PATHS = new Set([
   "/",
   "/intro",
   "/buy",
+  // Unlinked $37 app offer page (only the Day 5/7 emails link here).
+  "/app",
   "/start",
   "/more",
   "/terms",
