@@ -14,7 +14,7 @@ import {
   remainingLabel,
   stampClockNow,
 } from "@/lib/chime";
-import { startPlan } from "@/lib/block-plan";
+import { catchUpBlocks, startPlan } from "@/lib/block-plan";
 import { installPrintTextareaFit, printDaily, setActivePrintDate } from "@/lib/print";
 import { blockDefaults, endForStart, endsNextDay } from "@/lib/work-hours";
 import { useWorkdayKey } from "@/lib/workday";
@@ -51,6 +51,15 @@ function TimeField({
           type="time"
           value={value}
           readOnly={readOnly}
+          className={readOnly ? undefined : "cursor-pointer"}
+          onClick={(e) => {
+            if (readOnly) return;
+            try {
+              e.currentTarget.showPicker?.();
+            } catch {
+              /* older browsers: native focus/typing still works */
+            }
+          }}
           onChange={(e) => onChange(e.target.value)}
         />
       ) : (
@@ -140,6 +149,23 @@ export function DailyOs({ date }: { date?: string }) {
 
   const left = activeHere && session.endsAt ? session.endsAt - now : 0;
 
+  // Opening today's page after a planned start has passed (e.g. 3:52 AM on an
+  // 11 PM shift): move not-yet-rung blocks to the next quarter hour so the
+  // times, countdown and bell match now. Edited or rung blocks stay put.
+  useEffect(() => {
+    if (!hydrated || osDate !== workday) return;
+    const st = useFocusStore.getState();
+    if (st.session.running && st.session.date === osDate) return;
+    // Blocks rung before the `started` flag existed: today's last session covers them.
+    const rungUpTo =
+      entry.checks.block && st.session.date === osDate ? st.session.slotIndex : -1;
+    const slots = entry.slots.map((sl, i) => (i <= rungUpTo ? { ...sl, started: true } : sl));
+    const moves = catchUpBlocks(slots, entry.slotCount ?? 1, osDate, workHours, new Date());
+    for (const mv of moves) patchSlot(mv.index, { start: mv.start, end: mv.end });
+    // Only on open / day change; edits afterwards are the user's.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated, osDate, workday]);
+
   useEffect(() => {
     if (!activeHere || left > 0) return;
     void completeSession();
@@ -170,7 +196,7 @@ export function DailyOs({ date }: { date?: string }) {
     const slot = entry.slots[index];
     // Stamp actual start; end follows the planned length (Done stamps the real end).
     const plan = startPlan(slot);
-    patchSlot(index, { start: plan.start, end: plan.end });
+    patchSlot(index, { start: plan.start, end: plan.end, started: true });
     setRinging(true);
     window.setTimeout(() => setRinging(false), 1400);
     if (shouldExplainNotify()) setNotifyAsk(true);
@@ -251,17 +277,23 @@ export function DailyOs({ date }: { date?: string }) {
                 label="Starts"
                 value={slot.start}
                 fallback={defaults.start}
-                onChange={(start) => patchSlot(i, { start })}
+                onChange={(start) => patchSlot(i, { start, edited: true })}
                 readOnly={active}
               />
               <TimeField
                 label={slot.start && slot.end && endsNextDay(slot.start, slot.end) ? "Ends (next day)" : "Ends"}
                 value={slot.end}
                 fallback={endFallback}
-                onChange={(end) => patchSlot(i, { end })}
+                onChange={(end) => patchSlot(i, { end, edited: true })}
                 readOnly={active}
               />
             </div>
+            {i === 0 && !active && !doneHere && !slot.started ? (
+              <p className="daily-time-hint no-print -mt-1 text-sm text-muted">
+                Times not right? Tap a time to change it, or just press Start and the
+                bell uses the real time.
+              </p>
+            ) : null}
             {dur && (doneHere || (slot.start && slot.end && !active)) ? (
               <p className="daily-duration text-sm text-muted print:text-ink">
                 Duration: <span className="font-semibold text-olive">{dur}</span>

@@ -213,3 +213,56 @@ describe("starter week dates", () => {
     assert.equal(starterDayDate("2026-10-02", 7, wd), "2026-10-12");
   });
 });
+
+describe("late open moves passed blocks to now", () => {
+  it("11:50 AM, Block 1 planned 9:00 → 12:00–1:30 PM", async () => {
+    const { catchUpBlocks } = await import("./block-plan.ts");
+    const moves = catchUpBlocks(
+      [{ start: "09:00", end: "10:30" }], 1, "2026-10-05", "", new Date(2026, 9, 5, 11, 50),
+    );
+    assert.deepEqual(moves, [{ index: 0, start: "12:00", end: "13:30" }]);
+  });
+  it("night shift 11 PM–7 AM at 3:52 AM → 4:00–5:30 AM; Block 2 after a 30 min break", async () => {
+    const { catchUpBlocks } = await import("./block-plan.ts");
+    const moves = catchUpBlocks(
+      [{ start: "23:00", end: "00:30" }, { start: "01:00", end: "02:30" }],
+      2, "2026-10-02", "11 PM - 7 AM", new Date(2026, 9, 3, 3, 52),
+    );
+    assert.deepEqual(moves, [
+      { index: 0, start: "04:00", end: "05:30" },
+      { index: 1, start: "06:00", end: "07:00" }, // clamped to the 7 AM stop
+    ]);
+  });
+  it("planned start still ahead → unchanged", async () => {
+    const { catchUpBlocks } = await import("./block-plan.ts");
+    assert.deepEqual(
+      catchUpBlocks([{ start: "23:00", end: "00:30" }], 1, "2026-10-02", "11 PM - 7 AM", new Date(2026, 9, 2, 21, 0)),
+      [],
+    );
+    assert.deepEqual(
+      catchUpBlocks([{ start: "13:00", end: "14:30" }], 1, "2026-10-05", "", new Date(2026, 9, 5, 11, 50)),
+      [],
+    );
+  });
+  it("Block 2 still ahead of the moved Block 1 stays", async () => {
+    const { catchUpBlocks } = await import("./block-plan.ts");
+    const moves = catchUpBlocks(
+      [{ start: "09:00", end: "10:30" }, { start: "15:00", end: "16:30" }],
+      2, "2026-10-05", "9-5", new Date(2026, 9, 5, 11, 50),
+    );
+    assert.deepEqual(moves, [{ index: 0, start: "12:00", end: "13:30" }]);
+  });
+  it("rung or hand-edited blocks never move", async () => {
+    const { catchUpBlocks } = await import("./block-plan.ts");
+    const now = new Date(2026, 9, 5, 11, 50);
+    assert.deepEqual(catchUpBlocks([{ start: "09:00", end: "10:30", started: true }], 1, "2026-10-05", "", now), []);
+    assert.deepEqual(catchUpBlocks([{ start: "09:00", end: "10:30", edited: true }], 1, "2026-10-05", "", now), []);
+  });
+  it("bell uses the moved times: Start at 3:55 on 4:00–5:30 rings 90 min later", () => {
+    const now = new Date(2026, 9, 3, 3, 55);
+    const plan = startPlan({ start: "04:00", end: "05:30" }, now);
+    assert.equal(plan.endsAt - now.getTime(), 90 * 60_000);
+    const at4 = new Date(2026, 9, 3, 4, 0);
+    assert.equal(startPlan({ start: "04:00", end: "05:30" }, at4).end, "05:30");
+  });
+});

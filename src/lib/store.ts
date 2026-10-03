@@ -13,6 +13,10 @@ export type DailySlot = {
   outcome: string;
   /** "Before you ring the bell" ticks for this block. */
   prep?: BlockPrep;
+  /** Bell rung for this block (its times are real, never auto-moved). */
+  started?: boolean;
+  /** User changed the times by hand (never auto-moved). */
+  edited?: boolean;
 };
 
 export const emptyPrep = (): BlockPrep => ({ surface: false, phone: false, signal: false });
@@ -248,6 +252,8 @@ function migrateDaily(raw: Record<string, unknown>, hours?: string): DailyEntry 
         task: s?.task ?? "",
         outcome: s?.outcome ?? "",
         prep,
+        ...(s?.started ? { started: true } : {}),
+        ...(s?.edited ? { edited: true } : {}),
       };
     }) as DailyEntry["slots"];
     return {

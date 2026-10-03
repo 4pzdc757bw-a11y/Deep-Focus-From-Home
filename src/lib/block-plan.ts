@@ -1,4 +1,5 @@
 import { durationMinutes, stampClockNow } from "./chime.ts";
+import { parseWorkHours, toClock, workMinutes } from "./work-hours.ts";
 
 const DEFAULT_BLOCK_MINUTES = 90;
 const MAX_BLOCK_MINUTES = 4 * 60;
@@ -31,9 +32,66 @@ export function startPlan(slot: { start: string; end: string }, now = new Date()
       ahead = endAt.getTime() - now.getTime();
       if (ahead > MAX_BLOCK_MINUTES * 60_000) ahead = -1;
     }
-    if (ahead >= 60_000) return { start, end: slot.end, endsAt: endAt.getTime() };
+    // Keep it only if it is no further away than the planned length (starting
+    // before a planned start never makes the block longer).
+    if (ahead >= 60_000 && ahead <= (planned + 1) * 60_000) {
+      return { start, end: slot.end, endsAt: endAt.getTime() };
+    }
   }
   const endsAt = now.getTime() + planned * 60_000;
   return { start, end: stampClockNow(new Date(endsAt)), endsAt };
 }
 
+
+const GAP_MINUTES = 30;
+const DAY = 24 * 60;
+
+/** Round minutes up to the next quarter hour (3:52 → 4:00, 4:00 stays). */
+export function ceilQuarter(mins: number) {
+  return Math.ceil(mins / 15) * 15;
+}
+
+type PlanSlot = { start: string; end: string; started?: boolean; edited?: boolean };
+
+/**
+ * Opening today's Daily OS late: any not-yet-started block whose planned start
+ * has passed moves to the next quarter hour from now (Block 1) or 30 min after
+ * the block before it (later blocks), keeping its planned length (90 min by
+ * default). Blocks still ahead, already rung, or edited by hand stay put.
+ * `date` is the work day (YYYY-MM-DD); night-shift times past midnight count
+ * as the next calendar day. Ends are kept inside the work hours when there is
+ * room. Returns only the blocks that change.
+ */
+export function catchUpBlocks(
+  slots: readonly PlanSlot[],
+  count: number,
+  date: string,
+  hours: string | undefined | null,
+  now = new Date(),
+): { index: number; start: string; end: string }[] {
+  const [y, m, d] = date.split("-").map(Number);
+  const midnight = new Date(y ?? 1970, (m ?? 1) - 1, d ?? 1).getTime();
+  const nowMin = Math.floor((now.getTime() - midnight) / 60_000);
+  if (nowMin < 0 || nowMin > 2 * DAY) return [];
+  const wh = parseWorkHours(hours);
+  const out: { index: number; start: string; end: string }[] = [];
+  let prevEnd: number | null = null;
+  for (let i = 0; i < Math.min(count, slots.length); i++) {
+    const slot = slots[i]!;
+    const start = slot.start ? workMinutes(slot.start, hours) : null;
+    if (start == null) continue;
+    const len = plannedMinutes(slot.start, slot.end);
+    let end = start + len;
+    const movable = !slot.started && !slot.edited;
+    const earliest = prevEnd == null ? nowMin : Math.max(nowMin, prevEnd + GAP_MINUTES);
+    if (movable && start < earliest) {
+      const newStart = ceilQuarter(earliest);
+      end = newStart + len;
+      const stop = wh?.stop ?? null;
+      if (stop != null && end > stop && stop - newStart >= 15) end = stop;
+      out.push({ index: i, start: toClock(newStart), end: toClock(end) });
+    }
+    prevEnd = end;
+  }
+  return out;
+}
