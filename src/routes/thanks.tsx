@@ -20,6 +20,7 @@ import {
   parsePurchaseProduct,
   PRICE_LABEL,
   type PurchaseProduct,
+  APP_ACCESS_LINE,
 } from "@/lib/offer";
 import { useFocusStore } from "@/lib/store";
 import type { UnlockProduct } from "@/lib/unlock/access";
@@ -293,6 +294,10 @@ function ThanksPage() {
             <p className="text-ink">
               Claim one work-only surface. Park the phone for the first deep-work
               block. That is the whole job for today.
+            </p>
+            <p className="text-sm text-muted">
+              {APP_ACCESS_LINE} The app runs in your web browser; use Print this
+              day / Save PDF to keep your own copy of your entries.
             </p>
             <div className="flex flex-col gap-2 sm:flex-row">
               <Button asChild>

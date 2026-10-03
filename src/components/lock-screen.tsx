@@ -4,7 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Card } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { APP_PRICE_LABEL, PRICE_LABEL } from "@/lib/offer";
+import { APP_ACCESS_LINE, APP_PRICE_LABEL, PRICE_LABEL } from "@/lib/offer";
 import { hasAccess, type AccessNeed, type UnlockProduct } from "@/lib/unlock/access";
 import { unlockByEmail } from "@/lib/unlock/unlock";
 import { NotReadyLinks } from "@/components/not-ready";
@@ -205,7 +205,7 @@ export function LockScreen({
           {!isApp
             ? `Chapter 1 is free to read. The rest of the guide is in the handbook: ${PRICE_LABEL}, pay once.`
             : handbookBuyer
-              ? `Your handbook is unlocked, and everything in it works on paper. The Deep Focus app is an optional add-on to the handbook: a daily planner, focus bell, energy log and weekly planner in your browser. ${APP_PRICE_LABEL}, pay once.`
+              ? `Your handbook is unlocked, and everything in it works on paper. The Deep Focus app is an optional add-on to the handbook: a daily planner, focus bell, energy log and weekly planner in your browser, nothing to install. ${APP_PRICE_LABEL}. ${APP_ACCESS_LINE}`
               : `Seven short chapters on working from home: your workspace, household, phone, daily rituals, deep work, people and energy. One action per chapter. Online guide plus the PDF, ${PRICE_LABEL}, pay once.`}
         </p>
         <div className="flex flex-col gap-2 sm:flex-row">

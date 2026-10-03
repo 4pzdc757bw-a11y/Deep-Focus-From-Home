@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { LegalFooter } from "@/components/legal-footer";
 import { NotReadyLinks } from "@/components/not-ready";
 import {
+  APP_ACCESS_LINE,
   APP_PRICE_LABEL,
   markPurchased,
   PRICE_LABEL,
@@ -21,8 +22,8 @@ const HANDBOOK_INCLUDED = [
 ];
 
 const APP_INCLUDED = [
-  "The browser-based app — Daily OS, focus bell, energy peak, weekly planner, household fridge copy",
-  "Same system as the book, in your phone or computer browser — forms already filled in",
+  "The browser-based web app — Daily OS, focus bell, energy peak, weekly planner, household fridge copy",
+  "Same system as the book, in your phone or computer browser — nothing to download or install",
   "Includes handbook PDFs and fillables",
 ];
 
@@ -92,7 +93,8 @@ function BuyPage() {
         <p className="font-display text-2xl text-olive">Run it in your browser</p>
         <p className="text-ink">
           The Deep Focus app: an optional add-on to the handbook — a daily planner, focus
-          bell, energy log and weekly planner in your browser. {APP_PRICE_LABEL}, pay once.
+          bell, energy log and weekly planner that runs in your web browser. There is
+          nothing to download or install.
         </p>
         <ul className="flex flex-col gap-2 text-ink">
           {APP_INCLUDED.map((item) => (
@@ -102,7 +104,7 @@ function BuyPage() {
           ))}
         </ul>
         <p className="text-3xl font-display text-olive">{APP_PRICE_LABEL}</p>
-        <p className="text-sm text-muted">One-time. Full system in the app.</p>
+        <p className="text-sm text-muted">{APP_ACCESS_LINE}</p>
         {appCheckout ? (
           <Button variant="outline" asChild>
             <a href={appCheckout} rel="noopener noreferrer">

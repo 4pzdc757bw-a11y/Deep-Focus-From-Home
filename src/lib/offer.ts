@@ -5,6 +5,10 @@ export const PRICE_LABEL = "$17";
 export const APP_PRICE = 37;
 export const APP_PRICE_LABEL = "$37";
 
+/** Vera-approved app access line (replaces any "lifetime access" wording). Matches the Stripe product description. */
+export const APP_ACCESS_LINE =
+  "Pay once, no subscription. Use the app for as long as we offer it.";
+
 export const OFFER_NAME = "Remote Workers Deep Focus";
 
 export type PurchaseProduct = "handbook" | "app";
