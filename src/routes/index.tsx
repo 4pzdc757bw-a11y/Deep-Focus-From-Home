@@ -183,7 +183,7 @@ function Home() {
           <Card>
             <p className="text-ink">
               {appUnlocked
-                ? "Five quick setup steps, a 7-day starter, and answers to the usual questions — kids, missed days, the phone, where your notes live."
+                ? "Four quick setup steps, a 7-day starter, and answers to the usual questions — kids, missed days, the phone, where your notes live."
                 : "Seven short chapters, one action each, and answers to the usual questions — kids, missed days, the phone, where your notes live."}
             </p>
             <div className="mt-4 flex flex-wrap gap-2">

@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { isDateKey, monthKey, weekKey } from "./utils";
-import { blockDefaults, workdayKey } from "./work-hours";
+import { blockDefaults, endForStart, endsNextDay, workdayKey } from "./work-hours";
 import type { BlockPrepId, DailyCheckId, ShutdownStepId } from "./content";
 
 export type BlockPrep = Record<BlockPrepId, boolean>;
@@ -234,9 +234,17 @@ function migrateDaily(raw: Record<string, unknown>, hours?: string): DailyEntry 
               signal: Boolean(legacy.signal),
             }
           : emptyPrep());
+      const start = s?.start ?? (i === 0 ? base.slots[0].start : "");
+      let end = s?.end ?? (i === 0 ? base.slots[0].end : "");
+      // Older builds capped block ends at 11:59 PM (so 11 PM starts got 59 min).
+      // Give those the real 90-minute end past midnight (11:00 PM → 12:30 AM).
+      if (end === "23:59" && start) {
+        const fixed = endForStart(start, hours);
+        if (fixed && endsNextDay(start, fixed)) end = fixed;
+      }
       return {
-        start: s?.start ?? (i === 0 ? base.slots[0].start : ""),
-        end: s?.end ?? (i === 0 ? base.slots[0].end : ""),
+        start,
+        end,
         task: s?.task ?? "",
         outcome: s?.outcome ?? "",
         prep,
