@@ -70,11 +70,6 @@ function AppOfferPage() {
         <div className="rounded-md border border-yellow bg-paper p-3 text-sm text-ink">
           <p className="font-semibold text-olive">What the app adds</p>
           <p className="mt-1">
-            Free for everyone: the home page, How this works + FAQ, Chapter 1,
-            and the free 7-day starter week. The handbook adds the other six
-            chapters, the PDFs and the fillable forms.
-          </p>
-          <p className="mt-1">
             The app adds the interactive tools, which are locked unless you
             buy the app: the daily planner (Daily OS with the focus bell and
             Close day), the energy log, home focus setup, the weekly planner,
