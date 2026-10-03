@@ -266,3 +266,33 @@ describe("late open moves passed blocks to now", () => {
     assert.equal(startPlan({ start: "04:00", end: "05:30" }, at4).end, "05:30");
   });
 });
+
+describe("block after one that ran", () => {
+  it("Block 1 ended 3:54 AM → Block 2 4:15–5:45 AM (planned 1:00 passed)", async () => {
+    const { catchUpBlocks } = await import("./block-plan.ts");
+    const moves = catchUpBlocks(
+      [{ start: "03:53", end: "03:54", started: true }, { start: "01:00", end: "02:30" }],
+      2, "2026-10-02", "11 PM - 7 AM", new Date(2026, 9, 3, 3, 54, 30),
+    );
+    assert.deepEqual(moves, [{ index: 1, start: "04:15", end: "05:45" }]);
+  });
+  it("future planned Block 2 stays", async () => {
+    const { catchUpBlocks } = await import("./block-plan.ts");
+    const moves = catchUpBlocks(
+      [{ start: "09:00", end: "10:00", started: true }, { start: "13:00", end: "14:30" }],
+      2, "2026-10-05", "9-5", new Date(2026, 9, 5, 10, 0),
+    );
+    assert.deepEqual(moves, []);
+  });
+});
+
+describe("app-moved blocks follow the block before", () => {
+  it("Block 2 auto-moved to 6:00 comes back to 4:15 after Block 1 ends at 3:54", async () => {
+    const { catchUpBlocks } = await import("./block-plan.ts");
+    const moves = catchUpBlocks(
+      [{ start: "03:53", end: "03:54", started: true }, { start: "06:00", end: "07:00", auto: true }],
+      2, "2026-10-02", "11 PM - 7 AM", new Date(2026, 9, 3, 3, 54, 30),
+    );
+    assert.deepEqual(moves, [{ index: 1, start: "04:15", end: "05:45" }]);
+  });
+});

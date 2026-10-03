@@ -1,5 +1,5 @@
 import { durationMinutes, stampClockNow } from "./chime.ts";
-import { parseWorkHours, toClock, workMinutes } from "./work-hours.ts";
+import { parseWorkHours, spanMinutes, toClock, workMinutes } from "./work-hours.ts";
 
 const DEFAULT_BLOCK_MINUTES = 90;
 const MAX_BLOCK_MINUTES = 4 * 60;
@@ -44,6 +44,8 @@ export function startPlan(slot: { start: string; end: string }, now = new Date()
 
 
 const GAP_MINUTES = 30;
+/** Break after a block that actually ran (its end is the real end). */
+const GAP_AFTER_RUN = 15;
 const DAY = 24 * 60;
 
 /** Round minutes up to the next quarter hour (3:52 → 4:00, 4:00 stays). */
@@ -51,13 +53,15 @@ export function ceilQuarter(mins: number) {
   return Math.ceil(mins / 15) * 15;
 }
 
-type PlanSlot = { start: string; end: string; started?: boolean; edited?: boolean };
+type PlanSlot = { start: string; end: string; started?: boolean; edited?: boolean; auto?: boolean };
 
 /**
  * Opening today's Daily OS late: any not-yet-started block whose planned start
- * has passed moves to the next quarter hour from now (Block 1) or 30 min after
- * the block before it (later blocks), keeping its planned length (90 min by
- * default). Blocks still ahead, already rung, or edited by hand stay put.
+ * has passed moves to the next quarter hour from now (Block 1) or after the
+ * block before it (30 min after a planned block, 15 min after one that
+ * actually ran, e.g. ended 3:54 → 4:15), rounded up to a quarter hour, keeping its planned length (90 min by
+ * default). Blocks still ahead, already rung, or edited by hand stay put;
+ * blocks the app moved (`auto`) keep following the block before them.
  * `date` is the work day (YYYY-MM-DD); night-shift times past midnight count
  * as the next calendar day. Ends are kept inside the work hours when there is
  * room. Returns only the blocks that change.
@@ -76,22 +80,31 @@ export function catchUpBlocks(
   const wh = parseWorkHours(hours);
   const out: { index: number; start: string; end: string }[] = [];
   let prevEnd: number | null = null;
+  let prevRan = false;
   for (let i = 0; i < Math.min(count, slots.length); i++) {
     const slot = slots[i]!;
     const start = slot.start ? workMinutes(slot.start, hours) : null;
     if (start == null) continue;
-    const len = plannedMinutes(slot.start, slot.end);
-    let end = start + len;
+    // App-moved blocks may have been trimmed to the work-day stop: back to 90 min.
+    const len = slot.auto ? DEFAULT_BLOCK_MINUTES : plannedMinutes(slot.start, slot.end);
+    // A block that ran keeps its real end, however short.
+    const ranSpan = slot.started && slot.end ? spanMinutes(slot.start, slot.end) : null;
+    let end = start + (ranSpan ?? len);
     const movable = !slot.started && !slot.edited;
-    const earliest = prevEnd == null ? nowMin : Math.max(nowMin, prevEnd + GAP_MINUTES);
-    if (movable && start < earliest) {
-      const newStart = ceilQuarter(earliest);
+    const gap = prevRan ? GAP_AFTER_RUN : GAP_MINUTES;
+    const earliest = prevEnd == null ? nowMin : Math.max(nowMin, prevEnd + gap);
+    const target = ceilQuarter(earliest);
+    // Passed → move. Times the app already moved keep following the block
+    // before (e.g. Block 1 ends early → Block 2 comes 15 min after it).
+    if (movable && (start < earliest || (slot.auto && prevEnd != null && start !== target))) {
+      const newStart = target;
       end = newStart + len;
       const stop = wh?.stop ?? null;
       if (stop != null && end > stop && stop - newStart >= 15) end = stop;
       out.push({ index: i, start: toClock(newStart), end: toClock(end) });
     }
     prevEnd = end;
+    prevRan = Boolean(slot.started);
   }
   return out;
 }

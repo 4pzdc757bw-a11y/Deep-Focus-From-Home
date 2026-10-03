@@ -148,23 +148,28 @@ export function DailyOs({ date }: { date?: string }) {
   }, [activeHere, session.endsAt]);
 
   const left = activeHere && session.endsAt ? session.endsAt - now : 0;
+  const entryRef = useRef(entry);
+  entryRef.current = entry;
 
   // Opening today's page after a planned start has passed (e.g. 3:52 AM on an
   // 11 PM shift): move not-yet-rung blocks to the next quarter hour so the
   // times, countdown and bell match now. Edited or rung blocks stay put.
+  // Also right after a block ends: later blocks follow its real end (+15 min).
   useEffect(() => {
     if (!hydrated || osDate !== workday) return;
     const st = useFocusStore.getState();
     if (st.session.running && st.session.date === osDate) return;
+    const fresh = st.dailies[osDate];
+    const entry = fresh ? { ...entryRef.current, slots: fresh.slots, slotCount: fresh.slotCount } : entryRef.current;
     // Blocks rung before the `started` flag existed: today's last session covers them.
     const rungUpTo =
       entry.checks.block && st.session.date === osDate ? st.session.slotIndex : -1;
     const slots = entry.slots.map((sl, i) => (i <= rungUpTo ? { ...sl, started: true } : sl));
     const moves = catchUpBlocks(slots, entry.slotCount ?? 1, osDate, workHours, new Date());
-    for (const mv of moves) patchSlot(mv.index, { start: mv.start, end: mv.end });
+    for (const mv of moves) patchSlot(mv.index, { start: mv.start, end: mv.end, auto: true });
     // Only on open / day change; edits afterwards are the user's.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hydrated, osDate, workday]);
+  }, [hydrated, osDate, workday, session.running]);
 
   useEffect(() => {
     if (!activeHere || left > 0) return;
@@ -196,7 +201,7 @@ export function DailyOs({ date }: { date?: string }) {
     const slot = entry.slots[index];
     // Stamp actual start; end follows the planned length (Done stamps the real end).
     const plan = startPlan(slot);
-    patchSlot(index, { start: plan.start, end: plan.end, started: true });
+    patchSlot(index, { start: plan.start, end: plan.end, started: true, auto: false });
     setRinging(true);
     window.setTimeout(() => setRinging(false), 1400);
     if (shouldExplainNotify()) setNotifyAsk(true);
@@ -216,6 +221,20 @@ export function DailyOs({ date }: { date?: string }) {
 
   function addBlock() {
     if (visible >= 3) return;
+    const prev = entry.slots[visible - 1];
+    // New block: 15 min after a block that ran (real end, rounded up to the
+    // quarter hour), else the work-day default; moved to now if already past.
+    // Seeding start = previous end lets catchUpBlocks apply that rule.
+    const seed =
+      prev?.started && prev.end
+        ? { start: prev.end, end: prev.end }
+        : blockDefaults(visible, workHours, prev?.end);
+    const slots = entry.slots.map((s, i) => (i === visible ? { ...emptySlot(), ...seed } : s));
+    const moved = osDate === workday
+      ? catchUpBlocks(slots, visible + 1, osDate, workHours, new Date()).find((m) => m.index === visible)
+      : undefined;
+    const times = moved ?? (seed.start === seed.end ? blockDefaults(visible, workHours, prev?.end) : seed);
+    patchSlot(visible, { start: times.start, end: times.end, auto: true });
     patch({ slotCount: (visible + 1) as 2 | 3 });
   }
 

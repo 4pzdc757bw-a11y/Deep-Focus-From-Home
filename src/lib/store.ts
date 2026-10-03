@@ -17,6 +17,8 @@ export type DailySlot = {
   started?: boolean;
   /** User changed the times by hand (never auto-moved). */
   edited?: boolean;
+  /** Times were moved by the app (catch-up); they follow the block before. */
+  auto?: boolean;
 };
 
 export const emptyPrep = (): BlockPrep => ({ surface: false, phone: false, signal: false });
@@ -254,6 +256,7 @@ function migrateDaily(raw: Record<string, unknown>, hours?: string): DailyEntry 
         prep,
         ...(s?.started ? { started: true } : {}),
         ...(s?.edited ? { edited: true } : {}),
+        ...(s?.auto ? { auto: true } : {}),
       };
     }) as DailyEntry["slots"];
     return {
