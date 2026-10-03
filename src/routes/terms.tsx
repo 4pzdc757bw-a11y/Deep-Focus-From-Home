@@ -161,7 +161,7 @@ function TermsPage() {
         support@jeffsebiz.com and explain the problem. We review each of those
         requests case by case and may offer store credit, replace or fix a
         file, or in rare cases a refund. When we grant store credit, it equals the
-        purchase price you paid (unless we say otherwise), can be used toward any
+        purchase price you paid (unless we say otherwise in writing), can be used toward any
         Jeffsebiz product, and is good for 12 months from the purchase date.{" "}
         {STORE_CREDIT_LIMITS} Full details:{" "}
         <Link to="/store-credit">Store Credit / Digital Purchase Policy</Link>.

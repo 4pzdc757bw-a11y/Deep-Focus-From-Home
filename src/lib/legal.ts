@@ -52,7 +52,7 @@ export const CONSUMER_RIGHTS_LINE =
 
 /** App discontinuation (Terms section 3). */
 export const DISCONTINUE_NOTICE =
-  "If we decide to discontinue the app, we’ll give at least 30 days’ notice by email. Anyone who bought the app within the 12 months before that notice can ask for store credit under section 8.";
+  "If we decide to discontinue the app, we’ll give at least 30 days’ notice by email. Anyone who bought the app within the 12 months before that notice can ask for store credit under section 8, and we’ll provide it. Store credit issued because we discontinued the app is good for 12 months from the date we issue it.";
 
 export const LEGAL_LINKS = [
   { to: "/terms" as const, label: "Terms of Service" },
