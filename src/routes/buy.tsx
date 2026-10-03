@@ -76,21 +76,6 @@ function BuyPage() {
         )}
       </Card>
 
-      <Card className="flex flex-col gap-3">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
-          Free · no card
-        </p>
-        <p className="font-display text-2xl text-olive">Try the free 7-day starter first</p>
-        <p className="text-ink">
-          One small job a day for a week. Free, by email.
-        </p>
-        <div>
-          <Button variant="outline" asChild>
-            <Link to="/start">Get the free 7-day starter</Link>
-          </Button>
-        </div>
-      </Card>
-
       <NotReadyLinks />
 
       <p className="text-sm text-muted">{STORE_CREDIT_CHECKOUT_LINE}</p>
