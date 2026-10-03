@@ -29,10 +29,11 @@ function GatedOutlet() {
 
 /**
  * Runs before first paint: marks <html data-df-starter> when this browser has
- * a starter week saved, so Home can reserve the right space before the store
+ * a starter week saved (and data-df-day1 before Day 1 is done, when the card
+ * is taller), so Home can reserve the right space before the store
  * hydrates (avoids the big layout shift of the Daily OS on load).
  */
-const PREPAINT_SCRIPT = `try{var s=JSON.parse(localStorage.getItem("deep-focus-from-home")||"null");if(s&&s.state&&s.state.starterStart)document.documentElement.setAttribute("data-df-starter","1")}catch(e){}`;
+const PREPAINT_SCRIPT = `try{var s=JSON.parse(localStorage.getItem("deep-focus-from-home")||"null");if(s&&s.state&&s.state.starterStart){document.documentElement.setAttribute("data-df-starter","1");if(!(s.state.starterDone||[]).length)document.documentElement.setAttribute("data-df-day1","1")}}catch(e){}`;
 
 export const Route = createRootRoute({
   // Server-verified unlock (signed httpOnly cookie). Runs on the server for the

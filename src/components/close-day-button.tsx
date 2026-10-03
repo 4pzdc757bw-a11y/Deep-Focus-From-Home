@@ -7,7 +7,7 @@ import { WeeklyPlannerSheet } from "@/components/weekly-planner-sheet";
 import { Button } from "@/components/ui/button";
 import { closeDay } from "@/lib/close-day";
 import { useFocusStore } from "@/lib/store";
-import { printDaily } from "@/lib/print";
+import { printDaily, printedRecently } from "@/lib/print";
 import { cn, isFriday, todayKey } from "@/lib/utils";
 
 type Phase =
@@ -37,8 +37,11 @@ export function CloseDayButton({
   const [next, setNext] = useState<{ closedDate: string; nextDate: string } | null>(
     null,
   );
+  // Printed / saved this day's PDF in the last ~10 min → don't ask again.
+  const [alreadySaved, setAlreadySaved] = useState(false);
 
   function startClose() {
+    setAlreadySaved(printedRecently(todayKey()));
     if (isFriday()) {
       setPhase("week-plan");
       return;
@@ -58,13 +61,26 @@ export function CloseDayButton({
     const closedDate = todayKey();
     const result = closeDay(closedDate);
     setNext({ closedDate, nextDate: result.nextDate });
+    if (printedRecently(closedDate)) {
+      // Already saved a few minutes ago: straight to the next work day.
+      setPhase("idle");
+      void navigate({ to: "/daily", search: { date: result.nextDate } });
+      return;
+    }
     setPhase("offer-pdf");
   }
 
-  function savePdfThenAdvance() {
+  /** Close, then print again even though it was saved recently. */
+  function runCloseAndSaveAgain() {
+    const closedDate = todayKey();
+    const result = closeDay(closedDate);
+    savePdfThenAdvance({ closedDate, nextDate: result.nextDate });
+  }
+
+  function savePdfThenAdvance(target = next) {
     setPhase("idle");
-    const closedDate = next?.closedDate ?? todayKey();
-    const nextDate = next?.nextDate;
+    const closedDate = target?.closedDate ?? todayKey();
+    const nextDate = target?.nextDate;
     // Land on the closed day's Daily OS so it is what prints, then offer Save as PDF.
     void navigate({ to: "/daily", search: { date: closedDate } }).then(() => {
       window.setTimeout(() => {
@@ -155,8 +171,16 @@ export function CloseDayButton({
               <p className="mt-2 text-ink">
                 Marks today done (and copies your Shutdown note into the starter
                 day’s “one line” during week one), keeps the Daily OS in local
-                history, then offers Save PDF and moves you to tomorrow.
+                history, then{" "}
+                {alreadySaved
+                  ? "moves you to your next work day."
+                  : "offers Save PDF and moves you to your next work day."}
               </p>
+              {alreadySaved ? (
+                <p className="mt-2 text-sm text-olive">
+                  You already saved today’s PDF, so it won’t ask again.
+                </p>
+              ) : null}
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
               <button
@@ -173,6 +197,15 @@ export function CloseDayButton({
               >
                 Not yet
               </button>
+              {alreadySaved ? (
+                <button
+                  type="button"
+                  className="inline-flex min-h-11 items-center px-1 text-sm font-semibold text-gold underline underline-offset-4"
+                  onClick={runCloseAndSaveAgain}
+                >
+                  Close and save PDF again
+                </button>
+              ) : null}
             </div>
           </div>
         </div>
@@ -221,7 +254,7 @@ export function CloseDayButton({
               <button
                 type="button"
                 className="inline-flex h-11 items-center justify-center rounded-md bg-olive px-4 text-sm font-semibold text-cream"
-                onClick={savePdfThenAdvance}
+                onClick={() => savePdfThenAdvance()}
               >
                 Save PDF
               </button>

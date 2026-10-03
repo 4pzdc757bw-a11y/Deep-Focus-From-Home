@@ -1,6 +1,6 @@
 import { LegalFooter } from "@/components/legal-footer";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, BookOpen } from "lucide-react";
 import { DailyOs } from "@/components/daily-os";
 import { LockScreen, useHasAccess } from "@/components/lock-screen";
 import { Card, PageTitle } from "@/components/app-shell";
@@ -49,13 +49,17 @@ function Home() {
   const appUnlocked = useHasAccess("app");
 
   // Week one: never force. First start-of-day in week two: Home focus setup first.
+  // Never for visitors who have not unlocked the app (it would end at a lock).
   useEffect(() => {
-    if (!hydrated || homeFocusDismissed) return;
+    if (!hydrated || homeFocusDismissed || !appUnlocked) {
+      setShowHomeFocus(false);
+      return;
+    }
     const force = forceHomeFocusSetupPrompt();
     const due =
       force || (isWeekTwo(starterStart) && !homeFocusWeekTwoPrompted);
     setShowHomeFocus(due);
-  }, [hydrated, starterStart, homeFocusWeekTwoPrompted, homeFocusDismissed]);
+  }, [hydrated, starterStart, homeFocusWeekTwoPrompted, homeFocusDismissed, appUnlocked]);
 
   useEffect(() => {
     if (!session.running || !session.endsAt) return;
@@ -66,7 +70,7 @@ function Home() {
   return (
     <div className="flex flex-col gap-5">
       {/* Screen-only chrome: never print marketing / starter CTAs above the Daily OS sheet */}
-      {returning ? (
+      {returning && appUnlocked ? (
         <Card className="no-print">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
             Continue week one
@@ -91,22 +95,32 @@ function Home() {
               style={{ width: `${(starterDone.length / 7) * 100}%` }}
             />
           </div>
-          <div className="mt-4 flex flex-wrap gap-2">
+          {nextDay && nextDay.day === 1 ? <GuideFirstNote /> : null}
+          <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
             {nextDay ? (
               <Button asChild>
                 <Link to="/daily" search={{ date: nextDate }}>
-                  Open Day {nextDay.day} OS <ArrowRight className="size-4" />
+                  Start Day {nextDay.day} <ArrowRight className="size-4" />
                 </Link>
               </Button>
-            ) : null}
-            <Button variant="outline" asChild>
-              <Link to="/starter">Starter week</Link>
-            </Button>
+            ) : (
+              <Button asChild>
+                <Link to="/daily" search={{ date: undefined }}>
+                  Open today <ArrowRight className="size-4" />
+                </Link>
+              </Button>
+            )}
+            <Link
+              to="/starter"
+              className="inline-flex min-h-11 items-center text-sm font-semibold text-olive underline underline-offset-4"
+            >
+              See all 7 days
+            </Link>
           </div>
         </Card>
       ) : null}
 
-      {preHydration ? (
+      {preHydration && appUnlocked ? (
         <div className="df-pre-returning no-print" aria-hidden="true" />
       ) : null}
 
@@ -133,14 +147,20 @@ function Home() {
               kids, missed days, the phone, where your notes live.
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
-              <Button
-                onClick={() => {
-                  setTourClosed(false);
-                  setTourOpen(true);
-                }}
-              >
-                Show me how to start
-              </Button>
+              {appUnlocked ? (
+                <Button
+                  onClick={() => {
+                    setTourClosed(false);
+                    setTourOpen(true);
+                  }}
+                >
+                  Show me how to start
+                </Button>
+              ) : (
+                <Button asChild>
+                  <Link to="/buy">See what’s included</Link>
+                </Button>
+              )}
               <Button variant="outline" asChild>
                 <Link to="/intro" preload="intent">
                   How this works + FAQ <ArrowRight className="size-4" />
@@ -149,23 +169,26 @@ function Home() {
             </div>
           </Card>
 
-          <Card>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
-              7-day starter
-            </p>
-            <p className="mt-1 font-display text-xl text-olive">Start with Day 1 today.</p>
-            <p className="mt-2 text-ink">
-              Claim one surface that is work-only. After you start, Today opens
-              on the current day — not this welcome.
-            </p>
-            <div className="mt-4">
-              <Button asChild>
-                <Link to="/starter">
-                  Open starter week <ArrowRight className="size-4" />
-                </Link>
-              </Button>
-            </div>
-          </Card>
+          {appUnlocked ? (
+            <Card>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
+                7-day starter
+              </p>
+              <p className="mt-1 font-display text-xl text-olive">Start with Day 1 today.</p>
+              <p className="mt-2 text-ink">
+                Claim one surface that is work-only. After you start, Today opens
+                on the current day — not this welcome.
+              </p>
+              <GuideFirstNote />
+              <div className="mt-4">
+                <Button asChild>
+                  <Link to="/starter">
+                    Open starter week <ArrowRight className="size-4" />
+                  </Link>
+                </Button>
+              </div>
+            </Card>
+          ) : null}
         </div>
       ) : null}
 
@@ -179,7 +202,11 @@ function Home() {
 
       {appUnlocked ? <DailyOs /> : <LockScreen need="app" compact />}
 
-      {hydrated && !showHomeFocus && !tourClosed && (tourOpen || (!tourDone && !starterStart)) ? (
+      {hydrated &&
+      appUnlocked &&
+      !showHomeFocus &&
+      !tourClosed &&
+      (tourOpen || (!tourDone && !starterStart)) ? (
         <GettingStartedSheet onDone={() => setTourClosed(true)} />
       ) : null}
 
@@ -192,6 +219,23 @@ function Home() {
         />
       ) : null}
       <LegalFooter className="no-print mt-8" />
+    </div>
+  );
+}
+
+/** Day 1 nudge: read Guide chapters 1–4 (workspace setup) before starting the week. */
+function GuideFirstNote() {
+  return (
+    <div className="mt-3 flex flex-col gap-2 rounded-md border border-yellow bg-paper p-3 sm:flex-row sm:items-center">
+      <p className="text-sm text-ink sm:flex-1">
+        Before you start your week, read Guide chapters 1–4. They show you how to set up your
+        workspace.
+      </p>
+      <Button variant="outline" size="sm" asChild>
+        <Link to="/guide/$slug" params={{ slug: "intro" }}>
+          <BookOpen className="size-4" /> Read chapter 1
+        </Link>
+      </Button>
     </div>
   );
 }

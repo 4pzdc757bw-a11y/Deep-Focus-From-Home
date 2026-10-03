@@ -14,9 +14,14 @@ import {
   remainingLabel,
   stampClockNow,
 } from "@/lib/chime";
-import { installPrintTextareaFit, printDaily } from "@/lib/print";
+import { installPrintTextareaFit, printDaily, setActivePrintDate } from "@/lib/print";
 import { blockDefaults, endForStart } from "@/lib/work-hours";
-import { beginSession, completeSession } from "@/lib/session-runtime";
+import {
+  beginSession,
+  completeSession,
+  requestNotify,
+  shouldExplainNotify,
+} from "@/lib/session-runtime";
 import { partnerMessage } from "@/lib/backup";
 import { shareOrCopy } from "@/lib/share";
 import { emptyPrep, emptySlot, useDaily, useFocusStore } from "@/lib/store";
@@ -139,11 +144,20 @@ export function DailyOs({ date }: { date?: string }) {
     null,
   );
   const wasRunningHere = useRef(false);
+  // One-time "allow notifications" explainer, shown after Start while the
+  // browser has not been asked yet. The browser prompt only follows OK.
+  const [notifyAsk, setNotifyAsk] = useState(false);
 
   // Cmd+P / Ctrl+P too: fit notes to their content while printing.
   useEffect(() => {
     installPrintTextareaFit();
   }, []);
+
+  // Cmd+P on this page counts as saving this day (Close day won't ask again).
+  useEffect(() => {
+    setActivePrintDate(osDate);
+    return () => setActivePrintDate(null);
+  }, [osDate]);
 
   const visible = Math.min(3, Math.max(1, entry.slotCount ?? 1)) as 1 | 2 | 3;
   const activeHere = session.running && session.date === osDate;
@@ -189,6 +203,7 @@ export function DailyOs({ date }: { date?: string }) {
     patchSlot(index, { start: plan.start, end: plan.end });
     setRinging(true);
     window.setTimeout(() => setRinging(false), 1400);
+    if (shouldExplainNotify()) setNotifyAsk(true);
     await beginSession({
       date: osDate,
       slotIndex: index,
@@ -298,6 +313,33 @@ export function DailyOs({ date }: { date?: string }) {
                 onChange={(e) => patchSlot(i, { outcome: e.target.value })}
               />
             </Field>
+            {active && notifyAsk ? (
+              <div
+                role="dialog"
+                aria-label="Allow notifications"
+                className="no-print flex flex-col gap-2 rounded-md border border-gold bg-paper p-3 sm:flex-row sm:items-center"
+              >
+                <p className="text-sm text-ink sm:flex-1">
+                  Allow notifications so the bell can alert you when a block ends. You only
+                  need to do this once.
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => {
+                      setNotifyAsk(false);
+                      void requestNotify();
+                    }}
+                  >
+                    OK
+                  </Button>
+                  <Button type="button" size="sm" variant="ghost" onClick={() => setNotifyAsk(false)}>
+                    Not now
+                  </Button>
+                </div>
+              </div>
+            ) : null}
             {active ? (
               <p className="no-print text-sm text-muted">
                 The screen stays awake for this block. If you lock the phone, the

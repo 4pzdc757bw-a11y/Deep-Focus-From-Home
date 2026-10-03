@@ -77,6 +77,17 @@ html[data-df-starter] .df-pre-returning {
   min-height: 12.75rem;
 }
 
+/* Day 1 card also carries the "read Guide chapters 1–4" note. */
+html[data-df-starter][data-df-day1] .df-pre-returning {
+  min-height: 21.25rem;
+}
+
+@media (min-width: 640px) {
+  html[data-df-starter][data-df-day1] .df-pre-returning {
+    min-height: 17.75rem;
+  }
+}
+
 html[data-df-starter] .df-pre-welcome {
   display: none !important;
 }

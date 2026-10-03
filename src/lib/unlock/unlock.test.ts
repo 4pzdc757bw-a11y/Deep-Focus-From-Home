@@ -108,3 +108,31 @@ describe("rate limit", () => {
     assert.equal(rateLimitHit("k", 3, 1000, 2000), false);
   });
 });
+
+describe("unlock form result handling", async () => {
+  const { readUnlockResult, unlockErrorText, NO_PURCHASE_MESSAGE, UNLOCK_FALLBACK_MESSAGE } =
+    await import("./unlock-result.ts");
+  it("shows the no-purchase message returned as data", () => {
+    assert.deepEqual(readUnlockResult({ ok: false, error: NO_PURCHASE_MESSAGE }), {
+      ok: false,
+      error: NO_PURCHASE_MESSAGE,
+    });
+  });
+  it("accepts a real unlock", () => {
+    assert.deepEqual(readUnlockResult({ ok: true, product: "app" }), { ok: true, product: "app" });
+  });
+  it("never treats an unexpected value as success (silent reset bug)", () => {
+    for (const v of [undefined, null, {}, { product: null }, "ok", { ok: true, product: "x" }]) {
+      const r = readUnlockResult(v);
+      assert.equal(r.ok, false);
+      assert.ok(!r.ok && r.error.length > 0);
+    }
+  });
+  it("turns anything thrown into visible text", () => {
+    assert.equal(unlockErrorText(new Error("Too many tries.")), "Too many tries.");
+    assert.equal(unlockErrorText("plain string"), "plain string");
+    assert.equal(unlockErrorText({ message: "obj msg" }), "obj msg");
+    assert.equal(unlockErrorText(undefined), UNLOCK_FALLBACK_MESSAGE);
+    assert.equal(unlockErrorText(new Error("<html><body>504</body></html>")), UNLOCK_FALLBACK_MESSAGE);
+  });
+});

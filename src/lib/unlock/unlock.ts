@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import type { UnlockProduct } from "./access";
+import { NO_PURCHASE_MESSAGE, type UnlockByEmailResult } from "./unlock-result";
 
 /**
  * Device unlock server functions. Server-only modules are imported inside the
@@ -8,8 +9,6 @@ import type { UnlockProduct } from "./access";
 
 export type UnlockStatus = { product: UnlockProduct | null };
 
-const NO_PURCHASE_MESSAGE =
-  "No purchase found for that email. Use the email you entered at checkout, or email jeffrey@jeffsebiz.com with your Stripe receipt.";
 
 async function readCookieProduct(): Promise<UnlockProduct | null> {
   const { getCookie } = await import("@tanstack/react-start/server");
@@ -74,18 +73,25 @@ export const unlockFromCheckoutSession = createServerFn({ method: "POST" })
     return { product: await saveUnlock(product) };
   });
 
-/** "Already bought? Unlock this device": look up a completed checkout by email. */
+/**
+ * "Already bought? Unlock this device": look up a completed checkout by email.
+ * Expected failures are returned as `{ ok: false, error }` (not thrown) so the
+ * form always has a message to show.
+ */
 export const unlockByEmail = createServerFn({ method: "POST" })
   .validator((input: unknown) => {
     const raw = (input ?? {}) as { email?: unknown };
-    const typed = typeof raw.email === "string" ? raw.email.trim() : "";
-    const email = typed.toLowerCase();
-    if (!email || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      throw new Error("Enter the email you used at checkout.");
-    }
-    return { email, typed };
+    const typed = typeof raw.email === "string" ? raw.email.trim().slice(0, 300) : "";
+    return { email: typed.toLowerCase(), typed };
   })
-  .handler(async ({ data }): Promise<UnlockStatus> => {
+  .handler(async ({ data }): Promise<UnlockByEmailResult> => {
+    if (
+      !data.email ||
+      data.email.length > 254 ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)
+    ) {
+      return { ok: false, error: "Enter the email you used at checkout." };
+    }
     const { getRequestHeader } = await import("@tanstack/react-start/server");
     const { rateLimitHit } = await import("./rate-limit.server");
     const ip =
@@ -97,7 +103,7 @@ export const unlockByEmail = createServerFn({ method: "POST" })
       rateLimitHit(`ip:${ip}`, 8, tenMinutes) ||
       rateLimitHit(`email:${data.email}`, 5, tenMinutes)
     ) {
-      throw new Error("Too many tries. Wait 10 minutes and try again.");
+      return { ok: false, error: "Too many tries. Wait 10 minutes and try again." };
     }
 
     const { stripeClient, isPaidCheckoutSession } = await import(
@@ -134,11 +140,22 @@ export const unlockByEmail = createServerFn({ method: "POST" })
         "[unlock] Stripe email lookup failed:",
         err instanceof Error ? err.message : err,
       );
-      throw new Error(
-        "We could not check purchases right now. Try again in a minute, or email jeffrey@jeffsebiz.com with your Stripe receipt.",
-      );
+      return {
+        ok: false,
+        error:
+          "We could not check purchases right now. Try again in a minute, or email jeffrey@jeffsebiz.com with your Stripe receipt.",
+      };
     }
 
-    if (!found) throw new Error(NO_PURCHASE_MESSAGE);
-    return { product: await saveUnlock(found) };
+    if (!found) return { ok: false, error: NO_PURCHASE_MESSAGE };
+    try {
+      return { ok: true, product: await saveUnlock(found) };
+    } catch (err) {
+      console.error("[unlock] could not save unlock cookie:", err);
+      return {
+        ok: false,
+        error:
+          "We found your purchase but could not unlock this device. Email jeffrey@jeffsebiz.com with your Stripe receipt.",
+      };
+    }
   });

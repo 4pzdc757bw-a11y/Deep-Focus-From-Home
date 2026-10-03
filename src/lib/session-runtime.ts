@@ -14,6 +14,20 @@ function notify(title: string, body: string) {
   }
 }
 
+/**
+ * True when the browser has not been asked yet (permission "default"), so the
+ * Daily OS should show its one-line explainer before asking. Granted, denied
+ * or unsupported → never show it again.
+ */
+export function shouldExplainNotify() {
+  try {
+    return typeof Notification !== "undefined" && Notification.permission === "default";
+  } catch {
+    return false;
+  }
+}
+
+/** Ask the browser. Only call after the user taps OK on the in-app explainer. */
 export async function requestNotify() {
   try {
     if (typeof Notification === "undefined") return;
@@ -38,10 +52,10 @@ export function releaseScreen() {
 }
 
 /**
- * Start a block. State flips to running immediately (one tap), then the bell,
- * wake lock, and notification permission run in the background — they must
- * never hold the UI (Chrome's notification prompt used to leave the button on
- * "Start" until it was answered, which felt like a second tap was needed).
+ * Start a block. State flips to running immediately (one tap), then the bell
+ * and wake lock run in the background — they must never hold the UI.
+ * Notification permission is NOT requested here: the Daily OS first shows a
+ * short in-app explainer and only asks the browser after the user taps OK.
  */
 export async function beginSession(args: {
   date: string;
@@ -65,7 +79,6 @@ export async function beginSession(args: {
   // Called synchronously inside the tap so audio is allowed to start.
   const bell = playStartBell().catch(() => undefined);
   void holdScreen();
-  void requestNotify();
   await bell;
 }
 

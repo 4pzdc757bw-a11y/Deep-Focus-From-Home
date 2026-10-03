@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { APP_PRICE_LABEL, PRICE_LABEL } from "@/lib/offer";
 import { hasAccess, type AccessNeed, type UnlockProduct } from "@/lib/unlock/access";
 import { unlockByEmail } from "@/lib/unlock/unlock";
+import { readUnlockResult, unlockErrorText } from "@/lib/unlock/unlock-result";
 
 const rootApi = getRouteApi("__root__");
 
@@ -20,16 +21,27 @@ export function useHasAccess(need: AccessNeed): boolean {
   return hasAccess(useUnlockedProduct(), need);
 }
 
-function errorText(err: unknown): string {
-  if (err instanceof Error && err.message) return err.message;
-  return "Something went wrong. Try again, or email jeffrey@jeffsebiz.com with your Stripe receipt.";
-}
+/**
+ * Last attempt, kept outside React so the email and message survive if the
+ * lock screen re-mounts (route change, loader refresh) right after a failed try.
+ */
+let lastAttempt: { email: string; error: string | null } = { email: "", error: null };
 
 export function UnlockDeviceForm() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const [email, setEmailState] = useState(lastAttempt.email);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setErrorState] = useState<string | null>(lastAttempt.error);
+
+  function setEmail(value: string) {
+    lastAttempt = { email: value, error: lastAttempt.error };
+    setEmailState(value);
+  }
+
+  function setError(value: string | null) {
+    lastAttempt = { ...lastAttempt, error: value };
+    setErrorState(value);
+  }
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -37,10 +49,15 @@ export function UnlockDeviceForm() {
     setBusy(true);
     setError(null);
     try {
-      await unlockByEmail({ data: { email } });
+      const result = readUnlockResult(await unlockByEmail({ data: { email } }));
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      lastAttempt = { email: "", error: null };
       await router.invalidate();
     } catch (err) {
-      setError(errorText(err));
+      setError(unlockErrorText(err));
     } finally {
       setBusy(false);
     }
@@ -71,7 +88,11 @@ export function UnlockDeviceForm() {
         </Button>
       </div>
       {error ? (
-        <p role="alert" className="text-sm text-ink">
+        <p
+          role="alert"
+          aria-live="assertive"
+          className="rounded-md border border-gold bg-paper px-3 py-2 text-sm font-semibold text-ink"
+        >
           {error}
         </p>
       ) : null}

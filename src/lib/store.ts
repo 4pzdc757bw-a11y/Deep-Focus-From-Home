@@ -88,6 +88,8 @@ export type HouseholdState = {
   chores: string;
   kidVersion: string;
   signedBy: string;
+  /** Work days picked in Getting started (0 = Sun … 6 = Sat). Unset → Mon–Fri. */
+  workDays?: number[];
 };
 
 export type WeekState = {
@@ -216,8 +218,8 @@ const emptyMonth = (): MonthState => ({
   nextPeak: "",
 });
 
-function migrateDaily(raw: Record<string, unknown>): DailyEntry {
-  const base = emptyDaily();
+function migrateDaily(raw: Record<string, unknown>, hours?: string): DailyEntry {
+  const base = emptyDaily(hours);
   if (Array.isArray(raw.slots) && raw.slots.length) {
     const legacy = (raw.checks ?? {}) as Partial<Record<DailyCheckId, boolean>>;
     const slots = [0, 1, 2].map((i) => {
@@ -233,8 +235,8 @@ function migrateDaily(raw: Record<string, unknown>): DailyEntry {
             }
           : emptyPrep());
       return {
-        start: s?.start ?? (i === 0 ? "09:00" : ""),
-        end: s?.end ?? (i === 0 ? "10:30" : ""),
+        start: s?.start ?? (i === 0 ? base.slots[0].start : ""),
+        end: s?.end ?? (i === 0 ? base.slots[0].end : ""),
         task: s?.task ?? "",
         outcome: s?.outcome ?? "",
         prep,
@@ -251,8 +253,8 @@ function migrateDaily(raw: Record<string, unknown>): DailyEntry {
     };
   }
   const outcomes = Array.isArray(raw.outcomes) ? raw.outcomes : ["", "", ""];
-  const start = String(raw.blockStart ?? "09:00");
-  const end = String(raw.blockEnd ?? "10:30");
+  const start = String(raw.blockStart ?? base.slots[0].start);
+  const end = String(raw.blockEnd ?? base.slots[0].end);
   const slots: DailyEntry["slots"] = [
     {
       start,
@@ -335,7 +337,30 @@ export const useFocusStore = create<FocusState>()(
       setTourOpen: (v) => set({ tourOpen: v }),
       household: emptyHousehold(),
       setHousehold: (patch) =>
-        set((s) => ({ household: { ...s.household, ...patch } })),
+        set((s) => {
+          const household = { ...s.household, ...patch };
+          if (patch.hours === undefined || patch.hours === s.household.hours) {
+            return { household };
+          }
+          // Work hours changed: move Block 1 of today and later days to the new
+          // start, but only where it is still the untouched old default.
+          const oldDef = blockDefaults(0, s.household.hours);
+          const newDef = blockDefaults(0, household.hours);
+          const today = todayKey();
+          let dailies = s.dailies;
+          for (const [date, entry] of Object.entries(s.dailies)) {
+            if (date < today) continue;
+            const slot = entry?.slots?.[0];
+            if (!slot || slot.task || slot.outcome) continue;
+            if (s.session.running && s.session.date === date) continue;
+            if (slot.start !== oldDef.start || slot.end !== oldDef.end) continue;
+            const slots = [...entry.slots] as DailyEntry["slots"];
+            slots[0] = { ...slot, start: newDef.start, end: newDef.end };
+            if (dailies === s.dailies) dailies = { ...s.dailies };
+            dailies[date] = { ...entry, slots };
+          }
+          return { household, dailies };
+        }),
       weeks: {},
       patchWeek: (key, patch) =>
         set((s) => {
@@ -382,7 +407,10 @@ export const useFocusStore = create<FocusState>()(
         const state = persisted as FocusState;
         const dailies: Record<string, DailyEntry> = {};
         for (const [k, v] of Object.entries(state.dailies ?? {})) {
-          dailies[k] = migrateDaily(v as Record<string, unknown>);
+          dailies[k] = migrateDaily(
+            v as Record<string, unknown>,
+            (state.household as HouseholdState | undefined)?.hours,
+          );
         }
         const prev = state.session ?? {
           running: false,
@@ -411,7 +439,7 @@ export function useDaily(date = todayKey()) {
   const raw = useFocusStore((s) => s.dailies[date]);
   const hours = useFocusStore((s) => s.household?.hours);
   const entry = raw
-    ? migrateDaily(raw as unknown as Record<string, unknown>)
+    ? migrateDaily(raw as unknown as Record<string, unknown>, hours)
     : emptyDaily(hours);
   const patchDaily = useFocusStore((s) => s.patchDaily);
   const patchSlot = useFocusStore((s) => s.patchSlot);

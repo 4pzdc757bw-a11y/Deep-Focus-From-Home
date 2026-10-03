@@ -24,6 +24,45 @@ function clearTextareaFit(root: ParentNode = document) {
   });
 }
 
+/* ---------- "Already saved this day" tracking ---------- */
+
+const PRINTED_KEY = "df-printed:";
+/** Close day skips its Save PDF prompt if the day was printed this recently. */
+export const RECENT_PRINT_MS = 10 * 60 * 1000;
+
+/** Daily OS date on screen right now (set by DailyOs), so Cmd+P counts too. */
+let activePrintDate: string | null = null;
+let pendingPrintDate: string | null = null;
+
+export function setActivePrintDate(date: string | null) {
+  activePrintDate = date;
+}
+
+export function markPrinted(date: string, at = Date.now()) {
+  if (!isDateKey(date)) return;
+  try {
+    window.localStorage.setItem(PRINTED_KEY + date, String(at));
+  } catch {
+    /* storage unavailable — Close day will just offer the PDF again */
+  }
+}
+
+/** True if this day's Daily OS was printed / saved as PDF in the last ~10 min. */
+export function printedRecently(date: string, now = Date.now(), within = RECENT_PRINT_MS) {
+  if (typeof window === "undefined" || !isDateKey(date)) return false;
+  try {
+    const at = Number(window.localStorage.getItem(PRINTED_KEY + date));
+    return Number.isFinite(at) && at > 0 && now - at >= 0 && now - at <= within;
+  } catch {
+    return false;
+  }
+}
+
+function recordPrint() {
+  const date = pendingPrintDate ?? activePrintDate;
+  if (date) markPrinted(date);
+}
+
 let installed = false;
 
 /**
@@ -33,8 +72,15 @@ let installed = false;
 export function installPrintTextareaFit() {
   if (installed || typeof window === "undefined") return;
   installed = true;
-  window.addEventListener("beforeprint", () => fitTextareasForPrint());
-  window.addEventListener("afterprint", () => clearTextareaFit());
+  window.addEventListener("beforeprint", () => {
+    fitTextareasForPrint();
+    recordPrint();
+  });
+  window.addEventListener("afterprint", () => {
+    clearTextareaFit();
+    recordPrint();
+    pendingPrintDate = null;
+  });
 }
 
 /**
@@ -51,10 +97,13 @@ export function printDaily(date: string = todayKey()) {
     if (restored) return;
     restored = true;
     document.title = previous;
+    pendingPrintDate = null;
     window.removeEventListener("afterprint", restore);
   };
   window.addEventListener("afterprint", restore);
   fitTextareasForPrint();
+  pendingPrintDate = date;
+  markPrinted(date);
   try {
     window.print();
   } finally {

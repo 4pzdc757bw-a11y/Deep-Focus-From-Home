@@ -1,6 +1,7 @@
 import { STARTER_DAYS } from "./content";
 import { useFocusStore } from "./store";
 import { addDaysKey, todayKey } from "./utils";
+import { nextWorkdayFrom } from "./work-hours";
 
 /** Map a calendar date to starter day 1–7, or null if outside week one. */
 export function starterDayForDate(
@@ -15,13 +16,16 @@ export function starterDayForDate(
 }
 
 /**
- * Next Daily OS date after closing `closedDate`: the following calendar day,
- * but never earlier than today (local time). Never jumps backward, whatever
- * stale starter-week state is in local storage.
+ * Next Daily OS date after closing (or skipping) `closedDate`: the next work
+ * day from Getting started (Mon–Fri if none saved), so Friday → Monday. Never
+ * earlier than today (local time), whatever stale state is in local storage.
  */
-export function nextDateAfterClose(closedDate: string, today = todayKey()) {
-  const dayAfter = addDaysKey(closedDate, 1);
-  return dayAfter > today ? dayAfter : today;
+export function nextDateAfterClose(
+  closedDate: string,
+  today = todayKey(),
+  workDays: readonly number[] | null | undefined = useFocusStore.getState().household?.workDays,
+) {
+  return nextWorkdayFrom(closedDate, today, workDays);
 }
 
 export type CloseDayResult = {
