@@ -197,11 +197,7 @@ function Home() {
                 <Button asChild>
                   <Link to="/guide">Read the handbook</Link>
                 </Button>
-              ) : (
-                <Button asChild>
-                  <HandbookCheckoutLink>Get the handbook ({PRICE_LABEL})</HandbookCheckoutLink>
-                </Button>
-              )}
+              ) : null}
               <Button variant="outline" asChild>
                 <Link to="/intro" preload="intent">
                   How this works + FAQ <ArrowRight className="size-4" />
