@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { useFocusStore } from "@/lib/store";
 import { SessionWatcher } from "@/components/session-watcher";
 import { CloseDayButton } from "@/components/close-day-button";
+import { useHasAccess } from "@/components/lock-screen";
 
 const TABS = [
   { to: "/", label: "Today", icon: House },
@@ -13,11 +14,19 @@ const TABS = [
   { to: "/more", label: "Tools", icon: CalendarCheck },
 ] as const;
 
+/** Header links on every page, so nobody is ever stuck without a way home. */
+const HEADER_LINKS = [
+  { to: "/", label: "Home" },
+  { to: "/guide", label: "Guide" },
+  { to: "/intro", label: "FAQ" },
+] as const;
+
 const MARKETING = new Set(["/start", "/thanks", "/buy", "/terms", "/privacy", "/store-credit"]);
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const router = useRouter();
+  const appUnlocked = useHasAccess("app");
 
   useEffect(() => {
     let finished = false;
@@ -52,7 +61,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <SessionWatcher />
       <header className="no-print sticky top-0 z-20 border-b border-yellow/80 bg-sage/90 backdrop-blur-sm">
         <div className="mx-auto flex h-14 max-w-3xl items-center gap-3 px-4">
-          <Link to={marketing ? "/start" : "/"} className="flex min-w-0 items-center gap-3">
+          <Link to="/" className="flex min-w-0 items-center gap-3" aria-label="Deep Focus from Home — home">
             <img
               src="/images/logo.jpg"
               width={32} height={32} decoding="async"
@@ -68,18 +77,27 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </p>
             </div>
           </Link>
-          {marketing ? (
-            <Link
-              to="/"
-              className="ml-auto text-xs font-semibold uppercase tracking-wide text-olive"
-            >
-              Open the app
-            </Link>
-          ) : (
-            <span className="ml-auto hidden text-xs tracking-wide text-muted sm:inline">
-              A system, not a test
-            </span>
-          )}
+          <nav aria-label="Site" className="ml-auto flex items-center gap-4">
+            {HEADER_LINKS.map((l) => {
+              const active =
+                l.to === "/"
+                  ? pathname === "/"
+                  : pathname === l.to || pathname.startsWith(`${l.to}/`);
+              return (
+                <Link
+                  key={l.to}
+                  to={l.to}
+                  aria-current={active ? "page" : undefined}
+                  className={cn(
+                    "inline-flex min-h-11 items-center text-xs font-semibold uppercase tracking-wide text-olive underline-offset-4",
+                    active && "underline decoration-gold decoration-2",
+                  )}
+                >
+                  {l.label}
+                </Link>
+              );
+            })}
+          </nav>
         </div>
       </header>
 
@@ -116,9 +134,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </li>
               );
             })}
-            <li>
-              <CloseDayButton />
-            </li>
+            <li>{appUnlocked ? <CloseDayButton /> : null}</li>
           </ul>
         </nav>
       )}

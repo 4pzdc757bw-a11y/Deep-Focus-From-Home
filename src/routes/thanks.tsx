@@ -1,8 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { ArrowRight, Download } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/app-shell";
-import { InstallCard } from "@/components/install-card";
 import { LegalFooter } from "@/components/legal-footer";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,7 +15,6 @@ import {
   type MintedDownloadLink,
 } from "@/lib/downloads/mint";
 import {
-  APP_PRICE_LABEL,
   getPurchasedProduct,
   markPurchased,
   parsePurchaseProduct,
@@ -24,6 +22,8 @@ import {
   type PurchaseProduct,
 } from "@/lib/offer";
 import { useFocusStore } from "@/lib/store";
+import type { UnlockProduct } from "@/lib/unlock/access";
+import { unlockFromCheckoutSession } from "@/lib/unlock/unlock";
 
 type ThanksSearch = {
   /** Raw search value — TanStack JSON-parses `?paid=1` as number 1. */
@@ -185,6 +185,61 @@ function HandbookDownloadButtons({
   );
 }
 
+type DeviceUnlock =
+  | { state: "idle" }
+  | { state: "working" }
+  | { state: "done"; product: UnlockProduct }
+  | { state: "error"; message: string };
+
+/** Verify the Stripe session server-side and save the signed unlock cookie. */
+function useCheckoutUnlock(sessionId: string | undefined): DeviceUnlock {
+  const router = useRouter();
+  const [status, setStatus] = useState<DeviceUnlock>({ state: "idle" });
+
+  useEffect(() => {
+    if (!sessionId) return;
+    let cancelled = false;
+    setStatus({ state: "working" });
+    void unlockFromCheckoutSession({ data: { sessionId } })
+      .then(async (result) => {
+        if (cancelled || !result.product) return;
+        setStatus({ state: "done", product: result.product });
+        await router.invalidate();
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        setStatus({ state: "error", message: downloadErrorMessage(err) });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [sessionId, router]);
+
+  return status;
+}
+
+function DeviceUnlockNote({ status }: { status: DeviceUnlock }) {
+  if (status.state === "idle") return null;
+  if (status.state === "working") {
+    return <p className="text-sm text-muted">Checking your payment with Stripe…</p>;
+  }
+  if (status.state === "done") {
+    return (
+      <p className="text-sm font-semibold text-olive">
+        {status.product === "app"
+          ? "The app is unlocked on this device."
+          : "The full handbook is unlocked on this device."}{" "}
+        On another phone or computer, use “Unlock this device” with your checkout email.
+      </p>
+    );
+  }
+  return (
+    <p role="alert" className="text-sm text-ink">
+      {status.message} You can also unlock with your checkout email on any locked page.
+    </p>
+  );
+}
+
 function ThanksPage() {
   const {
     paid,
@@ -192,9 +247,11 @@ function ThanksPage() {
     session_id: sessionId,
   } = Route.useSearch();
   const start = useFocusStore((s) => s.startStarter);
-  const fromCheckout = isPaidUnlock(paid);
+  const unlock = useCheckoutUnlock(sessionId);
+  const fromCheckout = isPaidUnlock(paid) || unlock.state === "done";
+  const verifiedProduct = unlock.state === "done" ? unlock.product : null;
   const product: PurchaseProduct | null =
-    productParam ?? (fromCheckout ? getPurchasedProduct() : null);
+    verifiedProduct ?? productParam ?? (fromCheckout ? getPurchasedProduct() : null);
   const isAppBuyer = fromCheckout && product === "app";
 
   useEffect(() => {
@@ -218,10 +275,11 @@ function ThanksPage() {
       <p className="max-w-prose text-lg text-ink">
         {fromCheckout
           ? isAppBuyer
-            ? "Your app is unlocked on this device. Open Day 1, then install to your home screen so the Daily OS stays with you."
+            ? "Open Day 1 now. The app runs in your web browser — bookmark this site so the Daily OS is one tap away."
             : "Your handbook and fillables are ready below. Do only Day 1 today: claim one work-only surface and park the phone for the first deep-work block."
-          : "Do only Day 1 today: claim one work-only surface and park the phone for the first deep-work block (use the app to start, then phone off the desk). That is the whole job."}
+          : "Do only Day 1 today: claim one work-only surface and park the phone off the desk for the first deep-work block. That is the whole job."}
       </p>
+      <DeviceUnlockNote status={unlock} />
 
       {isAppBuyer ? (
         <>
@@ -247,7 +305,6 @@ function ThanksPage() {
               </Button>
             </div>
           </Card>
-          <InstallCard />
           <Card className="flex flex-col gap-3">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
               Also included — handbook
@@ -283,7 +340,8 @@ function ThanksPage() {
           <div className="flex flex-col gap-2 sm:flex-row">
             <Button asChild>
               <Link to="/starter" onClick={() => start()}>
-                Open Day 1 in the app <ArrowRight className="size-4" />
+                {fromCheckout ? "Open Day 1 in the app" : "Open the 7-day starter"}{" "}
+                <ArrowRight className="size-4" />
               </Link>
             </Button>
             {!fromCheckout && (
@@ -296,7 +354,7 @@ function ThanksPage() {
           </div>
           <p className="text-sm text-muted">
             {fromCheckout
-              ? "Purchase unlock is marked on this device. Want the installable app? See the app offer on the buy page."
+              ? "Want the browser-based app tools too? See the app offer on the buy page."
               : "The free pack is week one. The PDF is if you want it on paper."}
           </p>
         </>
@@ -324,24 +382,6 @@ function ThanksPage() {
             <p className="text-sm text-muted">No webinar. Keep it if Day 1 already helped.</p>
           </Card>
 
-          <Card className="flex flex-col gap-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
-              The app
-            </p>
-            <h2 className="font-display text-2xl text-olive">
-              Run it on your phone. {APP_PRICE_LABEL}.
-            </h2>
-            <p className="text-ink">
-              The installable app (Daily OS, starter week, bell, energy peak,
-              household fridge copy), plus handbook downloads. One-time{" "}
-              {APP_PRICE_LABEL}.
-            </p>
-            <div>
-              <Button variant="outline" asChild>
-                <Link to="/buy">See the {APP_PRICE_LABEL} app</Link>
-              </Button>
-            </div>
-          </Card>
         </>
       )}
       <LegalFooter />

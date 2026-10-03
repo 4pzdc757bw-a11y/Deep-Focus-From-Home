@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Bell, BellRing } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SheetPortal } from "@/components/sheet-portal";
@@ -6,6 +6,17 @@ import { Field, Input } from "@/components/ui/input";
 import { useFocusStore } from "@/lib/store";
 import { playDoneBell, playStartBell } from "@/lib/chime";
 import { todayKey, weekKey } from "@/lib/utils";
+import {
+  WEEKDAY_ORDER,
+  WEEKDAY_SHORT,
+  blockDefaults,
+  endForStart,
+  normalizeWorkDays,
+  parseWorkHours,
+  snapClock,
+} from "@/lib/work-hours";
+import { formatWeekBlock, parseWeekBlock, type WeekBlockDraft } from "@/lib/week-blocks";
+import { DayButton, WeekSlotPicker } from "@/components/week-slot-picker";
 
 const STEPS = [
   "Your work hours",
@@ -16,9 +27,27 @@ const STEPS = [
 ] as const;
 
 function splitHours(hours: string): [string, string] {
-  const m = hours.match(/(\d{1,2}:\d{2}).*?(\d{1,2}:\d{2})/);
-  return m ? [m[1].padStart(5, "0"), m[2].padStart(5, "0")] : ["09:00", "17:00"];
+  const wh = parseWorkHours(hours);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const clock = (m: number) => `${pad(Math.floor(m / 60))}:${pad(m % 60)}`;
+  if (!wh) return ["09:00", "17:00"];
+  return [clock(wh.start), wh.stop != null ? clock(wh.stop) : "17:00"];
 }
+
+/** Default days for the two weekly blocks: first work day, then two work days later. */
+function defaultWeekDays(workDays: number[]): [number, number] {
+  const ordered = WEEKDAY_ORDER.filter((d) => workDays.includes(d));
+  const a = ordered[0] ?? 1;
+  const b = ordered[Math.min(2, ordered.length - 1)] ?? 3;
+  return [a, b === a && ordered.length > 1 ? (ordered[1] ?? 3) : b];
+}
+
+function defaultWeekSlot(day: number, workHours: string): WeekBlockDraft {
+  const def = blockDefaults(0, workHours);
+  return { day, start: snapClock(def.start), end: snapClock(def.end), task: "" };
+}
+
+type BlockDraft = { task: string; start: string; end: string };
 
 /**
  * First-open walkthrough: five short steps, one at a time.
@@ -39,14 +68,81 @@ export function GettingStartedSheet({ onDone }: { onDone: () => void }) {
   const setTourOpen = useFocusStore((s) => s.setTourOpen);
 
   const [hours, setHours] = useState<[string, string]>(() => splitHours(household.hours));
-  const [blocks, setBlocks] = useState<[string, string]>(() => {
+  const [workDays, setWorkDays] = useState<number[]>(() =>
+    normalizeWorkDays(household.workDays),
+  );
+  // This week's two focus blocks: day buttons + time pickers, saved as text lines.
+  const [blocks, setBlocks] = useState<[WeekBlockDraft, WeekBlockDraft]>(() => {
     const w = useFocusStore.getState().weeks[wk];
-    return [w?.blocks[0] ?? "", w?.blocks[1] ?? ""];
+    const days = defaultWeekDays(normalizeWorkDays(household.workDays));
+    const hrs = splitHours(household.hours);
+    const wh = `${hrs[0]}–${hrs[1]}`;
+    return [0, 1].map((i) => {
+      const saved = parseWeekBlock(w?.blocks[i]);
+      const def = defaultWeekSlot(days[i]!, wh);
+      if (!saved) {
+        // Older free text without a day: keep it as the task.
+        const text = (w?.blocks[i] ?? "").trim();
+        return { ...def, task: text };
+      }
+      return {
+        day: saved.day,
+        start: saved.start ? snapClock(saved.start) : def.start,
+        end: saved.end ? snapClock(saved.end) : def.end,
+        task: saved.task,
+      };
+    }) as [WeekBlockDraft, WeekBlockDraft];
   });
-  const [first, setFirst] = useState(() => {
+  // Saved lines count as chosen; untouched picks follow the work hours/days.
+  const weekTouched = useRef(
+    [0, 1].map((i) => Boolean(parseWeekBlock(useFocusStore.getState().weeks[wk]?.blocks[i]))),
+  );
+  // Today's blocks. Times follow the work hours from step 1 until the user edits them.
+  const [first, setFirstState] = useState<BlockDraft>(() => {
     const d = useFocusStore.getState().dailies[todayKey()]?.slots[0];
-    return { task: d?.task ?? "", start: d?.start || "09:00", end: d?.end || "10:30" };
+    const def = blockDefaults(0, household.hours);
+    return { task: d?.task ?? "", start: d?.start || def.start, end: d?.end || def.end };
   });
+  const [second, setSecondState] = useState<BlockDraft>(() => {
+    const d = useFocusStore.getState().dailies[todayKey()]?.slots[1];
+    return { task: d?.task ?? "", start: d?.start ?? "", end: d?.end ?? "" };
+  });
+  // Times already saved on Today (e.g. replaying the tour) count as chosen.
+  const firstTimesTouched = useRef(
+    Boolean(useFocusStore.getState().dailies[todayKey()]?.slots[0]?.task),
+  );
+  const secondTimesTouched = useRef(
+    Boolean(useFocusStore.getState().dailies[todayKey()]?.slots[1]?.start),
+  );
+  const workHours = `${hours[0]}–${hours[1]}`;
+
+  function setWeekSlot(i: 0 | 1, next: WeekBlockDraft, timesEdited?: "start" | "end") {
+    weekTouched.current[i] = true;
+    let value = next;
+    if (timesEdited === "start") {
+      const end = endForStart(next.start, workHours);
+      if (end && end > next.start) value = { ...next, end: snapClock(end) };
+    }
+    if (value.end && value.start && value.end <= value.start) {
+      const end = endForStart(value.start, workHours);
+      value = { ...value, end: end ? snapClock(end) : value.end };
+    }
+    setBlocks((cur) => (i === 0 ? [value, cur[1]] : [cur[0], value]));
+  }
+
+  function setFirst(next: BlockDraft, timesEdited = false) {
+    if (timesEdited) firstTimesTouched.current = true;
+    setFirstState(next);
+    if (!secondTimesTouched.current) {
+      const def = blockDefaults(1, workHours, next.end);
+      setSecondState((cur) => ({ ...cur, start: def.start, end: def.end }));
+    }
+  }
+
+  function setSecond(next: BlockDraft, timesEdited = false) {
+    if (timesEdited) secondTimesTouched.current = true;
+    setSecondState(next);
+  }
 
   function close() {
     setTourDone(true);
@@ -64,13 +160,49 @@ export function GettingStartedSheet({ onDone }: { onDone: () => void }) {
   }, []);
 
   function saveStep() {
-    if (step === 0) setHousehold({ hours: `${hours[0]}–${hours[1]}` });
+    if (step === 0) {
+      setHousehold({ hours: workHours, workDays });
+      // Untouched weekly picks follow the new work hours and days.
+      const days = defaultWeekDays(workDays);
+      setBlocks((cur) =>
+        cur.map((b, i) =>
+          weekTouched.current[i] ? b : { ...defaultWeekSlot(days[i]!, workHours), task: b.task },
+        ) as [WeekBlockDraft, WeekBlockDraft],
+      );
+      // Re-seat today's blocks inside the new work hours unless already chosen.
+      const def0 = blockDefaults(0, workHours);
+      const nextFirst = firstTimesTouched.current
+        ? first
+        : { ...first, start: def0.start, end: def0.end };
+      setFirstState(nextFirst);
+      if (!secondTimesTouched.current) {
+        const def1 = blockDefaults(1, workHours, nextFirst.end);
+        setSecondState((cur) => ({ ...cur, start: def1.start, end: def1.end }));
+      }
+    }
     if (step === 1) {
       const cur = useFocusStore.getState().weeks[wk]?.blocks ?? ["", "", "", ""];
-      patchWeek(wk, { blocks: [blocks[0], blocks[1], cur[2] ?? "", cur[3] ?? ""] });
+      patchWeek(wk, {
+        blocks: [formatWeekBlock(blocks[0]), formatWeekBlock(blocks[1]), cur[2] ?? "", cur[3] ?? ""],
+      });
+      // Carry the named block tasks onto Today if those tasks are still empty.
+      const t0 = blocks[0].task.trim();
+      const t1 = blocks[1].task.trim();
+      if (!first.task.trim() && t0) {
+        setFirstState((f) => ({ ...f, task: t0 }));
+      }
+      if (!second.task.trim() && t1) {
+        setSecondState((b) => ({ ...b, task: t1 }));
+      }
     }
     if (step === 2) {
-      patchSlot(todayKey(), 0, { task: first.task, start: first.start, end: first.end });
+      const date = todayKey();
+      patchSlot(date, 0, { task: first.task, start: first.start, end: first.end });
+      if (second.task.trim()) {
+        patchSlot(date, 1, { task: second.task, start: second.start, end: second.end });
+        const count = useFocusStore.getState().dailies[date]?.slotCount ?? 1;
+        if (count < 2) useFocusStore.getState().patchDaily(date, { slotCount: 2 });
+      }
     }
   }
 
@@ -120,18 +252,48 @@ export function GettingStartedSheet({ onDone }: { onDone: () => void }) {
                     <Input type="time" value={hours[1]} onChange={(e) => setHours([hours[0], e.target.value])} />
                   </Field>
                 </div>
+                <div className="flex flex-col gap-1.5">
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-gold">Work days</p>
+                  <div className="flex flex-wrap gap-1.5" role="group" aria-label="Work days">
+                    {WEEKDAY_ORDER.map((d) => (
+                      <DayButton
+                        key={d}
+                        label={WEEKDAY_SHORT[d]}
+                        pressed={workDays.includes(d)}
+                        onClick={() =>
+                          setWorkDays((cur) =>
+                            cur.includes(d)
+                              ? cur.length > 1
+                                ? cur.filter((x) => x !== d)
+                                : cur
+                              : [...cur, d].sort((a, b) => a - b),
+                          )
+                        }
+                      />
+                    ))}
+                  </div>
+                  <p className="text-sm text-muted">Close day skips to your next work day.</p>
+                </div>
               </>
             ) : null}
 
             {step === 1 ? (
               <>
                 <p>Pick two times this week for your hardest work. Just two to start. You can add more on the This week page.</p>
-                <Field label="Block 1">
-                  <Input value={blocks[0]} placeholder="Mon 9:00–10:30 · hardest task" onChange={(e) => setBlocks([e.target.value, blocks[1]])} />
-                </Field>
-                <Field label="Block 2">
-                  <Input value={blocks[1]} placeholder="Wed 9:00–10:30 · next deep block" onChange={(e) => setBlocks([blocks[0], e.target.value])} />
-                </Field>
+                <WeekSlotPicker
+                  label="Block 1"
+                  value={blocks[0]}
+                  hours={workHours}
+                  taskPlaceholder="Hardest task"
+                  onChange={(next, edited) => setWeekSlot(0, next, edited)}
+                />
+                <WeekSlotPicker
+                  label="Block 2"
+                  value={blocks[1]}
+                  hours={workHours}
+                  taskPlaceholder="Next deep block"
+                  onChange={(next, edited) => setWeekSlot(1, next, edited)}
+                />
               </>
             ) : null}
 
@@ -143,18 +305,41 @@ export function GettingStartedSheet({ onDone }: { onDone: () => void }) {
                 </Field>
                 <div className="grid grid-cols-2 gap-3">
                   <Field label="Starts">
-                    <Input type="time" value={first.start} onChange={(e) => setFirst({ ...first, start: e.target.value })} />
+                    <Input
+                      type="time"
+                      value={first.start}
+                      onChange={(e) => {
+                        const start = e.target.value;
+                        const end = firstTimesTouched.current ? first.end : endForStart(start, workHours) || first.end;
+                        setFirst({ ...first, start, end }, true);
+                      }}
+                    />
                   </Field>
                   <Field label="Ends">
-                    <Input type="time" value={first.end} onChange={(e) => setFirst({ ...first, end: e.target.value })} />
+                    <Input type="time" value={first.end} onChange={(e) => setFirst({ ...first, end: e.target.value }, true)} />
                   </Field>
                 </div>
+                {second.task.trim() ? (
+                  <>
+                    <Field label="Block 2 task">
+                      <Input value={second.task} onChange={(e) => setSecond({ ...second, task: e.target.value })} />
+                    </Field>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Field label="Block 2 starts">
+                        <Input type="time" value={second.start} onChange={(e) => setSecond({ ...second, start: e.target.value }, true)} />
+                      </Field>
+                      <Field label="Block 2 ends">
+                        <Input type="time" value={second.end} onChange={(e) => setSecond({ ...second, end: e.target.value }, true)} />
+                      </Field>
+                    </div>
+                  </>
+                ) : null}
               </>
             ) : null}
 
             {step === 3 ? (
               <>
-                <p>On Today, tap <strong>Start · ring the bell</strong> when your block begins. It rings and writes down the time. Tap <strong>Done — ring the bell</strong> when you stop.</p>
+                <p>On Today, tap <strong>Start · ring the bell</strong> when your block begins. It rings and writes down the time. The button then changes to <strong>End · ring the bell</strong> — tap it when you stop.</p>
                 <p>Try the sounds now so you know them:</p>
                 <div className="flex flex-wrap gap-2">
                   <Button variant="outline" onClick={() => void playStartBell()}>
@@ -169,7 +354,8 @@ export function GettingStartedSheet({ onDone }: { onDone: () => void }) {
 
             {step === 4 ? (
               <>
-                <p>When your work day is over, tap <strong>Close day</strong> at the bottom right. Write one line about how it went, and the app marks the day done and gets tomorrow ready.</p>
+                <p>When your work day is over, scroll down Today to the <strong>Shutdown note</strong> and write one line. Tick the shutdown steps under <strong>End of day</strong>, then tap the <strong>Close day</strong> button just below them, beside Send to partner and Print this day.</p>
+                <p>Close day marks the day done, offers to save a PDF (unless you just printed it), and opens your next work day’s page.</p>
                 <p>That’s it. Tapping the button below starts Day 1 of your 7-day starter.</p>
               </>
             ) : null}

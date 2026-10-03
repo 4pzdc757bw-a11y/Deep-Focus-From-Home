@@ -14,6 +14,20 @@ function notify(title: string, body: string) {
   }
 }
 
+/**
+ * True when the browser has not been asked yet (permission "default"), so the
+ * Daily OS should show its one-line explainer before asking. Granted, denied
+ * or unsupported → never show it again.
+ */
+export function shouldExplainNotify() {
+  try {
+    return typeof Notification !== "undefined" && Notification.permission === "default";
+  } catch {
+    return false;
+  }
+}
+
+/** Ask the browser. Only call after the user taps OK on the in-app explainer. */
 export async function requestNotify() {
   try {
     if (typeof Notification === "undefined") return;
@@ -37,15 +51,18 @@ export function releaseScreen() {
   wake = null;
 }
 
+/**
+ * Start a block. State flips to running immediately (one tap), then the bell
+ * and wake lock run in the background — they must never hold the UI.
+ * Notification permission is NOT requested here: the Daily OS first shows a
+ * short in-app explainer and only asks the browser after the user taps OK.
+ */
 export async function beginSession(args: {
   date: string;
   slotIndex: number;
   endsAt: number;
 }) {
   completing = false;
-  await playStartBell();
-  await requestNotify();
-  await holdScreen();
   const cur = useFocusStore.getState().dailies[args.date];
   useFocusStore.getState().setSession({
     running: true,
@@ -59,6 +76,10 @@ export async function beginSession(args: {
       checks: { ...cur.checks, block: true },
     });
   }
+  // Called synchronously inside the tap so audio is allowed to start.
+  const bell = playStartBell().catch(() => undefined);
+  void holdScreen();
+  await bell;
 }
 
 export async function completeSession() {
@@ -67,12 +88,6 @@ export async function completeSession() {
   if (completing) return;
   completing = true;
   try {
-    await playDoneBell();
-    notify(
-      "Block complete",
-      "The deep-work slot is done. Write the outcome and shut down.",
-    );
-    releaseScreen();
     const date = s.date;
     const cur = date ? useFocusStore.getState().dailies[date] : undefined;
     useFocusStore.getState().setSession({ running: false, phase: "done" });
@@ -88,6 +103,12 @@ export async function completeSession() {
         checks: { ...cur.checks, block: true },
       });
     }
+    releaseScreen();
+    notify(
+      "Block complete",
+      "The deep-work slot is done. Write the outcome and shut down.",
+    );
+    await playDoneBell().catch(() => undefined);
   } finally {
     completing = false;
   }

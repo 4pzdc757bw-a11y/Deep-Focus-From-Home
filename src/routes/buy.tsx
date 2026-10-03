@@ -1,7 +1,8 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Card } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { LegalFooter } from "@/components/legal-footer";
+import { NotReadyLinks } from "@/components/not-ready";
 import {
   APP_PRICE_LABEL,
   markPurchased,
@@ -20,8 +21,8 @@ const HANDBOOK_INCLUDED = [
 ];
 
 const APP_INCLUDED = [
-  "The installable app — Daily OS, starter week, bell, energy peak, household fridge copy",
-  "Same system as the book, on your phone — forms already filled in",
+  "The browser-based app — Daily OS, focus bell, energy peak, weekly planner, household fridge copy",
+  "Same system as the book, in your phone or computer browser — forms already filled in",
   "Includes handbook PDFs and fillables",
 ];
 
@@ -40,13 +41,13 @@ function BuyPage() {
         Remote Workers Deep Focus
       </h1>
       <p className="max-w-prose text-lg text-ink">
-        Not a course. Not a streak app. Choose the handbook, or the app that
-        runs the same system on your phone.
+        Not a course. Not a streak app. Start with the handbook. The Deep
+        Focus app is a separate, optional add-on.
       </p>
 
-      <Card className="flex flex-col gap-3">
+      <Card className="flex flex-col gap-3 border-2 border-olive">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
-          Handbook
+          Start here · Handbook
         </p>
         <p className="font-display text-2xl text-olive">Handbook + fillables</p>
         <ul className="flex flex-col gap-2 text-ink">
@@ -88,7 +89,11 @@ function BuyPage() {
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
           The app
         </p>
-        <p className="font-display text-2xl text-olive">Run it on your phone</p>
+        <p className="font-display text-2xl text-olive">Run it in your browser</p>
+        <p className="text-ink">
+          The Deep Focus app: an optional add-on to the handbook — a daily planner, focus
+          bell, energy log and weekly planner in your browser. {APP_PRICE_LABEL}, pay once.
+        </p>
         <ul className="flex flex-col gap-2 text-ink">
           {APP_INCLUDED.map((item) => (
             <li key={item} className="border-l-2 border-yellow pl-3">
@@ -99,7 +104,7 @@ function BuyPage() {
         <p className="text-3xl font-display text-olive">{APP_PRICE_LABEL}</p>
         <p className="text-sm text-muted">One-time. Full system in the app.</p>
         {appCheckout ? (
-          <Button asChild>
+          <Button variant="outline" asChild>
             <a href={appCheckout} rel="noopener noreferrer">
               Get the app — {APP_PRICE_LABEL}
             </a>
@@ -108,6 +113,7 @@ function BuyPage() {
           <>
             <Button
               type="button"
+              variant="outline"
               onClick={() => {
                 markPurchased("app");
                 start();
@@ -124,13 +130,7 @@ function BuyPage() {
         )}
       </Card>
 
-      <p className="text-sm text-muted">
-        Not ready?{" "}
-        <Link to="/thanks" className="font-semibold text-olive">
-          Go back to the free pack
-        </Link>
-        .
-      </p>
+      <NotReadyLinks />
 
       <p className="text-sm text-muted">{STORE_CREDIT_CHECKOUT_LINE}</p>
       <LegalFooter />

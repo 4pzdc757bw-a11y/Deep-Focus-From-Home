@@ -2,11 +2,13 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { Card, PageTitle } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
+import { useHasAccess } from "@/components/lock-screen";
 import { APP_LINE, FAQ, HOW_IT_WORKS } from "@/lib/content";
 
 export const Route = createFileRoute("/intro")({ component: IntroPage });
 
 function IntroPage() {
+  const appUnlocked = useHasAccess("app");
   return (
     <div className="flex flex-col gap-5">
       <PageTitle
@@ -25,8 +27,9 @@ function IntroPage() {
         <p className="mt-3 text-pretty text-lg leading-relaxed text-ink">
           This program puts a small system back. You do not overhaul your life.
           You claim a surface, set a household signal, protect the first block,
-          and shut the day down on purpose. The handbook is the why. This app
-          is the forms — Daily OS, starter week, household agreement, energy log.
+          and shut the day down on purpose. The handbook is the why. The forms
+          are the how — daily page, starter week, household agreement, energy log.
+          {appUnlocked ? " In the app, those forms are built in." : ""}
         </p>
       </Card>
 
@@ -54,7 +57,7 @@ function IntroPage() {
 
       <h2 className="mt-4 font-display text-2xl text-olive">Questions</h2>
       <div className="flex flex-col gap-2">
-        {FAQ.map((item) => (
+        {FAQ.filter((item) => appUnlocked || !("appOnly" in item && item.appOnly)).map((item) => (
           <details
             key={item.q}
             className="rounded-lg border border-yellow bg-cream px-4 py-2"

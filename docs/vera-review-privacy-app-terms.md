@@ -45,11 +45,11 @@
 
 ## Terms — new §3 Deep Focus From Home app ($37)
 
-> When you buy the Deep Focus From Home app offer shown at checkout (often priced at $37), you get access to the installable web app — including tools such as the Daily OS, focus bells, energy log, and household fridge tools — plus the handbook downloads included with that offer as listed on the checkout and thanks pages for your purchase.
+> When you buy the Deep Focus From Home app offer shown at checkout (often priced at $37), you get access to the browser-based web app — including tools such as the Daily OS, focus bells, energy log, and household fridge tools — plus the handbook downloads included with that offer as listed on the checkout and thanks pages for your purchase.
 >
 > You receive a personal license to use the app for yourself. You do not own the app’s code, design, or brand. You may not redistribute, resell, share paid access, or claim the app as your own product. Section 5 (License) also applies.
 >
-> The app is meant for modern phone and computer browsers and can be installed where the browser supports it. We aim to keep it working, but we do not guarantee every device or browser forever.
+> The app runs in modern phone and computer web browsers; there is nothing to download or install. *(Updated Oct 2, 2026: install wording removed.)* We aim to keep it working, but we do not guarantee every device or browser forever.
 >
 > Notes, focus or energy logs, and similar entries you make in the app are typically stored on your own device or browser. We do not collect those local notes on our servers as part of normal app use. Order and account details from checkout are handled as described in our Privacy Policy.
 >

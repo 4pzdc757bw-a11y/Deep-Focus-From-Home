@@ -1,43 +1,10 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { type FormEvent, useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
 import { Card } from "@/components/app-shell";
-import { Button } from "@/components/ui/button";
 import { LegalFooter } from "@/components/legal-footer";
 import { STARTER_DAYS } from "@/lib/content";
-import { saveLeadEmail } from "@/lib/offer";
+import { StarterSignupForm } from "@/components/starter-signup";
 
 export const Route = createFileRoute("/start")({ component: StartPage });
-
-function OptIn({ label }: { label: string }) {
-  const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-
-  function onSubmit(e: FormEvent) {
-    e.preventDefault();
-    saveLeadEmail(email);
-    void navigate({ to: "/thanks" });
-  }
-
-  return (
-    <form className="flex flex-col gap-2 sm:flex-row" onSubmit={onSubmit}>
-      <label className="sr-only" htmlFor={`email-${label}`}>
-        Email
-      </label>
-      <input
-        id={`email-${label}`}
-        type="email"
-        required
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder="Your email"
-        className="h-12 min-w-0 flex-1 rounded-md border border-gold bg-paper px-3 text-base text-ink outline-none focus:ring-2 focus:ring-gold/30"
-      />
-      <Button type="submit" className="h-12">
-        {label}
-      </Button>
-    </form>
-  );
-}
 
 function StartPage() {
   return (
@@ -65,9 +32,9 @@ function StartPage() {
 
       <Card className="flex flex-col gap-3">
         <p className="font-display text-xl text-olive">Start Day 1 tomorrow morning.</p>
-        <OptIn label="Send me the 7-day pack" />
+        <StarterSignupForm />
         <p className="text-sm text-muted">
-          One email. You can leave anytime. No webinar.
+          One short email a day for a week. Leave anytime. No webinar.
         </p>
       </Card>
 
@@ -103,7 +70,8 @@ function StartPage() {
 
       <Card className="flex flex-col gap-3">
         <h2 className="font-display text-2xl text-olive">The first job is a desk, not a course.</h2>
-        <OptIn label="Send me the pack" />
+        <StarterSignupForm />
+        <p className="text-sm text-muted">First name and email only. Leave anytime.</p>
       </Card>
 
       <LegalFooter />

@@ -116,12 +116,13 @@ export function resolvePublicHost(hostHeader) {
   );
 }
 
-export function isInstallQuery(url) {
-  const query = String(url ?? "").split("?", 2)[1] ?? "";
-  const params = new URLSearchParams(query);
-  const install = params.get("install");
-  const platform = (params.get("platform") ?? "").toLowerCase();
-  return (install === "1" || install === "true") && platform === "ios";
+/**
+ * Deep Focus is browser-only (not installable). The old platform manifest
+ * URLs must answer 404 so no browser offers "Install app" / Add to Home Screen.
+ */
+export function isRemovedManifestPath(pathname) {
+  const path = String(pathname ?? "");
+  return path === "/__grok/manifest.webmanifest" || path === "/__grok/manifest.json";
 }
 
 /** Paths that can carry an app document (vs assets / API / internals). */
@@ -141,61 +142,11 @@ export function acceptsHtml(accept) {
   return value === "" || value.includes("text/html") || value.includes("*/*");
 }
 
-/** The same URL without the install-tutorial params (used as the app link). */
-export function stripInstallParams(url) {
-  const [path = "/", query = ""] = String(url ?? "/").split("?", 2);
-  const params = new URLSearchParams(query);
-  params.delete("install");
-  params.delete("platform");
-  const rest = params.toString();
-  return rest ? `${path}?${rest}` : path;
-}
-
-export function renderInstallPageHtml(template, { host, url } = {}) {
-  return String(template)
-    .replaceAll("{{APP_NAME}}", escapeHtml(appNameFromHost(host)))
-    .replaceAll("{{APP_URL}}", escapeHtml(stripInstallParams(url)));
-}
-
-export function renderWebManifest(hostHeader) {
-  const name = appNameFromHost(hostHeader);
-  return JSON.stringify(
-    {
-      name,
-      short_name: name,
-      id: "/",
-      start_url: "/",
-      scope: "/",
-      display: "standalone",
-      background_color: "#000000",
-      theme_color: "#000000",
-      icons: [
-        {
-          src: "/__grok/icon-180.png",
-          sizes: "180x180",
-          type: "image/png",
-        },
-      ],
-    },
-    null,
-    2,
-  );
-}
-
-export function grokPwaHeadTags(appName = DEFAULT_APP_NAME) {
+export function grokPwaHeadTags() {
+  // No manifest and no apple-mobile-web-app-* metas: the site must not be
+  // installable. Only the bookmark icon and theme colour remain.
   return [
-    // Standalone display comes from the manifest ("display": "standalone");
-    // the legacy *-web-app-capable metas it replaces are deliberately absent.
-    ["manifest", '<link rel="manifest" href="/__grok/manifest.webmanifest">'],
     ["apple-touch-icon", '<link rel="apple-touch-icon" href="/__grok/icon-180.png">'],
-    [
-      "apple-mobile-web-app-title",
-      `<meta name="apple-mobile-web-app-title" content="${escapeHtml(appName)}">`,
-    ],
-    [
-      "apple-mobile-web-app-status-bar-style",
-      '<meta name="apple-mobile-web-app-status-bar-style" content="black">',
-    ],
     ["theme-color", '<meta name="theme-color" content="#000000">'],
   ];
 }
@@ -434,9 +385,8 @@ export function injectGrokPwaHead(html, ctx = {}) {
   );
   let next = stripShareMetaTags(html);
 
-  const missing = grokPwaHeadTags(appName)
+  const missing = grokPwaHeadTags()
     .filter(([key]) => {
-      if (key === "manifest") return !next.includes('href="/__grok/manifest.webmanifest"');
       if (key === "apple-touch-icon") return !next.includes('href="/__grok/icon-180.png"');
       return !next.includes(`name="${key}"`);
     })

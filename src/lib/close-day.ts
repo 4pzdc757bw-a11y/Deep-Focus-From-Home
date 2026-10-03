@@ -1,6 +1,7 @@
 import { STARTER_DAYS } from "./content";
 import { useFocusStore } from "./store";
 import { addDaysKey, todayKey } from "./utils";
+import { nextWorkdayFrom } from "./work-hours";
 
 /** Map a calendar date to starter day 1–7, or null if outside week one. */
 export function starterDayForDate(
@@ -12,6 +13,19 @@ export function starterDayForDate(
     if (addDaysKey(starterStart, d.day - 1) === date) return d.day;
   }
   return null;
+}
+
+/**
+ * Next Daily OS date after closing (or skipping) `closedDate`: the next work
+ * day from Getting started (Mon–Fri if none saved), so Friday → Monday. Never
+ * earlier than today (local time), whatever stale state is in local storage.
+ */
+export function nextDateAfterClose(
+  closedDate: string,
+  today = todayKey(),
+  workDays: readonly number[] | null | undefined = useFocusStore.getState().household?.workDays,
+) {
+  return nextWorkdayFrom(closedDate, today, workDays);
 }
 
 export type CloseDayResult = {
@@ -27,15 +41,11 @@ export type CloseDayResult = {
  */
 export function closeDay(osDate = todayKey()): CloseDayResult {
   const store = useFocusStore.getState();
-  if (!store.starterStart) store.startStarter();
-  const started = useFocusStore.getState().starterStart ?? todayKey();
+  const started = store.starterStart;
 
-  let day = starterDayForDate(started, osDate);
-  // If viewing a non-starter date during week one, close the current unfinished day.
-  if (day == null) {
-    const unfinished = STARTER_DAYS.find((d) => !store.starterDone.includes(d.day));
-    day = unfinished?.day ?? null;
-  }
+  // Only touch the starter week when this date is one of its seven days.
+  // No starter week set (or a stale one) → just close the Daily OS.
+  const day = started ? starterDayForDate(started, osDate) : null;
 
   const entry = store.dailies[osDate];
   const shutdown = (entry?.note ?? "").trim();
@@ -65,10 +75,8 @@ export function closeDay(osDate = todayKey()): CloseDayResult {
   }
 
   const fresh = useFocusStore.getState();
-  const next = STARTER_DAYS.find((d) => !fresh.starterDone.includes(d.day));
-  const nextDay = next?.day ?? null;
-  const nextDate =
-    nextDay != null ? addDaysKey(fresh.starterStart ?? started, nextDay - 1) : osDate;
+  const nextDate = nextDateAfterClose(osDate);
+  const nextDay = fresh.starterStart ? starterDayForDate(fresh.starterStart, nextDate) : null;
 
   return { starterDay: day, nextDay, nextDate, noteCopied };
 }
