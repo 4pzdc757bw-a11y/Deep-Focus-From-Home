@@ -19,6 +19,8 @@
 
 @layer base {
   html {
+    /* Native checkboxes, date and time pickers use the site's olive accent. */
+    accent-color: var(--color-olive);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
