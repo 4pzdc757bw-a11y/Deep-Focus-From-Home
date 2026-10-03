@@ -18,6 +18,7 @@ import {
   spanMinutes,
   toClock,
   workdayKey,
+  workHoursText,
 } from "@/lib/work-hours";
 import { formatWeekBlock, parseWeekBlock, type WeekBlockDraft } from "@/lib/week-blocks";
 import { DayButton, WeekSlotPicker } from "@/components/week-slot-picker";
@@ -97,7 +98,8 @@ export function GettingStartedSheet({ onDone }: { onDone: () => void }) {
   const weekTouched = useRef(
     [0, 1].map((i) => Boolean(parseWeekBlock(useFocusStore.getState().weeks[wk]?.blocks[i]))),
   );
-  const workHours = `${hours[0]}–${hours[1]}`;
+  // Saved with AM/PM ("11:00 PM–7:00 AM"); parseWorkHours reads both forms.
+  const workHours = workHoursText(hours[0], hours[1]);
 
   function setWeekSlot(i: 0 | 1, next: WeekBlockDraft, timesEdited?: "start" | "end") {
     weekTouched.current[i] = true;

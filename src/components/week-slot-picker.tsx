@@ -6,6 +6,7 @@ import {
   blockTimeOptions,
   clock12,
   endLabel,
+  endsNextDay,
 } from "@/lib/work-hours";
 import type { WeekBlockDraft } from "@/lib/week-blocks";
 
@@ -66,6 +67,7 @@ export function WeekSlotPicker({
 }) {
   const startOpts = optionsFor(hours, "start", value.start);
   const endOpts = optionsFor(hours, "end", value.end, value.start);
+  const nextDay = Boolean(value.start && value.end && endsNextDay(value.start, value.end));
   return (
     <fieldset className="flex flex-col gap-2 rounded-md border border-yellow bg-paper/60 p-3">
       <legend className="px-1 text-xs font-semibold uppercase tracking-[0.14em] text-gold">
@@ -97,7 +99,9 @@ export function WeekSlotPicker({
           </select>
         </label>
         <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-semibold uppercase tracking-[0.14em] text-gold">Ends</span>
+          <span className="text-xs font-semibold uppercase tracking-[0.14em] text-gold">
+            {nextDay ? "Ends (next day)" : "Ends"}
+          </span>
           <select
             className={selectClass}
             value={value.end}
@@ -105,7 +109,8 @@ export function WeekSlotPicker({
           >
             {endOpts.map((t) => (
               <option key={t} value={t}>
-                {value.start ? endLabel(value.start, t) : clock12(t)}
+                {/* Short on phones; past-midnight ends get "(next day)" in the label above. */}
+                {nextDay || !value.start ? clock12(t) : endLabel(value.start, t)}
               </option>
             ))}
           </select>

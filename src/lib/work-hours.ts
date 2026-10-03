@@ -247,7 +247,7 @@ export function normalizeWorkDays(days: readonly number[] | undefined | null): n
   return valid.length ? valid.sort((a, b) => a - b) : [...DEFAULT_WORK_DAYS];
 }
 
-function weekdayOf(dateKey: string) {
+export function weekdayOf(dateKey: string) {
   const [y, m, d] = dateKey.split("-").map(Number);
   return new Date(y ?? 1970, (m ?? 1) - 1, d ?? 1).getDay();
 }
@@ -307,4 +307,31 @@ export function starterDayOn(start: string | null, date: string, workDays?: read
   if (!start) return null;
   const i = starterDayDates(start, workDays).indexOf(date);
   return i >= 0 ? i + 1 : null;
+}
+
+/* ---------- AM/PM display ---------- */
+
+const SIMPLE_RANGE = /^\s*(\d{1,2}:\d{2})\s*[–—-]\s*(\d{1,2}:\d{2})\s*$/;
+
+/**
+ * Show times with AM/PM: "23:00–07:00" → "11:00 PM–7:00 AM (next day)";
+ * other text keeps its words, with each bare 24-hour time given AM/PM
+ * ("9:00–12:00 and 13:30–16:00" → "9:00 AM–12:00 PM and 1:30 PM–4:00 PM").
+ * Times that already say AM/PM are left alone.
+ */
+export function withAmPm(text: string | undefined | null): string {
+  const raw = text ?? "";
+  const simple = SIMPLE_RANGE.exec(raw);
+  if (simple) {
+    const [a, b] = [simple[1]!, simple[2]!];
+    if (toMinutes(a) != null && toMinutes(b) != null) return `${clock12(a)}–${endLabel(a, b)}`;
+  }
+  return raw.replace(/\b(\d{1,2}):(\d{2})\b(?!\s*[ap]\.?\s?m\b)/gi, (m) =>
+    toMinutes(m) != null ? clock12(m) : m,
+  );
+}
+
+/** Saved work hours in AM/PM form ("11:00 PM–7:00 AM"), as Getting started stores them. */
+export function workHoursText(start: string, stop: string) {
+  return `${clock12(start)}–${clock12(stop)}`;
 }

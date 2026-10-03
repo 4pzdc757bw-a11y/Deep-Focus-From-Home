@@ -35,6 +35,6 @@ export function checkInStamp(at: number | Date) {
     month: "short",
     day: "numeric",
   });
-  const time = d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  const time = d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit", hour12: true });
   return `${date} · ${time}`;
 }

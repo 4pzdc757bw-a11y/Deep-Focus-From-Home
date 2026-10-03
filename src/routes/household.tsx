@@ -2,7 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Card, PageTitle } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Textarea } from "@/components/ui/input";
+import { useEffect } from "react";
 import { useFocusStore } from "@/lib/store";
+import { withAmPm } from "@/lib/work-hours";
 
 export const Route = createFileRoute("/household")({ component: HouseholdPage });
 
@@ -55,6 +57,14 @@ function SignalIcon({ kind }: { kind: "door" | "card" | "headphones" }) {
 function HouseholdPage() {
   const h = useFocusStore((s) => s.household);
   const set = useFocusStore((s) => s.setHousehold);
+  const hydrated = useFocusStore((s) => s.hydrated);
+  // Older saves are 24-hour ("23:00–07:00"): show them with AM/PM once.
+  useEffect(() => {
+    if (!hydrated || !h.hours) return;
+    const shown = withAmPm(h.hours);
+    if (shown !== h.hours) set({ hours: shown });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated]);
 
   const emergencyText =
     h.emergency?.trim() || "Hurt, fire, or you cannot find a grown-up";
@@ -85,7 +95,11 @@ function HouseholdPage() {
           <Input
             value={h.hours}
             onChange={(e) => set({ hours: e.target.value })}
-            placeholder="9:00–12:00 and 13:30–16:00"
+            onBlur={(e) => {
+              const shown = withAmPm(e.target.value);
+              if (shown !== e.target.value) set({ hours: shown });
+            }}
+            placeholder="9:00 AM–12:00 PM and 1:30 PM–4:00 PM"
           />
         </Field>
         <Field label="Visible signal">
@@ -184,7 +198,7 @@ function HouseholdPage() {
                 Work times
               </p>
               <p className="mt-1 text-base font-semibold leading-snug text-ink sm:text-lg">
-                {h.hours?.trim() || (
+                {withAmPm(h.hours?.trim()) || (
                   <span className="font-normal text-muted print:hidden">
                     Add core hours above
                   </span>
@@ -336,7 +350,7 @@ function HouseholdPage() {
                 Core hours
               </dt>
               <dd className="mt-1 text-base font-semibold leading-snug text-ink sm:text-lg">
-                {h.hours?.trim() || "—"}
+                {withAmPm(h.hours?.trim()) || "—"}
               </dd>
             </div>
             <div className="rounded-md border border-yellow bg-paper px-3 py-2.5 sm:px-4 sm:py-3">

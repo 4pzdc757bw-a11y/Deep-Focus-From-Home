@@ -105,7 +105,7 @@ describe("overnight work hours", () => {
   });
   it("week block line round-trips across midnight", () => {
     const line = formatWeekBlock({ day: 1, start: "23:00", end: "00:30", task: "Reports" });
-    assert.equal(line, "Mon 11:00 PM–12:30 AM · Reports");
+    assert.equal(line, "Mon 11:00 PM–12:30 AM (next day) · Reports");
     assert.deepEqual(parseWeekBlock(line), { day: 1, start: "23:00", end: "00:30", task: "Reports" });
   });
 });
@@ -294,5 +294,80 @@ describe("app-moved blocks follow the block before", () => {
       2, "2026-10-02", "11 PM - 7 AM", new Date(2026, 9, 3, 3, 54, 30),
     );
     assert.deepEqual(moves, [{ index: 1, start: "04:15", end: "05:45" }]);
+  });
+});
+
+describe("weekly planner pre-fill", () => {
+  const NIGHT_HOURS = "11:00 PM–7:00 AM";
+  it("mirrors last week's night-shift plan (tasks cleared), labelled next day", async () => {
+    const { suggestWeekBlocks, formatWeekBlock } = await import("./week-blocks.ts");
+    const drafts = suggestWeekBlocks({
+      targetKey: "2026-10-12",
+      weeks: { "2026-09-28": { blocks: ["Fri 11:00 PM–12:30 AM · Reports", "Mon 1:00 AM–2:30 AM · Inbox", "", ""] } },
+      dailies: {},
+      hours: NIGHT_HOURS,
+    });
+    assert.deepEqual(drafts.map(formatWeekBlock), [
+      "Fri 11:00 PM–12:30 AM (next day)",
+      "Mon 1:00 AM–2:30 AM",
+    ]);
+  });
+  it("edited week plan for the target week is not used as a source (kept by the UI)", async () => {
+    const { suggestWeekBlocks } = await import("./week-blocks.ts");
+    const drafts = suggestWeekBlocks({
+      targetKey: "2026-10-12",
+      weeks: { "2026-10-12": { blocks: ["Tue 8:00 AM–9:30 AM · mine", "", "", ""] } },
+      dailies: {},
+      hours: NIGHT_HOURS,
+      workDays: [0, 1, 2, 3, 4],
+    });
+    assert.equal(drafts[0]!.start, "23:00");
+  });
+  it("no week plan: uses recent Today pages, per shift-start day", async () => {
+    const { suggestWeekBlocks } = await import("./week-blocks.ts");
+    const drafts = suggestWeekBlocks({
+      targetKey: "2026-10-12",
+      today: "2026-10-09",
+      weeks: {},
+      dailies: {
+        "2026-10-05": { slots: [{ start: "23:00", end: "00:30" }] },
+        "2026-10-06": { slots: [{ start: "23:30", end: "01:00" }] },
+        // A block that ran at 3:53 AM uses the work-hours default, not 3:45.
+        "2026-10-07": { slots: [{ start: "03:53", end: "05:23", started: true }] },
+      },
+      hours: NIGHT_HOURS,
+    });
+    assert.deepEqual(drafts, [
+      { day: 1, start: "23:00", end: "00:30", task: "" },
+      { day: 2, start: "23:30", end: "01:00", task: "" },
+      { day: 3, start: "23:00", end: "00:30", task: "" },
+    ]);
+  });
+  it("nothing saved: samples follow work hours, else 9:00 AM", async () => {
+    const { suggestWeekBlocks } = await import("./week-blocks.ts");
+    const night = suggestWeekBlocks({ targetKey: "2026-10-12", weeks: {}, dailies: {}, hours: NIGHT_HOURS, workDays: [0, 1, 2, 3, 4] });
+    assert.deepEqual(night, [
+      { day: 1, start: "23:00", end: "00:30", task: "" },
+      { day: 3, start: "23:00", end: "00:30", task: "" },
+    ]);
+    const plain = suggestWeekBlocks({ targetKey: "2026-10-12", weeks: {}, dailies: {}, hours: "" });
+    assert.deepEqual(plain.map((b) => [b.day, b.start, b.end]), [[1, "09:00", "10:30"], [3, "09:00", "10:30"]]);
+  });
+  it("reads lines with (next day) back", () => {
+    assert.deepEqual(parseWeekBlock("Fri 11:00 PM–12:30 AM (next day) · Reports"), {
+      day: 5, start: "23:00", end: "00:30", task: "Reports",
+    });
+  });
+});
+
+describe("AM/PM everywhere", () => {
+  it("adds AM/PM to bare times and marks next day", async () => {
+    const { withAmPm, workHoursText } = await import("./work-hours.ts");
+    assert.equal(withAmPm("23:00–07:00"), "11:00 PM–7:00 AM (next day)");
+    assert.equal(withAmPm("9:00–12:00 and 13:30–16:00"), "9:00 AM–12:00 PM and 1:30 PM–4:00 PM");
+    assert.equal(withAmPm("9am-5pm"), "9am-5pm");
+    assert.equal(withAmPm("9:00 AM–5:00 PM"), "9:00 AM–5:00 PM");
+    assert.equal(workHoursText("23:00", "07:00"), "11:00 PM–7:00 AM");
+    assert.deepEqual(parseWorkHours(withAmPm("23:00–07:00")), { start: 1380, stop: 1860, overnight: true });
   });
 });
