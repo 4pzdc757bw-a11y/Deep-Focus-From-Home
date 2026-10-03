@@ -167,7 +167,7 @@ export const unlockByEmail = createServerFn({ method: "POST" })
       return {
         ok: false,
         error:
-          "We found your purchase but could not unlock this device. Email jeffrey@jeffsebiz.com with your Stripe receipt.",
+          "We found your purchase but could not open it on this device. Email jeffrey@jeffsebiz.com with the receipt email you got when you paid.",
       };
     }
   });

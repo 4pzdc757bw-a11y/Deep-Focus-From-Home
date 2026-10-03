@@ -146,15 +146,15 @@ function HandbookDownloadButtons({
       <div className="flex flex-col gap-2 rounded-lg border border-gold/30 bg-cream/40 p-4 text-ink">
         <p className="font-medium">Downloads need your checkout link</p>
         <p className="text-sm">
-          This page was opened without a Stripe checkout session id, so we cannot
-          unlock the paid handbook files here. Email{" "}
+          We couldn’t match this page to your payment, so we can’t open the
+          handbook files here. Email{" "}
           <a
             className="underline underline-offset-2"
             href={`mailto:${DOWNLOAD_SUPPORT_EMAIL}?subject=Deep%20Focus%20handbook%20download`}
           >
             {DOWNLOAD_SUPPORT_EMAIL}
           </a>{" "}
-          with your Stripe receipt and we will send your files.
+          with the receipt email you got when you paid, and we will send your files.
         </p>
       </div>
     );
@@ -168,7 +168,7 @@ function HandbookDownloadButtons({
       {error && !loading && (
         <p className="text-sm text-muted">
           {error} You can still try the buttons below — each click re-checks your
-          payment with Stripe.
+          payment.
         </p>
       )}
       {items.map((item) => (
@@ -222,15 +222,15 @@ function useCheckoutUnlock(sessionId: string | undefined): DeviceUnlock {
 function DeviceUnlockNote({ status }: { status: DeviceUnlock }) {
   if (status.state === "idle") return null;
   if (status.state === "working") {
-    return <p className="text-sm text-muted">Checking your payment with Stripe…</p>;
+    return <p className="text-sm text-muted">Checking your payment…</p>;
   }
   if (status.state === "done") {
     return (
       <p className="text-sm font-semibold text-olive">
         {status.product === "app"
-          ? "The app is unlocked on this device."
-          : "The full handbook is unlocked on this device."}{" "}
-        On another phone or computer, use “Unlock this device” with your checkout email.
+          ? "The app is open on this device."
+          : "The full handbook is open on this device."}{" "}
+        On another phone or computer, use “Open my purchase” with the email you paid with.
       </p>
     );
   }
@@ -318,7 +318,7 @@ function ThanksPage() {
               Download PDFs and fillables
             </h2>
             <p className="text-ink">
-              Secondary to the app. Keep the Stripe receipt email — that is your
+              Keep the receipt email you got when you paid — that is your
               proof of purchase.
             </p>
             <HandbookDownloadButtons sessionId={sessionId} />
@@ -336,7 +336,7 @@ function ThanksPage() {
               </h2>
               <p className="text-ink">
                 Phone PDF, desktop PDF, and every fillable worksheet. Keep the
-                Stripe receipt email — that is your proof of purchase.
+                receipt email you got when you paid — that is your proof of purchase.
               </p>
               <HandbookDownloadButtons sessionId={sessionId} />
             </Card>
