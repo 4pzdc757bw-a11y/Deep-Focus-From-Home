@@ -8,6 +8,7 @@ import { CheckRow } from "@/components/ui/checkbox";
 import { Input, Textarea } from "@/components/ui/input";
 import { STARTER_DAYS } from "@/lib/content";
 import { useFocusStore } from "@/lib/store";
+import { StarterSignupCard } from "@/components/starter-signup";
 import { addDaysKey, prettyDate, todayKey } from "@/lib/utils";
 
 export const Route = createFileRoute("/starter")({ component: StarterPage });
@@ -47,6 +48,7 @@ function StarterPage() {
           </a>
         </p>
       )}
+      {appUnlocked ? null : <StarterSignupCard title="Get each day by email, too." />}
       {!started ? (
         <Button onClick={start}>Start week one today</Button>
       ) : (

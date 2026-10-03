@@ -4,6 +4,7 @@ import { ArrowRight, BookOpen } from "lucide-react";
 import { DailyOs } from "@/components/daily-os";
 import { useHasAccess, useUnlockedProduct } from "@/components/lock-screen";
 import { HandbookFirstCard, HandbookUnlockedCard } from "@/components/home-offer";
+import { StarterSignupCard } from "@/components/starter-signup";
 import { PRICE_LABEL } from "@/lib/offer";
 import { Card, PageTitle } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
@@ -227,7 +228,10 @@ function Home() {
       ) : handbookBuyer ? (
         <HandbookUnlockedCard />
       ) : (
-        <HandbookFirstCard />
+        <>
+          <HandbookFirstCard />
+          <StarterSignupCard title="Not ready to buy? Start with the free 7-day pack." />
+        </>
       )}
 
       {hydrated &&
