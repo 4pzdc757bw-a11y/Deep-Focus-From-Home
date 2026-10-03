@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { BookOpen, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Card } from "@/components/app-shell";
-import { UnlockDeviceForm, useAppPitchAllowed } from "@/components/lock-screen";
+import { useAppPitchAllowed } from "@/components/lock-screen";
 import { Button } from "@/components/ui/button";
 import { APP_ACCESS_LINE, APP_PRICE_LABEL, PRICE_LABEL } from "@/lib/offer";
 
@@ -25,9 +25,6 @@ export function HandbookFirstCard() {
             <BookOpen className="size-4" /> Read Chapter 1 free
           </Link>
         </Button>
-      </div>
-      <div className="border-t border-yellow pt-4">
-        <UnlockDeviceForm />
       </div>
     </Card>
   );

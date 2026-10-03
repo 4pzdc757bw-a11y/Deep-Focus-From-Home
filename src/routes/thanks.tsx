@@ -230,7 +230,7 @@ function DeviceUnlockNote({ status }: { status: DeviceUnlock }) {
         {status.product === "app"
           ? "The app is open on this device."
           : "The full handbook is open on this device."}{" "}
-        On another phone or computer, use “Open my purchase” with the email you paid with.
+        On another phone or computer, tap “Already bought? Get your copy” and type the email you paid with.
       </p>
     );
   }

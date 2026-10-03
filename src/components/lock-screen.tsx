@@ -122,7 +122,7 @@ export function UnlockDeviceForm() {
   return (
     <form onSubmit={(e) => void submit(e)} className="flex flex-col gap-2">
       <label htmlFor="unlock-email" className="text-sm font-semibold text-olive">
-        Already bought? Open your purchase on this computer or phone
+        Already bought? Get your copy
       </label>
       <p className="text-sm text-muted">
         Type the email you used when you paid, and we’ll open your handbook (or app) right here.
@@ -140,7 +140,7 @@ export function UnlockDeviceForm() {
           className="sm:flex-1"
         />
         <Button type="submit" variant="outline" disabled={busy || !email.trim()}>
-          {busy ? "Checking…" : "Open my purchase"}
+          {busy ? "Checking…" : "Get my copy"}
         </Button>
       </div>
       {error ? (

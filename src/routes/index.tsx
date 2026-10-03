@@ -1,3 +1,4 @@
+import { UnlockDeviceForm } from "@/components/lock-screen";
 import { HandbookCheckoutLink } from "@/components/handbook-checkout-link";
 import { LegalFooter } from "@/components/legal-footer";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -40,6 +41,7 @@ function Home() {
   const tourOpen = useFocusStore((s) => s.tourOpen);
   const setTourOpen = useFocusStore((s) => s.setTourOpen);
   const [tourClosed, setTourClosed] = useState(false);
+  const [showUnlock, setShowUnlock] = useState(false);
   const nextDay = STARTER_DAYS.find((d) => !starterDone.includes(d.day));
   const returning = hydrated && Boolean(starterStart);
   // Visitors without the app always get the welcome (the free starter week can
@@ -203,7 +205,21 @@ function Home() {
                   How this works + FAQ <ArrowRight className="size-4" />
                 </Link>
               </Button>
+              {!appUnlocked && !handbookBuyer ? (
+                <Button
+                  variant="outline"
+                  aria-expanded={showUnlock}
+                  onClick={() => setShowUnlock((v) => !v)}
+                >
+                  Already bought? Get your copy
+                </Button>
+              ) : null}
             </div>
+            {showUnlock && !appUnlocked && !handbookBuyer ? (
+              <div className="mt-4 border-t border-yellow pt-4">
+                <UnlockDeviceForm />
+              </div>
+            ) : null}
           </Card>
 
           {appUnlocked ? (
