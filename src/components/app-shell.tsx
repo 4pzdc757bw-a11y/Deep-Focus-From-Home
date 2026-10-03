@@ -14,8 +14,8 @@ const TABS = [
   { to: "/more", label: "Tools", icon: CalendarCheck },
 ] as const;
 
-/** Header links on marketing pages (no bottom nav there), so nobody is stuck. */
-const MARKETING_LINKS = [
+/** Header links on every page, so nobody is ever stuck without a way home. */
+const HEADER_LINKS = [
   { to: "/", label: "Home" },
   { to: "/guide", label: "Guide" },
   { to: "/intro", label: "FAQ" },
@@ -77,23 +77,27 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </p>
             </div>
           </Link>
-          {marketing ? (
-            <nav aria-label="Site" className="ml-auto flex items-center gap-4">
-              {MARKETING_LINKS.map((l) => (
+          <nav aria-label="Site" className="ml-auto flex items-center gap-4">
+            {HEADER_LINKS.map((l) => {
+              const active =
+                l.to === "/"
+                  ? pathname === "/"
+                  : pathname === l.to || pathname.startsWith(`${l.to}/`);
+              return (
                 <Link
                   key={l.to}
                   to={l.to}
-                  className="inline-flex min-h-11 items-center text-xs font-semibold uppercase tracking-wide text-olive"
+                  aria-current={active ? "page" : undefined}
+                  className={cn(
+                    "inline-flex min-h-11 items-center text-xs font-semibold uppercase tracking-wide text-olive underline-offset-4",
+                    active && "underline decoration-gold decoration-2",
+                  )}
                 >
                   {l.label}
                 </Link>
-              ))}
-            </nav>
-          ) : (
-            <span className="ml-auto hidden text-xs tracking-wide text-muted sm:inline">
-              A system, not a test
-            </span>
-          )}
+              );
+            })}
+          </nav>
         </div>
       </header>
 

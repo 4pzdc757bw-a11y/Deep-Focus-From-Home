@@ -1,6 +1,6 @@
 import { LegalFooter } from "@/components/legal-footer";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Card, PageTitle } from "@/components/app-shell";
 import { CHAPTERS } from "@/lib/content";
 import { FREE_CHAPTER_SLUGS } from "@/lib/unlock/access";
@@ -10,6 +10,13 @@ export const Route = createFileRoute("/guide/")({ component: GuidePage });
 function GuidePage() {
   return (
     <div className="flex flex-col gap-5">
+      <Link
+        to="/"
+        className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-olive"
+      >
+        <ArrowLeft className="size-4" />
+        Back to home
+      </Link>
       <PageTitle
         kicker="The handbook"
         title="Seven chapters you can use this week"

@@ -1,5 +1,5 @@
 import { getRouteApi, Link, useRouter, useRouterState } from "@tanstack/react-router";
-import { Lock } from "lucide-react";
+import { ArrowLeft, Lock } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { Card } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
@@ -114,20 +114,33 @@ export function LockScreen({
   const Heading = compact ? "h2" : "h1";
   return (
     <div className={compact ? "no-print" : "no-print flex flex-col gap-5"}>
+      {!isApp && !compact ? (
+        <Link
+          to="/guide"
+          className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-olive"
+        >
+          <ArrowLeft className="size-4" />
+          Back to all chapters
+        </Link>
+      ) : null}
       <Card className="flex flex-col gap-4">
         <div className="flex items-center gap-2 text-gold">
           <Lock className="size-4" />
           <p className="text-xs font-semibold uppercase tracking-[0.16em]">
-            {isApp ? "Part of the app" : "Part of the handbook"}
+            {isApp ? "Deep Focus app" : "Deep Focus handbook"}
           </p>
         </div>
         <Heading className="font-display text-3xl leading-tight text-olive text-balance">
-          {isApp ? "This tool comes with the app" : "This chapter is in the full handbook"}
+          {isApp
+            ? onHome
+              ? "Today’s planner is part of the Deep Focus app"
+              : "This planner is part of the Deep Focus app"
+            : "This chapter is in the handbook"}
         </Heading>
         <p className="max-w-prose text-pretty text-ink">
           {isApp
-            ? `The Daily OS, starter week, energy log, planners and household agreement are part of the ${APP_PRICE_LABEL} app. It runs right here in your browser, and includes everything in the handbook. Pay once.`
-            : `The guide index and Chapter 1 are free. The full handbook is ${PRICE_LABEL} (online guide plus the PDF), or get the ${APP_PRICE_LABEL} app, which includes it.`}
+            ? `The Deep Focus app goes with the handbook: a daily planner, focus bell, energy log and weekly planner that run right in your browser. ${APP_PRICE_LABEL}, pay once.`
+            : `Chapter 1 is free to read. The rest of the guide is in the handbook (${PRICE_LABEL}) or the app (${APP_PRICE_LABEL}).`}
         </p>
         <div className="flex flex-col gap-2 sm:flex-row">
           {isApp ? (
