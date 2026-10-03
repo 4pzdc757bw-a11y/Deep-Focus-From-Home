@@ -21,7 +21,7 @@ export function downloadErrorMessage(err: unknown): string {
     return err.message;
   }
   if (err instanceof Error && err.message) return err.message;
-  return "Download is unavailable right now. Email jeffrey@jeffsebiz.com with your Stripe receipt.";
+  return "Download is unavailable right now. Email jeffrey@jeffsebiz.com with the receipt email you got when you paid.";
 }
 
 export function downloadErrorStatus(err: unknown): number {

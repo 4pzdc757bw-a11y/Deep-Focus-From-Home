@@ -69,7 +69,7 @@ export async function assertPaidCheckoutSession(
       err instanceof Error ? err.message : "Stripe session lookup failed.";
     console.error("[downloads] Stripe session retrieve failed:", message);
     throw new DownloadAuthError(
-      "Could not verify this payment with Stripe. Double-check the link from checkout, or email jeffrey@jeffsebiz.com with your receipt.",
+      "We could not confirm this payment. Double-check the link from checkout, or email jeffrey@jeffsebiz.com with your receipt.",
     );
   }
 
