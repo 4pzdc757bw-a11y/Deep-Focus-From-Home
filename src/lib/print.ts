@@ -1,9 +1,10 @@
-import { isDateKey, todayKey } from "./utils";
+import { isDateKey } from "./utils";
+import { currentWorkdayKey } from "./workday";
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
 
 /** "Deep Focus Daily - 2026-10-01 (Thu)" — becomes Chrome's suggested PDF name. */
-export function dailyPrintTitle(date: string = todayKey()) {
+export function dailyPrintTitle(date: string = currentWorkdayKey()) {
   if (!isDateKey(date)) return "Deep Focus Daily";
   const [y, m, d] = date.split("-").map(Number);
   const wd = WEEKDAYS[new Date(y, (m ?? 1) - 1, d ?? 1).getDay()];
@@ -87,7 +88,7 @@ export function installPrintTextareaFit() {
  * Print with a dated document title (Chrome uses it as the PDF file name),
  * then restore the original title on afterprint.
  */
-export function printDaily(date: string = todayKey()) {
+export function printDaily(date: string = currentWorkdayKey()) {
   if (typeof window === "undefined") return;
   installPrintTextareaFit();
   const previous = document.title;

@@ -3,7 +3,7 @@
  * Weekly planner): "Mon 11:30 AM–1:00 PM · hardest task". Getting started
  * builds that line from day/time pickers and reads it back the same way.
  */
-import { WEEKDAY_SHORT, clock12, parseWorkHours } from "./work-hours.ts";
+import { WEEKDAY_SHORT, clock12, parseWorkHours, toClock as clock } from "./work-hours.ts";
 
 export type WeekBlockDraft = {
   /** 0 = Sunday … 6 = Saturday. */
@@ -38,8 +38,6 @@ export function parseWeekBlock(text: string | undefined | null): WeekBlockDraft 
     rest = rest.slice(0, sep);
   }
   const hours = parseWorkHours(rest);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  const clock = (m: number) => `${pad(Math.floor(m / 60))}:${pad(m % 60)}`;
   return {
     day,
     start: hours ? clock(hours.start) : "",

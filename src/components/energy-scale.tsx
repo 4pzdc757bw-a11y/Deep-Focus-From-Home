@@ -53,7 +53,7 @@ export function EnergyScalePicker({
 
 /**
  * Prefill time-of-day from a Daily OS block's actual start (local clock):
- * Morning before 12:00, Afternoon 12:00–16:59, Evening 17:00 and later.
+ * Morning 5:00–11:59, Afternoon 12:00–16:59, Evening 17:00 and later (and midnight–4:59).
  * The user can still change it in the check-in.
  */
 export function slotLabelFromBlock(

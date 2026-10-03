@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { isDateKey, monthKey, todayKey, weekKey } from "./utils";
-import { blockDefaults } from "./work-hours";
+import { isDateKey, monthKey, weekKey } from "./utils";
+import { blockDefaults, workdayKey } from "./work-hours";
 import type { BlockPrepId, DailyCheckId, ShutdownStepId } from "./content";
 
 export type BlockPrep = Record<BlockPrepId, boolean>;
@@ -286,7 +286,7 @@ export const useFocusStore = create<FocusState>()(
       starterDone: [],
       starterNotes: {},
       startStarter: () =>
-        set((s) => ({ starterStart: s.starterStart ?? todayKey() })),
+        set((s) => ({ starterStart: s.starterStart ?? workdayKey(new Date(), s.household?.hours) })),
       setStarterStart: (date) =>
         set(() => (isDateKey(date) ? { starterStart: date } : {})),
       toggleStarterDay: (day) =>
@@ -346,7 +346,7 @@ export const useFocusStore = create<FocusState>()(
           // start, but only where it is still the untouched old default.
           const oldDef = blockDefaults(0, s.household.hours);
           const newDef = blockDefaults(0, household.hours);
-          const today = todayKey();
+          const today = workdayKey(new Date(), household.hours);
           let dailies = s.dailies;
           for (const [date, entry] of Object.entries(s.dailies)) {
             if (date < today) continue;
@@ -435,9 +435,11 @@ export const useFocusStore = create<FocusState>()(
   ),
 );
 
-export function useDaily(date = todayKey()) {
-  const raw = useFocusStore((s) => s.dailies[date]);
+export function useDaily(day?: string) {
   const hours = useFocusStore((s) => s.household?.hours);
+  // Default: the current work day (a night shift's small hours count as the evening before).
+  const date = day ?? workdayKey(new Date(), hours);
+  const raw = useFocusStore((s) => s.dailies[date]);
   const entry = raw
     ? migrateDaily(raw as unknown as Record<string, unknown>, hours)
     : emptyDaily(hours);

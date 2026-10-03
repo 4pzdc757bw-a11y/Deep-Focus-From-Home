@@ -5,15 +5,20 @@ import { SheetPortal } from "@/components/sheet-portal";
 import { Field, Input } from "@/components/ui/input";
 import { useFocusStore } from "@/lib/store";
 import { playDoneBell, playStartBell } from "@/lib/chime";
-import { todayKey, weekKey } from "@/lib/utils";
+import { weekKey } from "@/lib/utils";
+import { currentWorkdayKey } from "@/lib/workday";
 import {
   WEEKDAY_ORDER,
   WEEKDAY_SHORT,
   blockDefaults,
   endForStart,
+  endsNextDay,
   normalizeWorkDays,
   parseWorkHours,
   snapClock,
+  spanMinutes,
+  toClock,
+  workdayKey,
 } from "@/lib/work-hours";
 import { formatWeekBlock, parseWeekBlock, type WeekBlockDraft } from "@/lib/week-blocks";
 import { DayButton, WeekSlotPicker } from "@/components/week-slot-picker";
@@ -28,10 +33,9 @@ const STEPS = [
 
 function splitHours(hours: string): [string, string] {
   const wh = parseWorkHours(hours);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  const clock = (m: number) => `${pad(Math.floor(m / 60))}:${pad(m % 60)}`;
   if (!wh) return ["09:00", "17:00"];
-  return [clock(wh.start), wh.stop != null ? clock(wh.stop) : "17:00"];
+  // Overnight stops come back as next-morning clock times (07:00).
+  return [toClock(wh.start), wh.stop != null ? toClock(wh.stop) : "17:00"];
 }
 
 /** Default days for the two weekly blocks: first work day, then two work days later. */
@@ -99,20 +103,20 @@ export function GettingStartedSheet({ onDone }: { onDone: () => void }) {
   );
   // Today's blocks. Times follow the work hours from step 1 until the user edits them.
   const [first, setFirstState] = useState<BlockDraft>(() => {
-    const d = useFocusStore.getState().dailies[todayKey()]?.slots[0];
+    const d = useFocusStore.getState().dailies[currentWorkdayKey()]?.slots[0];
     const def = blockDefaults(0, household.hours);
     return { task: d?.task ?? "", start: d?.start || def.start, end: d?.end || def.end };
   });
   const [second, setSecondState] = useState<BlockDraft>(() => {
-    const d = useFocusStore.getState().dailies[todayKey()]?.slots[1];
+    const d = useFocusStore.getState().dailies[currentWorkdayKey()]?.slots[1];
     return { task: d?.task ?? "", start: d?.start ?? "", end: d?.end ?? "" };
   });
   // Times already saved on Today (e.g. replaying the tour) count as chosen.
   const firstTimesTouched = useRef(
-    Boolean(useFocusStore.getState().dailies[todayKey()]?.slots[0]?.task),
+    Boolean(useFocusStore.getState().dailies[currentWorkdayKey()]?.slots[0]?.task),
   );
   const secondTimesTouched = useRef(
-    Boolean(useFocusStore.getState().dailies[todayKey()]?.slots[1]?.start),
+    Boolean(useFocusStore.getState().dailies[currentWorkdayKey()]?.slots[1]?.start),
   );
   const workHours = `${hours[0]}–${hours[1]}`;
 
@@ -121,9 +125,12 @@ export function GettingStartedSheet({ onDone }: { onDone: () => void }) {
     let value = next;
     if (timesEdited === "start") {
       const end = endForStart(next.start, workHours);
-      if (end && end > next.start) value = { ...next, end: snapClock(end) };
+      if (end) value = { ...next, end: snapClock(end) };
     }
-    if (value.end && value.start && value.end <= value.start) {
+    // Ends before (or at) the start, or a wrap of more than 12 h: reset to 90 min.
+    // A night-shift block like 11:00 PM → 12:30 AM (next day) is fine.
+    const span = value.end && value.start ? spanMinutes(value.start, value.end) : null;
+    if (value.end && value.start && (span == null || span > 12 * 60)) {
       const end = endForStart(value.start, workHours);
       value = { ...value, end: end ? snapClock(end) : value.end };
     }
@@ -196,7 +203,8 @@ export function GettingStartedSheet({ onDone }: { onDone: () => void }) {
       }
     }
     if (step === 2) {
-      const date = todayKey();
+      // The work day the user is in now (a night shift's small hours count as the evening before).
+      const date = workdayKey(new Date(), workHours);
       patchSlot(date, 0, { task: first.task, start: first.start, end: first.end });
       if (second.task.trim()) {
         patchSlot(date, 1, { task: second.task, start: second.start, end: second.end });
@@ -252,6 +260,11 @@ export function GettingStartedSheet({ onDone }: { onDone: () => void }) {
                     <Input type="time" value={hours[1]} onChange={(e) => setHours([hours[0], e.target.value])} />
                   </Field>
                 </div>
+                {endsNextDay(hours[0], hours[1]) ? (
+                  <p className="-mt-2 text-sm text-muted">
+                    Night shift: you stop the next morning. Each shift counts as the day it starts.
+                  </p>
+                ) : null}
                 <div className="flex flex-col gap-1.5">
                   <p className="text-xs font-semibold uppercase tracking-[0.14em] text-gold">Work days</p>
                   <div className="flex flex-wrap gap-1.5" role="group" aria-label="Work days">
@@ -315,7 +328,7 @@ export function GettingStartedSheet({ onDone }: { onDone: () => void }) {
                       }}
                     />
                   </Field>
-                  <Field label="Ends">
+                  <Field label={endsNextDay(first.start, first.end) ? "Ends (next day)" : "Ends"}>
                     <Input type="time" value={first.end} onChange={(e) => setFirst({ ...first, end: e.target.value }, true)} />
                   </Field>
                 </div>
@@ -328,7 +341,7 @@ export function GettingStartedSheet({ onDone }: { onDone: () => void }) {
                       <Field label="Block 2 starts">
                         <Input type="time" value={second.start} onChange={(e) => setSecond({ ...second, start: e.target.value }, true)} />
                       </Field>
-                      <Field label="Block 2 ends">
+                      <Field label={endsNextDay(second.start, second.end) ? "Block 2 ends (next day)" : "Block 2 ends"}>
                         <Input type="time" value={second.end} onChange={(e) => setSecond({ ...second, end: e.target.value }, true)} />
                       </Field>
                     </div>

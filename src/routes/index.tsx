@@ -4,6 +4,7 @@ import { LegalFooter } from "@/components/legal-footer";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, BookOpen } from "lucide-react";
 import { DailyOs } from "@/components/daily-os";
+import { useWorkdayKey } from "@/lib/workday";
 import { useHasAccess, useUnlockedProduct } from "@/components/lock-screen";
 import { HandbookFirstCard, HandbookUnlockedCard } from "@/components/home-offer";
 import { StarterSignupCard } from "@/components/starter-signup";
@@ -21,7 +22,6 @@ import {
   cn,
   forceHomeFocusSetupPrompt,
   isWeekTwo,
-  todayKey,
   weekdayLong,
 } from "@/lib/utils";
 import { useEffect, useState } from "react";
@@ -50,7 +50,8 @@ function Home() {
   // Before the store hydrates, render the welcome (CSS hides it for returning
   // browsers) or a same-size placeholder, so the Daily OS below does not jump.
   const preHydration = !hydrated;
-  const nextDate = starterStart && nextDay ? addDaysKey(starterStart, nextDay.day - 1) : todayKey();
+  const workday = useWorkdayKey();
+  const nextDate = starterStart && nextDay ? addDaysKey(starterStart, nextDay.day - 1) : workday;
   const peak = peakFrom(energy);
   const [now, setNow] = useState(() => Date.now());
   const [showHomeFocus, setShowHomeFocus] = useState(false);

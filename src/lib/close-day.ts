@@ -1,6 +1,7 @@
 import { STARTER_DAYS } from "./content";
 import { useFocusStore } from "./store";
-import { addDaysKey, todayKey } from "./utils";
+import { addDaysKey } from "./utils";
+import { currentWorkdayKey } from "./workday";
 import { nextWorkdayFrom } from "./work-hours";
 
 /** Map a calendar date to starter day 1–7, or null if outside week one. */
@@ -22,7 +23,7 @@ export function starterDayForDate(
  */
 export function nextDateAfterClose(
   closedDate: string,
-  today = todayKey(),
+  today = currentWorkdayKey(),
   workDays: readonly number[] | null | undefined = useFocusStore.getState().household?.workDays,
 ) {
   return nextWorkdayFrom(closedDate, today, workDays);
@@ -39,7 +40,7 @@ export type CloseDayResult = {
  * Close the workday: copy Shutdown note → starter “one line”, mark day done,
  * keep the daily entry in local history, return next-day pointers for nav/print.
  */
-export function closeDay(osDate = todayKey()): CloseDayResult {
+export function closeDay(osDate = currentWorkdayKey()): CloseDayResult {
   const store = useFocusStore.getState();
   const started = store.starterStart;
 
@@ -75,7 +76,7 @@ export function closeDay(osDate = todayKey()): CloseDayResult {
   }
 
   const fresh = useFocusStore.getState();
-  const nextDate = nextDateAfterClose(osDate);
+  const nextDate = nextDateAfterClose(osDate, currentWorkdayKey());
   const nextDay = fresh.starterStart ? starterDayForDate(fresh.starterStart, nextDate) : null;
 
   return { starterDay: day, nextDay, nextDate, noteCopied };

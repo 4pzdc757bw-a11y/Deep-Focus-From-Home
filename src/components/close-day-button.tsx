@@ -8,7 +8,14 @@ import { Button } from "@/components/ui/button";
 import { closeDay } from "@/lib/close-day";
 import { useFocusStore } from "@/lib/store";
 import { printDaily, printedRecently } from "@/lib/print";
-import { cn, isFriday, todayKey } from "@/lib/utils";
+import { cn, isFriday } from "@/lib/utils";
+import { currentWorkdayKey } from "@/lib/workday";
+
+/** Friday review follows the work day: a Friday-night shift closes on Saturday morning. */
+function workdayIsFriday() {
+  const [y, m, d] = currentWorkdayKey().split("-").map(Number);
+  return isFriday(new Date(y ?? 1970, (m ?? 1) - 1, d ?? 1));
+}
 
 type Phase =
   | "idle"
@@ -41,8 +48,8 @@ export function CloseDayButton({
   const [alreadySaved, setAlreadySaved] = useState(false);
 
   function startClose() {
-    setAlreadySaved(printedRecently(todayKey()));
-    if (isFriday()) {
+    setAlreadySaved(printedRecently(currentWorkdayKey()));
+    if (workdayIsFriday()) {
       setPhase("week-plan");
       return;
     }
@@ -58,7 +65,7 @@ export function CloseDayButton({
   }
 
   function runClose() {
-    const closedDate = todayKey();
+    const closedDate = currentWorkdayKey();
     const result = closeDay(closedDate);
     setNext({ closedDate, nextDate: result.nextDate });
     if (printedRecently(closedDate)) {
@@ -72,14 +79,14 @@ export function CloseDayButton({
 
   /** Close, then print again even though it was saved recently. */
   function runCloseAndSaveAgain() {
-    const closedDate = todayKey();
+    const closedDate = currentWorkdayKey();
     const result = closeDay(closedDate);
     savePdfThenAdvance({ closedDate, nextDate: result.nextDate });
   }
 
   function savePdfThenAdvance(target = next) {
     setPhase("idle");
-    const closedDate = target?.closedDate ?? todayKey();
+    const closedDate = target?.closedDate ?? currentWorkdayKey();
     const nextDate = target?.nextDate;
     // Land on the closed day's Daily OS so it is what prints, then offer Save as PDF.
     void navigate({ to: "/daily", search: { date: closedDate } }).then(() => {

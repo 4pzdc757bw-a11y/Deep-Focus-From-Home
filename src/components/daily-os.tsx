@@ -14,8 +14,10 @@ import {
   remainingLabel,
   stampClockNow,
 } from "@/lib/chime";
+import { startPlan } from "@/lib/block-plan";
 import { installPrintTextareaFit, printDaily, setActivePrintDate } from "@/lib/print";
-import { blockDefaults, endForStart } from "@/lib/work-hours";
+import { blockDefaults, endForStart, endsNextDay } from "@/lib/work-hours";
+import { useWorkdayKey } from "@/lib/workday";
 import {
   beginSession,
   completeSession,
@@ -25,42 +27,9 @@ import {
 import { partnerMessage } from "@/lib/backup";
 import { shareOrCopy } from "@/lib/share";
 import { emptyPrep, emptySlot, useDaily, useFocusStore } from "@/lib/store";
-import { cn, prettyDate, todayKey } from "@/lib/utils";
+import { cn, prettyDate } from "@/lib/utils";
 
 const SLOT_LABELS = ["Block 1", "Block 2", "Block 3"] as const;
-
-const DEFAULT_BLOCK_MINUTES = 90;
-const MAX_BLOCK_MINUTES = 4 * 60;
-
-/** Planned length from the block's prefilled/typed times; 90 min if unusable. */
-function plannedMinutes(start: string, end: string) {
-  if (!start || !end || end <= start) return DEFAULT_BLOCK_MINUTES;
-  const mins = durationMinutes(start, end);
-  if (mins == null || mins < 5 || mins > MAX_BLOCK_MINUTES) return DEFAULT_BLOCK_MINUTES;
-  return mins;
-}
-
-/**
- * When Start is pressed: stamp start = now. Keep the planned end only if it is
- * still later today; otherwise end = now + planned length (cleared if that
- * would cross midnight, so it shows "Set time"). Never leaves an end earlier
- * than the start, so no negative / wrapped duration.
- */
-function startPlan(slot: { start: string; end: string }, now = new Date()) {
-  const start = stampClockNow(now);
-  const planned = plannedMinutes(slot.start, slot.end);
-  const minEnd = stampClockNow(new Date(now.getTime() + 60_000));
-  if (slot.end && slot.end >= minEnd && slot.end > start) {
-    const [h, m] = slot.end.split(":").map(Number);
-    const endAt = new Date(now);
-    endAt.setHours(h, m, 0, 0);
-    return { start, end: slot.end, endsAt: endAt.getTime() };
-  }
-  const endsAt = now.getTime() + planned * 60_000;
-  const endDate = new Date(endsAt);
-  const sameDay = endDate.getDate() === now.getDate();
-  return { start, end: sameDay ? stampClockNow(endDate) : "", endsAt };
-}
 
 function TimeField({
   label,
@@ -133,7 +102,8 @@ function StatusLine({
 
 export function DailyOs({ date }: { date?: string }) {
   const hydrated = useFocusStore((s) => s.hydrated);
-  const osDate = date ?? todayKey();
+  const workday = useWorkdayKey();
+  const osDate = date ?? workday;
   const { entry, patch, patchSlot } = useDaily(osDate);
   const session = useFocusStore((s) => s.session);
   const workHours = useFocusStore((s) => s.household.hours);
@@ -285,7 +255,7 @@ export function DailyOs({ date }: { date?: string }) {
                 readOnly={active}
               />
               <TimeField
-                label="Ends"
+                label={slot.start && slot.end && endsNextDay(slot.start, slot.end) ? "Ends (next day)" : "Ends"}
                 value={slot.end}
                 fallback={endFallback}
                 onChange={(end) => patchSlot(i, { end })}
