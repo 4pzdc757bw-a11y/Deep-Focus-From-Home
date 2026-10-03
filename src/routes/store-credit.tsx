@@ -31,7 +31,7 @@ function StoreCreditPage() {
         automatic cash refunds on digital downloads or digital access.
       </p>
       <p>
-        If something went wrong with your order, email jeffrey@jeffsebiz.com,
+        If something went wrong with your order, email support@jeffsebiz.com,
         explain what happened, and we will review it. Delivery problems and
         duplicate charges are always fixed (see below). Other requests are
         reviewed case by case: we may offer store credit, replace or fix a file,
@@ -51,7 +51,7 @@ function StoreCreditPage() {
       <h2>How to contact us</h2>
       <ol>
         <li>
-          Email jeffrey@jeffsebiz.com from the address you used at checkout when
+          Email support@jeffsebiz.com from the address you used at checkout when
           you can.
         </li>
         <li>

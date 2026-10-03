@@ -39,7 +39,7 @@ function PrivacyPage() {
         </li>
         <li>
           Messages you send us (for example, store-credit requests to
-          jeffrey@jeffsebiz.com)
+          support@jeffsebiz.com)
         </li>
         <li>
           Basic technical data such as browser type, device type, and pages
@@ -122,7 +122,7 @@ function PrivacyPage() {
         occasional notes about our products. We don’t sell or rent the list.
         Our email provider, Kit (kit.com), stores your address and sends these
         messages for us. Every email has an unsubscribe link, or you can email
-        jeffrey@jeffsebiz.com to be removed; we’ll stop within 10 business days.
+        support@jeffsebiz.com to be removed; we’ll stop within 10 business days.
         Our emails may use standard open and click tracking to help us improve
         them. We don’t add buyers to this list unless they sign up themselves.
       </p>

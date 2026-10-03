@@ -6,11 +6,11 @@ export const LEGAL_EFFECTIVE_DATE = "October 3, 2026";
 export const BUSINESS_NAME = "JEFFSEBIZ LLC";
 export const BUSINESS_ADDRESS_LINES = ["333 W Bethalto Dr, Ste C #210", "Bethalto, IL 62010"] as const;
 export const BUSINESS_ADDRESS = BUSINESS_ADDRESS_LINES.join(", ");
-export const BUSINESS_EMAIL = "jeffrey@jeffsebiz.com";
+export const BUSINESS_EMAIL = "support@jeffsebiz.com";
 
 /** Locked checkout / footer line from Store Credit policy. */
 export const STORE_CREDIT_CHECKOUT_LINE =
-  "Digital products, no automatic refunds. If something’s wrong, email jeffrey@jeffsebiz.com. We aim to reply within 3 business days, fix delivery problems, and refund duplicate charges. Other requests are reviewed case by case.";
+  "Digital products, no automatic refunds. If something’s wrong, email support@jeffsebiz.com. We aim to reply within 3 business days, fix delivery problems, and refund duplicate charges. Other requests are reviewed case by case.";
 
 /**
  * Fix-it rule (Vera): identical wording in the Store Credit Policy and Terms
@@ -18,7 +18,7 @@ export const STORE_CREDIT_CHECKOUT_LINE =
  */
 export const FIX_IT_HEADING = "Didn’t get your files, or charged twice?";
 export const FIX_IT_INTRO =
-  "Email jeffrey@jeffsebiz.com with the email you used to buy and your Stripe receipt (or the date and amount).";
+  "Email support@jeffsebiz.com with the email you used to buy and your Stripe receipt (or the date and amount).";
 export const FIX_IT_ITEMS = [
   "Files never arrived or won’t open: we’ll resend them or send a working download link.",
   "Charged more than once for the same order: we’ll refund the extra charge to your original payment method.",
@@ -44,7 +44,7 @@ export const REFUND_ENDS_ACCESS =
 
 /** Payment problems (Terms section 7). Neutral; internal refund rules stay internal. */
 export const PAYMENT_DISPUTE_LINE =
-  "If there’s a problem with a charge, please email us first at jeffrey@jeffsebiz.com so we can fix it quickly. Access to the purchase may be paused while a payment dispute is open.";
+  "If there’s a problem with a charge, please email us first at support@jeffsebiz.com so we can fix it quickly. Access to the purchase may be paused while a payment dispute is open.";
 
 /** Consumer rights the law doesn't let us waive (Terms section 11). */
 export const CONSUMER_RIGHTS_LINE =
