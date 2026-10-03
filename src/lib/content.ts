@@ -30,7 +30,7 @@ export const STARTER_DAYS = [
     day: 3,
     title: "Digital",
     job: "Park the phone for the first deep-work block.",
-    why: "Plan the day first. Then, for the block itself, the phone leaves your desk. Out of sight beats willpower.",
+    why: "Plan the day first. Then, for the block itself, the phone leaves your desk. Some research suggests a phone in view can pull at your attention, even on silent. Out of sight beats willpower.",
     actions: [
       "Write today’s 1–3 outcomes, then start the block.",
       "Then put the phone away for 60–90 minutes (another room, or face-down off the desk).",
@@ -111,7 +111,7 @@ export const CHAPTERS = [
     title: "Design your focus environment",
     kicker: "Claim one workspace",
     summary:
-      "A dedicated surface is one of the highest-leverage changes most remote workers can make. Mixed-use tables send mixed signals.",
+      "A dedicated surface is one of the most useful changes many remote workers can make. Mixed-use tables send mixed signals.",
     body: [
       "Choose one consistent location. A room with a door is ideal. If not, a corner that can stay set up.",
       "Equip it with essentials only: screen, keyboard, chair, light, water, notebook. Remove non-work objects.",
@@ -128,7 +128,7 @@ export const CHAPTERS = [
     title: "Set clear boundaries with home life",
     kicker: "Presence is not availability",
     summary:
-      "Family, pets, deliveries, and unfinished chores are the most cited focus killers. Boundaries have to be explicit and consistently signaled.",
+      "Family, pets, deliveries, and unfinished chores are commonly cited focus killers. Boundaries have to be explicit and consistently signaled.",
     body: [
       "Share core work hours. Post them if it helps. Agree what is an emergency versus a question that can wait.",
       "For children, use a signal they can see: closed door, headphones, a red or green card.",
@@ -287,7 +287,7 @@ export const FAQ = [
   },
   {
     q: "I have kids / a shared room. Will this still work?",
-    a: "Yes. Perfect quiet is not required. You still pick a visible signal, an emergency rule, and a 15-minute minimum on hard days. Fill the Household Agreement in language a child can understand.",
+    a: "It’s built with that in mind. Chapter 2 and the Household Agreement cover shared homes. Perfect quiet is not required. You still pick a visible signal, an emergency rule, and a 15-minute minimum on hard days. Fill the Household Agreement in language a child can understand.",
   },
   {
     q: "What if I miss a day?",
@@ -295,7 +295,7 @@ export const FAQ = [
   },
   {
     q: "Why park the phone during a block?",
-    a: "Plan the day first. Then, for the deep-work block itself, park the phone off your desk — another room, or face-down and out of reach. Out of sight beats willpower. Need a timer? Use a kitchen timer or a clock, not the phone. Between blocks, pick two short windows to check messages.",
+    a: "Plan the day first. Then, for the deep-work block itself, park the phone off your desk — another room, or face-down and out of reach. Some research suggests a phone in view can pull at your attention, even on silent. Out of sight beats willpower. Need a timer? Use a kitchen timer or a clock, not the phone. Between blocks, pick two short windows to check messages.",
   },
   {
     q: "Do I need a spare room?",

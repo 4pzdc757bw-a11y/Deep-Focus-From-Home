@@ -2,20 +2,22 @@ import { useEffect, useId, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { SheetPortal } from "@/components/sheet-portal";
 import { Field, Input } from "@/components/ui/input";
+import { WeekBlocksEditor, hasAnyBlock, suggestedWeekLines } from "@/components/week-blocks-editor";
 import { useFocusStore, type WeekState } from "@/lib/store";
 import { nextWeekKey, prettyDate } from "@/lib/utils";
 
 type Step = "ask" | "form";
 
-const BLOCK_LABELS = ["Block 1", "Block 2", "Block 3", "Block 4"] as const;
-const BLOCK_HINTS = [
-  "Mon 9:00–10:30 · hardest task",
-  "Tue 9:00–10:30 · next deep block",
-  "Wed 14:00–15:30 · deep block",
-  "Thu 9:00–10:30 · or Sat/Sun only if you need overflow",
-] as const;
-
-function emptyDraft(from?: WeekState): WeekState {
+/** Saved plan for the week, or one pre-filled from the user's own schedule. */
+function emptyDraft(from: WeekState | undefined, key: string): WeekState {
+  if (!hasAnyBlock(from?.blocks)) {
+    return {
+      theme: from?.theme ?? "",
+      blocks: suggestedWeekLines(key),
+      coworking: from?.coworking ?? "",
+      fridayNote: from?.fridayNote ?? "",
+    };
+  }
   return {
     theme: from?.theme ?? "",
     blocks: [
@@ -33,17 +35,18 @@ function emptyDraft(from?: WeekState): WeekState {
  * Friday Close day gate: plan next week’s blocks before Friday review.
  * Skip is one tap and never blocks Close.
  */
-export function WeeklyPlannerSheet({ onDone }: { onDone: () => void }) {
+export function WeeklyPlannerSheet({ onDone, date }: { onDone: () => void; date?: string }) {
   const titleId = useId();
-  const key = nextWeekKey();
+  // The week after the day being closed (Fri Oct 9 → week of Oct 12), never an earlier one.
+  const key = nextWeekKey(date ? new Date(`${date}T12:00:00`) : new Date());
   const stored = useFocusStore((s) => s.weeks[key]);
   const patchWeek = useFocusStore((s) => s.patchWeek);
   const [step, setStep] = useState<Step>("ask");
-  const [draft, setDraft] = useState<WeekState>(() => emptyDraft(stored));
+  const [draft, setDraft] = useState<WeekState>(() => emptyDraft(stored, key));
 
   useEffect(() => {
     setStep("ask");
-    setDraft(emptyDraft(useFocusStore.getState().weeks[key]));
+    setDraft(emptyDraft(useFocusStore.getState().weeks[key], key));
   }, [key]);
 
   useEffect(() => {
@@ -122,22 +125,10 @@ export function WeeklyPlannerSheet({ onDone }: { onDone: () => void }) {
                   autoFocus
                 />
               </Field>
-              {draft.blocks.map((b, i) => (
-                <Field key={i} label={BLOCK_LABELS[i] ?? `Block ${i + 1}`}>
-                  <Input
-                    value={b}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setDraft((d) => {
-                        const blocks = [...d.blocks] as WeekState["blocks"];
-                        blocks[i] = value;
-                        return { ...d, blocks };
-                      });
-                    }}
-                    placeholder={BLOCK_HINTS[i]}
-                  />
-                </Field>
-              ))}
+              <WeekBlocksEditor
+                blocks={draft.blocks}
+                onChange={(blocks) => setDraft((d) => ({ ...d, blocks }))}
+              />
               <Field
                 label="Body-doubling / coworking"
                 hint="Optional. One appointment is enough."
@@ -147,7 +138,7 @@ export function WeeklyPlannerSheet({ onDone }: { onDone: () => void }) {
                   onChange={(e) =>
                     setDraft((d) => ({ ...d, coworking: e.target.value }))
                   }
-                  placeholder="Tue 10:00 · Focusmate / friend"
+                  placeholder="Tue 10:00 AM · Focusmate / friend"
                 />
               </Field>
             </div>

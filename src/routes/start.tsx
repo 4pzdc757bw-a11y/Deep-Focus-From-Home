@@ -33,9 +33,6 @@ function StartPage() {
       <Card className="flex flex-col gap-3">
         <p className="font-display text-xl text-olive">Start Day 1 tomorrow morning.</p>
         <StarterSignupForm />
-        <p className="text-sm text-muted">
-          One short email a day for a week. Leave anytime. No webinar.
-        </p>
       </Card>
 
       <div>
@@ -71,7 +68,6 @@ function StartPage() {
       <Card className="flex flex-col gap-3">
         <h2 className="font-display text-2xl text-olive">The first job is a desk, not a course.</h2>
         <StarterSignupForm />
-        <p className="text-sm text-muted">First name and email only. Leave anytime.</p>
       </Card>
 
       <LegalFooter />

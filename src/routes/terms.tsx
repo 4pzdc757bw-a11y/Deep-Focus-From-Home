@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { LegalDoc } from "@/components/legal-doc";
+import { FixItRule, LegalDoc } from "@/components/legal-doc";
 
 export const Route = createFileRoute("/terms")({
   head: () => ({
@@ -21,7 +21,7 @@ function TermsPage() {
       <p>
         These Terms cover your use of jeffsebiz.com and purchases of digital
         products from JEFFSEBIZ LLC (“we,” “us,” “Jeffsebiz”), including Deep
-        Focus From Home and related offers. By buying or using our products, you
+        Focus from Home and related offers. By buying or using our products, you
         agree to these Terms.
       </p>
 
@@ -50,10 +50,14 @@ function TermsPage() {
         product, we will update these Terms or that product’s checkout terms
         before that sale goes live.
       </p>
-
-      <h2>3. Deep Focus From Home app</h2>
       <p>
-        When you buy the Deep Focus From Home app at the price shown at checkout,
+        We currently don’t sell to customers in the European Union or the
+        United Kingdom.
+      </p>
+
+      <h2>3. Deep Focus from Home app</h2>
+      <p>
+        When you buy the Deep Focus from Home app at the price shown at checkout,
         you get access to the browser-based web app, including tools such as the
         Daily OS, focus bells, and energy log, plus any handbook downloads listed
         on the checkout and thank-you pages for your purchase.
@@ -79,11 +83,22 @@ function TermsPage() {
         <Link to="/privacy">Privacy Policy</Link>.
       </p>
       <p>
-        If we discontinue the app, we’ll try to give at least 30 days’ notice by
-        email. If that happens within 12 months of your purchase, you can ask for
-        store credit under section 8. For delivery problems, missing files, or
-        duplicate charges, email jeffrey@jeffsebiz.com. We reply within 3
-        business days, fix delivery problems, and refund duplicate charges. Other
+        “Lifetime” or “pay once” access means access for as long as we offer
+        the app, not for the life of the buyer. The app runs on our website, so
+        it isn’t available while the site is down for maintenance or outages,
+        and it depends on third-party hosting. We work to keep it running but
+        don’t guarantee uninterrupted access. Your entries are saved in your own
+        browser, so clearing browser data or switching devices may remove them,
+        and we can’t recover them. If we decide to discontinue the app, we’ll
+        try to give at least 30 days’ notice by email. If that happens within 12
+        months of your purchase, you can ask for store credit under section 8.
+      </p>
+      <p>
+        Use the export or print option to keep your own copy of your entries.
+      </p>
+      <p>
+        For delivery problems, missing files, or duplicate charges, see
+        “Didn’t get your files, or charged twice?” in section 8. Other
         requests are handled under section 8 and our{" "}
         <Link to="/store-credit">Store Credit Policy</Link>. The app and
         handbook share practical work habits for general information. As in
@@ -134,15 +149,16 @@ function TermsPage() {
       <h2>8. Refunds and store credit</h2>
       <p>
         We do not offer automatic cash refunds on digital downloads or digital
-        access. If something went wrong with your order (for example you never
-        received the files, a file will not open, or you were charged twice),
-        email jeffrey@jeffsebiz.com and explain the problem. We review each
-        request and may offer store credit, replace or fix a file, or in rare
-        cases a refund. When we grant store credit, it equals what you paid
+        access. Delivery problems and duplicate charges are always fixed (see
+        below). If something else went wrong with your order, email
+        jeffrey@jeffsebiz.com and explain the problem. We review each of those
+        requests case by case and may offer store credit, replace or fix a
+        file, or in rare cases a refund. When we grant store credit, it equals what you paid
         (unless we say otherwise), can be used toward any Jeffsebiz product, and
         is good for 12 months from the purchase date. Full details:{" "}
         <Link to="/store-credit">Store Credit / Digital Purchase Policy</Link>.
       </p>
+      <FixItRule as="h3" />
 
       <h2>9. Acceptable use</h2>
       <p>

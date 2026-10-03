@@ -1,3 +1,4 @@
+import { starterDayDates } from "./work-hours";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -71,14 +72,22 @@ export function nextWeekKey(d = new Date()) {
 }
 
 /** Calendar day 8+ of the starter week. Override with ?week2=1|0 for local testing. */
-export function isWeekTwo(starterStart: string | null, d = new Date()) {
+/**
+ * Week two begins after starter Day 7 (Day 1 = start date, Days 2–7 = next
+ * picked work days). `today` is the current work day (YYYY-MM-DD).
+ */
+export function isWeekTwo(
+  starterStart: string | null,
+  today: string = todayKey(),
+  workDays?: readonly number[] | null,
+) {
   if (typeof window !== "undefined") {
     const force = new URLSearchParams(window.location.search).get("week2");
     if (force === "1" || force === "true") return true;
     if (force === "0" || force === "false") return false;
   }
   if (!starterStart) return false;
-  return todayKey(d) >= addDaysKey(starterStart, 7);
+  return today > starterDayDates(starterStart, workDays)[6]!;
 }
 
 /** Force Home focus setup sheet. ?homeFocus=1 for local testing (re-show after Skip). */

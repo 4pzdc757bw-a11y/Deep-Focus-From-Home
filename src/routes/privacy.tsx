@@ -8,7 +8,7 @@ export const Route = createFileRoute("/privacy")({
       {
         name: "description",
         content:
-          "Privacy Policy for Deep Focus From Home and related jeffsebiz.com digital products from JEFFSEBIZ LLC.",
+          "Privacy Policy for Deep Focus from Home and related jeffsebiz.com digital products from JEFFSEBIZ LLC.",
       },
     ],
   }),
@@ -19,7 +19,7 @@ function PrivacyPage() {
   return (
     <LegalDoc kicker="Legal" title="Privacy Policy">
       <p>
-        JEFFSEBIZ LLC (“we,” “us,” “Jeffsebiz”) runs Deep Focus From Home and
+        JEFFSEBIZ LLC (“we,” “us,” “Jeffsebiz”) runs Deep Focus from Home and
         related digital products. This page explains what information we collect
         and how we use it.
       </p>
@@ -84,8 +84,8 @@ function PrivacyPage() {
           including visitor stats described below
         </li>
         <li>
-          Email tools that help us send downloads, newsletters, or signup
-          messages you asked for (for example, Kit, when we turn on email signup)
+          Our email provider, Kit (kit.com), which stores signup addresses and
+          sends the emails you asked for
         </li>
         <li>
           Service providers who help us run the business, under limits that
@@ -113,23 +113,22 @@ function PrivacyPage() {
         Vercel provides these stats as our service provider.
       </p>
 
-      <h2>5. Email signup (when added)</h2>
+      <h2>5. Email signup</h2>
       <p>
-        When we offer an email signup on the site, we collect the email address
-        you submit and the date and time you signed up. We use it only to send
-        the updates you asked for, such as launch news and the free 7-day
-        starter. We don’t sell or rent the list. Our email tool (for example,
-        Kit) stores your address and sends these messages for us. Every email has
-        an unsubscribe link, or you can email jeffrey@jeffsebiz.com to be
-        removed; we’ll stop within 10 business days. Our emails may use standard
-        open and click tracking to help us improve them. We don’t add buyers to
-        this list unless they sign up themselves. Until signup is turned on, we
-        only collect email when you buy or contact us directly.
+        When you sign up for the free 7-day pack, we collect the first name and
+        email address you submit and the date and time you signed up. We use it
+        to send the free 7-day pack emails you asked for, launch news, and
+        occasional notes about our products. We don’t sell or rent the list.
+        Our email provider, Kit (kit.com), stores your address and sends these
+        messages for us. Every email has an unsubscribe link, or you can email
+        jeffrey@jeffsebiz.com to be removed; we’ll stop within 10 business days.
+        Our emails may use standard open and click tracking to help us improve
+        them. We don’t add buyers to this list unless they sign up themselves.
       </p>
 
       <h2>6. App data on your device</h2>
       <p>
-        The Deep Focus From Home web app may store notes, focus or energy logs,
+        The Deep Focus from Home web app may store notes, focus or energy logs,
         and similar entries on your own device or browser (local storage). That
         information stays on your device unless you choose to share it with us
         (for example, by emailing us). We do not pull those local notes onto our

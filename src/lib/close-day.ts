@@ -1,18 +1,18 @@
-import { STARTER_DAYS } from "./content";
 import { useFocusStore } from "./store";
-import { addDaysKey, todayKey } from "./utils";
-import { nextWorkdayFrom } from "./work-hours";
 
-/** Map a calendar date to starter day 1–7, or null if outside week one. */
+import { currentWorkdayKey } from "./workday";
+import { nextWorkdayFrom, starterDayOn } from "./work-hours";
+
+/**
+ * Map a work-day date to starter day 1–7, or null if outside week one. Day 1
+ * is the start date; Days 2–7 are the next picked work days.
+ */
 export function starterDayForDate(
   starterStart: string | null,
   date: string,
+  workDays: readonly number[] | null | undefined = useFocusStore.getState().household?.workDays,
 ): number | null {
-  if (!starterStart) return null;
-  for (const d of STARTER_DAYS) {
-    if (addDaysKey(starterStart, d.day - 1) === date) return d.day;
-  }
-  return null;
+  return starterDayOn(starterStart, date, workDays);
 }
 
 /**
@@ -22,10 +22,37 @@ export function starterDayForDate(
  */
 export function nextDateAfterClose(
   closedDate: string,
-  today = todayKey(),
+  today = currentWorkdayKey(),
   workDays: readonly number[] | null | undefined = useFocusStore.getState().household?.workDays,
+  latestClosed: string | null = latestClosedDate(),
 ) {
-  return nextWorkdayFrom(closedDate, today, workDays);
+  return nextDateForward(closedDate, today, workDays, latestClosed);
+}
+
+/**
+ * Pure: next work day after the closed day, never moving backward — not
+ * before today, and not on or before a day already closed later (closing
+ * Wednesday after Monday… opens Thursday, never Monday again).
+ */
+export function nextDateForward(
+  closedDate: string,
+  today: string,
+  workDays: readonly number[] | null | undefined,
+  latestClosed: string | null,
+) {
+  const base = latestClosed && latestClosed > closedDate ? latestClosed : closedDate;
+  return nextWorkdayFrom(base, today, workDays);
+}
+
+/** Latest day whose Close day ran (shutdown checked), or null. */
+export function latestClosedDate(
+  dailies: Record<string, { checks?: { shutdown?: boolean } } | undefined> = useFocusStore.getState().dailies,
+): string | null {
+  let latest: string | null = null;
+  for (const [k, v] of Object.entries(dailies)) {
+    if (v?.checks?.shutdown && (!latest || k > latest)) latest = k;
+  }
+  return latest;
 }
 
 export type CloseDayResult = {
@@ -39,7 +66,7 @@ export type CloseDayResult = {
  * Close the workday: copy Shutdown note → starter “one line”, mark day done,
  * keep the daily entry in local history, return next-day pointers for nav/print.
  */
-export function closeDay(osDate = todayKey()): CloseDayResult {
+export function closeDay(osDate = currentWorkdayKey()): CloseDayResult {
   const store = useFocusStore.getState();
   const started = store.starterStart;
 
@@ -75,7 +102,7 @@ export function closeDay(osDate = todayKey()): CloseDayResult {
   }
 
   const fresh = useFocusStore.getState();
-  const nextDate = nextDateAfterClose(osDate);
+  const nextDate = nextDateAfterClose(osDate, currentWorkdayKey());
   const nextDay = fresh.starterStart ? starterDayForDate(fresh.starterStart, nextDate) : null;
 
   return { starterDay: day, nextDay, nextDate, noteCopied };

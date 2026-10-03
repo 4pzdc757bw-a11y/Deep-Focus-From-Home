@@ -9,6 +9,7 @@ import { AuthProvider } from "@/lib/auth/provider";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import { AppShell } from "@/components/app-shell";
 import { LockScreen, useUnlockedProduct } from "@/components/lock-screen";
+import { LegalFooter } from "@/components/legal-footer";
 import { hasAccess, requiredAccessForPath } from "@/lib/unlock/access";
 import { getUnlockStatus } from "@/lib/unlock/unlock";
 import appCss from "../styles.css?url";
@@ -23,8 +24,44 @@ function GatedOutlet() {
   });
   const product = useUnlockedProduct();
   const need = requiredAccessForPath(pathname);
-  if (need === "none" || hasAccess(product, need)) return <Outlet />;
-  return <LockScreen need={need} />;
+  if (need === "none" || hasAccess(product, need)) {
+    return (
+      <>
+        <Outlet />
+        {rendersOwnFooter(pathname) ? null : <SiteFooter />}
+      </>
+    );
+  }
+  return (
+    <>
+      <LockScreen need={need} />
+      <SiteFooter />
+    </>
+  );
+}
+
+/** Pages whose component already renders <LegalFooter /> (or LegalDoc). */
+const OWN_FOOTER_PATHS = new Set([
+  "/",
+  "/buy",
+  "/more",
+  "/thanks",
+  "/start",
+  "/starter",
+  "/guide",
+  "/terms",
+  "/privacy",
+  "/store-credit",
+]);
+
+function rendersOwnFooter(pathname: string): boolean {
+  const p = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
+  return OWN_FOOTER_PATHS.has(p) || p.startsWith("/guide/");
+}
+
+/** Legal links on every page (app tools, lock screens, /intro, /access). */
+function SiteFooter() {
+  return <LegalFooter className="no-print mt-10" />;
 }
 
 /**

@@ -14,8 +14,10 @@ import {
   remainingLabel,
   stampClockNow,
 } from "@/lib/chime";
+import { catchUpBlocks, nextBlockTimes, startPlan, withLength } from "@/lib/block-plan";
 import { installPrintTextareaFit, printDaily, setActivePrintDate } from "@/lib/print";
-import { blockDefaults, endForStart } from "@/lib/work-hours";
+import { blockDefaults, endForStart, endsNextDay } from "@/lib/work-hours";
+import { useWorkdayKey } from "@/lib/workday";
 import {
   beginSession,
   completeSession,
@@ -25,42 +27,9 @@ import {
 import { partnerMessage } from "@/lib/backup";
 import { shareOrCopy } from "@/lib/share";
 import { emptyPrep, emptySlot, useDaily, useFocusStore } from "@/lib/store";
-import { cn, prettyDate, todayKey } from "@/lib/utils";
+import { cn, prettyDate } from "@/lib/utils";
 
 const SLOT_LABELS = ["Block 1", "Block 2", "Block 3"] as const;
-
-const DEFAULT_BLOCK_MINUTES = 90;
-const MAX_BLOCK_MINUTES = 4 * 60;
-
-/** Planned length from the block's prefilled/typed times; 90 min if unusable. */
-function plannedMinutes(start: string, end: string) {
-  if (!start || !end || end <= start) return DEFAULT_BLOCK_MINUTES;
-  const mins = durationMinutes(start, end);
-  if (mins == null || mins < 5 || mins > MAX_BLOCK_MINUTES) return DEFAULT_BLOCK_MINUTES;
-  return mins;
-}
-
-/**
- * When Start is pressed: stamp start = now. Keep the planned end only if it is
- * still later today; otherwise end = now + planned length (cleared if that
- * would cross midnight, so it shows "Set time"). Never leaves an end earlier
- * than the start, so no negative / wrapped duration.
- */
-function startPlan(slot: { start: string; end: string }, now = new Date()) {
-  const start = stampClockNow(now);
-  const planned = plannedMinutes(slot.start, slot.end);
-  const minEnd = stampClockNow(new Date(now.getTime() + 60_000));
-  if (slot.end && slot.end >= minEnd && slot.end > start) {
-    const [h, m] = slot.end.split(":").map(Number);
-    const endAt = new Date(now);
-    endAt.setHours(h, m, 0, 0);
-    return { start, end: slot.end, endsAt: endAt.getTime() };
-  }
-  const endsAt = now.getTime() + planned * 60_000;
-  const endDate = new Date(endsAt);
-  const sameDay = endDate.getDate() === now.getDate();
-  return { start, end: sameDay ? stampClockNow(endDate) : "", endsAt };
-}
 
 function TimeField({
   label,
@@ -82,6 +51,15 @@ function TimeField({
           type="time"
           value={value}
           readOnly={readOnly}
+          className={readOnly ? undefined : "cursor-pointer"}
+          onClick={(e) => {
+            if (readOnly) return;
+            try {
+              e.currentTarget.showPicker?.();
+            } catch {
+              /* older browsers: native focus/typing still works */
+            }
+          }}
           onChange={(e) => onChange(e.target.value)}
         />
       ) : (
@@ -133,7 +111,8 @@ function StatusLine({
 
 export function DailyOs({ date }: { date?: string }) {
   const hydrated = useFocusStore((s) => s.hydrated);
-  const osDate = date ?? todayKey();
+  const workday = useWorkdayKey();
+  const osDate = date ?? workday;
   const { entry, patch, patchSlot } = useDaily(osDate);
   const session = useFocusStore((s) => s.session);
   const workHours = useFocusStore((s) => s.household.hours);
@@ -169,6 +148,28 @@ export function DailyOs({ date }: { date?: string }) {
   }, [activeHere, session.endsAt]);
 
   const left = activeHere && session.endsAt ? session.endsAt - now : 0;
+  const entryRef = useRef(entry);
+  entryRef.current = entry;
+
+  // Opening today's page after a planned start has passed (e.g. 3:52 AM on an
+  // 11 PM shift): move not-yet-rung blocks to the next quarter hour so the
+  // times, countdown and bell match now. Edited or rung blocks stay put.
+  // Also right after a block ends: later blocks follow its real end (+15 min).
+  useEffect(() => {
+    if (!hydrated || osDate !== workday) return;
+    const st = useFocusStore.getState();
+    if (st.session.running && st.session.date === osDate) return;
+    const fresh = st.dailies[osDate];
+    const entry = fresh ? { ...entryRef.current, slots: fresh.slots, slotCount: fresh.slotCount } : entryRef.current;
+    // Blocks rung before the `started` flag existed: today's last session covers them.
+    const rungUpTo =
+      entry.checks.block && st.session.date === osDate ? st.session.slotIndex : -1;
+    const slots = entry.slots.map((sl, i) => (i <= rungUpTo ? { ...sl, started: true } : sl));
+    const moves = catchUpBlocks(slots, entry.slotCount ?? 1, osDate, workHours, new Date());
+    for (const mv of moves) patchSlot(mv.index, { start: mv.start, end: mv.end, auto: true });
+    // Only on open / day change; edits afterwards are the user's.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated, osDate, workday, session.running]);
 
   useEffect(() => {
     if (!activeHere || left > 0) return;
@@ -200,7 +201,7 @@ export function DailyOs({ date }: { date?: string }) {
     const slot = entry.slots[index];
     // Stamp actual start; end follows the planned length (Done stamps the real end).
     const plan = startPlan(slot);
-    patchSlot(index, { start: plan.start, end: plan.end });
+    patchSlot(index, { start: plan.start, end: plan.end, started: true, auto: false });
     setRinging(true);
     window.setTimeout(() => setRinging(false), 1400);
     if (shouldExplainNotify()) setNotifyAsk(true);
@@ -220,6 +221,13 @@ export function DailyOs({ date }: { date?: string }) {
 
   function addBlock() {
     if (visible >= 3) return;
+    const prev = entry.slots[visible - 1];
+    // Always pre-filled (no "Set time"): 15 min after the previous block's end,
+    // or now if later, rounded up to the quarter hour, 90 min long. "Now" counts
+    // when the previous block actually ran or this is today's page.
+    const useNow = Boolean(prev?.started) || osDate === workday;
+    const times = nextBlockTimes(prev, visible, workHours, useNow ? new Date() : null);
+    patchSlot(visible, { start: times.start, end: times.end, auto: true });
     patch({ slotCount: (visible + 1) as 2 | 3 });
   }
 
@@ -234,7 +242,7 @@ export function DailyOs({ date }: { date?: string }) {
     <div className="daily-os flex flex-col gap-5">
       <div className="daily-print-header hidden print:block">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-olive">
-          Deep Focus · Daily OS
+          Deep Focus from Home · Daily OS
         </p>
         <h1 className="font-display text-2xl text-olive">{hydrated ? prettyDate(osDate) : "Today"}</h1>
       </div>
@@ -249,7 +257,7 @@ export function DailyOs({ date }: { date?: string }) {
         // blocks 30 min after the previous block ends.
         const defaults = blockDefaults(i, workHours, entry.slots[i - 1]?.end);
         const endFallback = slot.start
-          ? endForStart(slot.start, workHours) || defaults.end
+          ? withLength({ start: slot.start, end: endForStart(slot.start, workHours) || defaults.end }).end
           : defaults.end;
         return (
           <Card key={i} className="daily-block flex flex-col gap-3">
@@ -281,17 +289,23 @@ export function DailyOs({ date }: { date?: string }) {
                 label="Starts"
                 value={slot.start}
                 fallback={defaults.start}
-                onChange={(start) => patchSlot(i, { start })}
+                onChange={(start) => patchSlot(i, { start, edited: true })}
                 readOnly={active}
               />
               <TimeField
-                label="Ends"
+                label={slot.start && slot.end && endsNextDay(slot.start, slot.end) ? "Ends (next day)" : "Ends"}
                 value={slot.end}
                 fallback={endFallback}
-                onChange={(end) => patchSlot(i, { end })}
+                onChange={(end) => patchSlot(i, { end, edited: true })}
                 readOnly={active}
               />
             </div>
+            {i === 0 && !active && !doneHere && !slot.started ? (
+              <p className="daily-time-hint no-print -mt-1 text-sm text-muted">
+                Times not right? Tap a time to change it, or just press Start and the
+                bell uses the real time.
+              </p>
+            ) : null}
             {dur && (doneHere || (slot.start && slot.end && !active)) ? (
               <p className="daily-duration text-sm text-muted print:text-ink">
                 Duration: <span className="font-semibold text-olive">{dur}</span>

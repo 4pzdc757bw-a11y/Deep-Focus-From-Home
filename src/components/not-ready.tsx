@@ -8,13 +8,20 @@ export function NotReadyLinks({
   compact = false,
   showHome = true,
   showChapter = true,
+  showStarter = true,
 }: {
   compact?: boolean;
   showHome?: boolean;
   showChapter?: boolean;
+  showStarter?: boolean;
 }) {
   const links = (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+      {showStarter ? (
+        <Button variant="outline" asChild>
+          <Link to="/start">Try the free 7-day starter</Link>
+        </Button>
+      ) : null}
       {showChapter ? (
         <Button variant="outline" asChild>
           <Link to="/guide/$slug" params={{ slug: "intro" }}>

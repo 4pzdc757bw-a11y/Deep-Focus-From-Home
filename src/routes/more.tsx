@@ -75,7 +75,11 @@ function MorePage() {
       <PageTitle
         kicker="Tools"
         title="The rest of the system"
-        lede="This app is the companion to the Deep Focus from Home handbook. The book is the why. These pages are the forms. Saved on this device — export a copy so it cannot vanish."
+        lede={
+          appUnlocked
+            ? "This app is the companion to the Deep Focus from Home handbook. The book is the why. These pages are the forms. Saved on this device — export a copy so it cannot vanish."
+            : "The forms that go with the Deep Focus from Home handbook. Notes are saved on this device — export a copy so they cannot vanish."
+        }
       />
       <Card className="flex flex-col gap-3">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">

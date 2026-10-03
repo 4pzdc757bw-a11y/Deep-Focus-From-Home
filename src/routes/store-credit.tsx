@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { LegalDoc } from "@/components/legal-doc";
+import { FixItRule, LegalDoc } from "@/components/legal-doc";
 import { STORE_CREDIT_CHECKOUT_LINE } from "@/lib/legal";
 
 export const Route = createFileRoute("/store-credit")({
@@ -32,26 +32,7 @@ function StoreCreditPage() {
         or in rare cases issue a refund.
       </p>
 
-      <h2>Didn’t get your files, or charged twice?</h2>
-      <p>
-        Email jeffrey@jeffsebiz.com with the email you used to buy and your
-        Stripe receipt (or the date and amount).
-      </p>
-      <ul>
-        <li>
-          Files never arrived or won’t open: we’ll resend them or send a working
-          download link.
-        </li>
-        <li>
-          Charged more than once for the same order: we’ll refund the extra
-          charge to your original payment method.
-        </li>
-      </ul>
-      <p>
-        These fixes are separate from store credit. They’re not case-by-case.
-        We aim to reply within 3 business days (Monday to Friday, US Central
-        time, excluding US holidays).
-      </p>
+      <FixItRule />
 
       <h2>What this covers</h2>
       <p>

@@ -1,7 +1,30 @@
 import { Link } from "@tanstack/react-router";
 import { Card, PageTitle } from "@/components/app-shell";
 import { LegalFooter } from "@/components/legal-footer";
-import { LEGAL_EFFECTIVE_DATE, LEGAL_LINKS } from "@/lib/legal";
+import {
+  FIX_IT_HEADING,
+  FIX_IT_INTRO,
+  FIX_IT_ITEMS,
+  FIX_IT_REPLY,
+  LEGAL_EFFECTIVE_DATE,
+  LEGAL_LINKS,
+} from "@/lib/legal";
+
+/** The fix-it rule, word for word the same on Store Credit and Terms §8. */
+export function FixItRule({ as: Heading = "h2" }: { as?: "h2" | "h3" }) {
+  return (
+    <>
+      <Heading>{FIX_IT_HEADING}</Heading>
+      <p>{FIX_IT_INTRO}</p>
+      <ul>
+        {FIX_IT_ITEMS.map((item) => (
+          <li key={item}>{item}</li>
+        ))}
+      </ul>
+      <p>{FIX_IT_REPLY}</p>
+    </>
+  );
+}
 
 export function LegalDoc({
   kicker,

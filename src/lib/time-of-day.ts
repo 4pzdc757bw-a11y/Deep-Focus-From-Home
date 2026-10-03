@@ -1,8 +1,13 @@
 /** Quick picks for energy check-ins. */
 export const TIME_OF_DAY_OPTIONS = ["Morning", "Afternoon", "Evening"] as const;
 
-/** Morning before 12:00, Afternoon 12:00–16:59, Evening 17:00 and later (local). */
+/**
+ * Morning 5:00–11:59, Afternoon 12:00–16:59, Evening 17:00 and later (local).
+ * The small hours (midnight–4:59) count as Evening too, so a night-shift
+ * block at 1 AM is logged as the late end of the evening, not "Morning".
+ */
 export function periodFromHour(h: number) {
+  if (h < 5) return "Evening";
   if (h < 12) return "Morning";
   if (h < 17) return "Afternoon";
   return "Evening";
@@ -30,6 +35,6 @@ export function checkInStamp(at: number | Date) {
     month: "short",
     day: "numeric",
   });
-  const time = d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  const time = d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit", hour12: true });
   return `${date} · ${time}`;
 }

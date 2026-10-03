@@ -79,7 +79,7 @@ export const unlockFromCheckoutSession = createServerFn({ method: "POST" })
     const product = productFromSession(session, { strict: false });
     if (!product) {
       throw new Error(
-        "We could not match this payment to a Deep Focus product. Email jeffrey@jeffsebiz.com with your Stripe receipt.",
+        "We could not match this payment to a Deep Focus product. Email jeffrey@jeffsebiz.com with the receipt email you got when you paid.",
       );
     }
     return { product: await saveUnlock(product) };
@@ -155,7 +155,7 @@ export const unlockByEmail = createServerFn({ method: "POST" })
       return {
         ok: false,
         error:
-          "We could not check purchases right now. Try again in a minute, or email jeffrey@jeffsebiz.com with your Stripe receipt.",
+          "We could not check purchases right now. Try again in a minute, or email jeffrey@jeffsebiz.com with the receipt email you got when you paid.",
       };
     }
 
@@ -167,7 +167,7 @@ export const unlockByEmail = createServerFn({ method: "POST" })
       return {
         ok: false,
         error:
-          "We found your purchase but could not unlock this device. Email jeffrey@jeffsebiz.com with your Stripe receipt.",
+          "We found your purchase but could not open it on this device. Email jeffrey@jeffsebiz.com with the receipt email you got when you paid.",
       };
     }
   });

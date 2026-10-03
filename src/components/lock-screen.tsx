@@ -4,7 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Card } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { APP_PRICE_LABEL, PRICE_LABEL } from "@/lib/offer";
+import { APP_ACCESS_LINE, APP_PRICE_LABEL, PRICE_LABEL } from "@/lib/offer";
 import { hasAccess, type AccessNeed, type UnlockProduct } from "@/lib/unlock/access";
 import { unlockByEmail } from "@/lib/unlock/unlock";
 import { NotReadyLinks } from "@/components/not-ready";
@@ -122,10 +122,10 @@ export function UnlockDeviceForm() {
   return (
     <form onSubmit={(e) => void submit(e)} className="flex flex-col gap-2">
       <label htmlFor="unlock-email" className="text-sm font-semibold text-olive">
-        Already bought? Unlock this device
+        Already bought? Get your copy
       </label>
       <p className="text-sm text-muted">
-        Type the email you used at checkout. We check it with Stripe.
+        Type the email you used when you paid, and we’ll open your handbook (or app) right here.
       </p>
       <div className="flex flex-col gap-2 sm:flex-row">
         <Input
@@ -140,7 +140,7 @@ export function UnlockDeviceForm() {
           className="sm:flex-1"
         />
         <Button type="submit" variant="outline" disabled={busy || !email.trim()}>
-          {busy ? "Checking…" : "Unlock this device"}
+          {busy ? "Checking…" : "Get my copy"}
         </Button>
       </div>
       {error ? (
@@ -205,7 +205,7 @@ export function LockScreen({
           {!isApp
             ? `Chapter 1 is free to read. The rest of the guide is in the handbook: ${PRICE_LABEL}, pay once.`
             : handbookBuyer
-              ? `Your handbook is unlocked, and everything in it works on paper. The Deep Focus app is an optional add-on to the handbook: a daily planner, focus bell, energy log and weekly planner in your browser. ${APP_PRICE_LABEL}, pay once.`
+              ? `Your handbook is unlocked, and everything in it works on paper. The Deep Focus app is an optional add-on to the handbook: a daily planner, focus bell, energy log and weekly planner in your browser, nothing to install. ${APP_PRICE_LABEL}. ${APP_ACCESS_LINE}`
               : `Seven short chapters on working from home: your workspace, household, phone, daily rituals, deep work, people and energy. One action per chapter. Online guide plus the PDF, ${PRICE_LABEL}, pay once.`}
         </p>
         <div className="flex flex-col gap-2 sm:flex-row">
@@ -215,7 +215,7 @@ export function LockScreen({
                 <Link to="/guide">Read the handbook</Link>
               </Button>
               <Button variant="outline" asChild>
-                <Link to="/buy">Add the app ({APP_PRICE_LABEL})</Link>
+                <Link to="/app">Add the app ({APP_PRICE_LABEL})</Link>
               </Button>
             </>
           ) : (
@@ -223,18 +223,26 @@ export function LockScreen({
               <Button asChild>
                 <Link to="/buy">Get the handbook ({PRICE_LABEL})</Link>
               </Button>
-              <Button variant="outline" asChild>
-                <Link to="/guide/$slug" params={{ slug: "intro" }}>
-                  Read Chapter 1 free
-                </Link>
-              </Button>
+              {isApp ? (
+                <Button variant="outline" asChild>
+                  <Link to="/start">Try the free 7-day starter</Link>
+                </Button>
+              ) : (
+                <Button variant="outline" asChild>
+                  <Link to="/guide/$slug" params={{ slug: "intro" }}>
+                    Read Chapter 1 free
+                  </Link>
+                </Button>
+              )}
             </>
           )}
         </div>
         <div className="border-t border-yellow pt-4">
           <UnlockDeviceForm />
         </div>
-        {handbookBuyer ? null : <NotReadyLinks compact showHome={!onHome} showChapter={false} />}
+        {handbookBuyer ? null : (
+          <NotReadyLinks compact showHome={!onHome} showChapter={isApp} showStarter={false} />
+        )}
       </Card>
       {compact ? null : (
         <p className="text-sm text-muted">
