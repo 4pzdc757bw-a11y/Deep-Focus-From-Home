@@ -239,7 +239,7 @@ function HouseholdPage() {
             </p>
           </div>
           <p className="shrink-0 text-[10px] uppercase tracking-[0.14em] text-muted sm:text-xs">
-            deepfocusfromhome.com
+            deepfocus.jeffsebiz.com
           </p>
         </div>
       </section>
@@ -299,7 +299,7 @@ function HouseholdPage() {
 
         <div className="door-stop-foot flex justify-center border-t border-olive/20 pt-3">
           <p className="text-[10px] uppercase tracking-[0.14em] text-muted sm:text-xs">
-            deepfocusfromhome.com
+            deepfocus.jeffsebiz.com
           </p>
         </div>
       </section>
@@ -386,7 +386,7 @@ function HouseholdPage() {
             ) : null}
           </div>
           <p className="shrink-0 text-[10px] uppercase tracking-[0.14em] text-muted sm:text-xs">
-            deepfocusfromhome.com
+            deepfocus.jeffsebiz.com
           </p>
         </div>
       </section>

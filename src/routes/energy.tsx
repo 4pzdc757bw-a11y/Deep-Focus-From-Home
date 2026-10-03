@@ -79,7 +79,7 @@ function EnergyPage() {
         </p>
         <p className="mt-2 text-ink">{peakLine(peak, rows.length)}</p>
         <p className="mt-3 text-sm text-muted">
-          From the handbook — Chapter 7: log morning, midday, and late afternoon
+          From the handbook — Chapter 7: log morning, afternoon, and evening
           for a few days, then protect the peak.{" "}
           <Link to="/guide" className="font-semibold text-olive">
             Open the guide

@@ -234,7 +234,7 @@ export function DailyOs({ date }: { date?: string }) {
     <div className="daily-os flex flex-col gap-5">
       <div className="daily-print-header hidden print:block">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-olive">
-          Deep Focus · Daily OS
+          Deep Focus from Home · Daily OS
         </p>
         <h1 className="font-display text-2xl text-olive">{hydrated ? prettyDate(osDate) : "Today"}</h1>
       </div>

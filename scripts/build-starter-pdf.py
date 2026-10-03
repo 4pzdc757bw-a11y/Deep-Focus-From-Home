@@ -85,6 +85,9 @@ def build():
         for a in d["actions"]:
             story.append(Paragraph(escape(a), bullet, bulletText="•"))
         story.append(Paragraph('<font name="ZapfDingbats">n</font> I completed today’s job.', check))
+        # Same prompt as the app's starter page ("One line about what you actually did…").
+        story.append(Spacer(1, 4))
+        story.append(Paragraph("One line about what you actually did: " + "_" * 58, check))
     story += [Spacer(1, 18), Paragraph(escape(FOOTER_LINE), note)]
     doc.build(story)
     print(f"wrote {OUT}")

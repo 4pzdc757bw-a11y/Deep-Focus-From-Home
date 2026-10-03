@@ -30,7 +30,7 @@ export function peakFrom(rows: EnergyRow[]): PeakWindow | null {
 export function peakLine(peak: PeakWindow | null, rows: number) {
   if (!peak) {
     return rows === 0
-      ? "Log morning, midday, and late afternoon. After three check-ins, this page will name your peak."
+      ? "Log morning, afternoon, and evening. After three check-ins, this page will name your peak."
       : `Keep logging. ${rows} check-in${rows === 1 ? "" : "s"} so far — three is enough to name a peak.`;
   }
   return `Your peak looks like ${peak.slot}. Put next week’s hardest work there.`;

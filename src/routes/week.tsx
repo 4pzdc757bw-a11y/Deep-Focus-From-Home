@@ -17,7 +17,7 @@ function WeekPage() {
         lede={`Week of ${key}. Two to four immovable sessions. One coworking appointment. Always editable here — Friday Close also opens this planner for next week.`}
       />
       <Card className="flex flex-col gap-3">
-        <Field label="This week’s theme">
+        <Field label="This week’s outcome">
           <Input
             value={entry.theme}
             onChange={(e) => patch({ theme: e.target.value })}
