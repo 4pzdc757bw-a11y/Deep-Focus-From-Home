@@ -2,6 +2,12 @@
 
 export const LEGAL_EFFECTIVE_DATE = "October 3, 2026";
 
+/** Official business mailing address (MailPro mailbox #210). Never the home address. */
+export const BUSINESS_NAME = "JEFFSEBIZ LLC";
+export const BUSINESS_ADDRESS_LINES = ["333 W Bethalto Dr, Ste C #210", "Bethalto, IL 62010"] as const;
+export const BUSINESS_ADDRESS = BUSINESS_ADDRESS_LINES.join(", ");
+export const BUSINESS_EMAIL = "jeffrey@jeffsebiz.com";
+
 /** Locked checkout / footer line from Store Credit policy. */
 export const STORE_CREDIT_CHECKOUT_LINE =
   "Digital products, no automatic refunds. If something’s wrong, email jeffrey@jeffsebiz.com. We aim to reply within 3 business days, fix delivery problems, and refund duplicate charges. Other requests are reviewed case by case.";

@@ -1,6 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { FixItRule, LegalDoc } from "@/components/legal-doc";
-import { STORE_CREDIT_CHECKOUT_LINE } from "@/lib/legal";
+import {
+  BUSINESS_ADDRESS_LINES,
+  BUSINESS_EMAIL,
+  BUSINESS_NAME,
+  STORE_CREDIT_CHECKOUT_LINE,
+} from "@/lib/legal";
 
 export const Route = createFileRoute("/store-credit")({
   head: () => ({
@@ -86,13 +91,13 @@ function StoreCreditPage() {
 
       <h2>Contact</h2>
       <p>
-        JEFFSEBIZ LLC
+        {BUSINESS_NAME}
         <br />
-        10 Holly Hill Drive
+        {BUSINESS_ADDRESS_LINES[0]}
         <br />
-        Alton, IL 62002-5224
+        {BUSINESS_ADDRESS_LINES[1]}
         <br />
-        Email: jeffrey@jeffsebiz.com
+        Email: {BUSINESS_EMAIL}
       </p>
     </LegalDoc>
   );

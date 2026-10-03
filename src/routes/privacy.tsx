@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { LegalDoc } from "@/components/legal-doc";
+import { BUSINESS_ADDRESS_LINES, BUSINESS_EMAIL, BUSINESS_NAME } from "@/lib/legal";
 
 export const Route = createFileRoute("/privacy")({
   head: () => ({
@@ -182,13 +183,13 @@ function PrivacyPage() {
 
       <h2>12. Contact</h2>
       <p>
-        JEFFSEBIZ LLC
+        {BUSINESS_NAME}
         <br />
-        10 Holly Hill Drive
+        {BUSINESS_ADDRESS_LINES[0]}
         <br />
-        Alton, IL 62002-5224
+        {BUSINESS_ADDRESS_LINES[1]}
         <br />
-        Email: jeffrey@jeffsebiz.com
+        Email: {BUSINESS_EMAIL}
       </p>
     </LegalDoc>
   );

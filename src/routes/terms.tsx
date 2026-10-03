@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { FixItRule, LegalDoc } from "@/components/legal-doc";
+import { BUSINESS_ADDRESS, BUSINESS_EMAIL } from "@/lib/legal";
 
 export const Route = createFileRoute("/terms")({
   head: () => ({
@@ -28,8 +29,7 @@ function TermsPage() {
       <h2>1. Who we are</h2>
       <p>
         JEFFSEBIZ LLC is an Illinois limited liability company. Contact:
-        jeffrey@jeffsebiz.com · 10 Holly Hill Drive, Alton, IL
-        62002-5224.
+        {BUSINESS_EMAIL} · {BUSINESS_ADDRESS}.
       </p>
 
       <h2>2. What we sell</h2>
