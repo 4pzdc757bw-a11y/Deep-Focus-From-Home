@@ -26,6 +26,34 @@ export const FIX_IT_ITEMS = [
 export const FIX_IT_REPLY =
   "These fixes are separate from store credit. They’re not case-by-case. We aim to reply within 3 business days (Monday to Friday, US Central time, excluding US holidays).";
 
+/**
+ * Store credit limits (Vera, Oct 3). Same wording on the Store Credit page
+ * (as a list) and in Terms section 8 (as one sentence).
+ */
+export const STORE_CREDIT_LIMIT_ITEMS = [
+  "Credit covers the purchase price only, not any tax you paid.",
+  "Credit has no cash value and can’t be cashed out.",
+  "Credit isn’t a gift card and can’t be transferred to anyone else.",
+] as const;
+export const STORE_CREDIT_LIMITS =
+  "Store credit covers the purchase price only, not any tax you paid. It has no cash value, isn’t a gift card, and can’t be transferred to anyone else.";
+
+/** Refund or credit ends access (Terms section 8). */
+export const REFUND_ENDS_ACCESS =
+  "A refund or store credit for a purchase ends your access to that purchase. (Refunding a duplicate charge doesn’t affect your access.)";
+
+/** Payment problems (Terms section 7). Neutral; internal refund rules stay internal. */
+export const PAYMENT_DISPUTE_LINE =
+  "If there’s a problem with a charge, please email us first at jeffrey@jeffsebiz.com so we can fix it quickly. Access to the purchase may be paused while a payment dispute is open.";
+
+/** Consumer rights the law doesn't let us waive (Terms section 11). */
+export const CONSUMER_RIGHTS_LINE =
+  "Nothing in these Terms limits any consumer rights that the law doesn’t allow us to waive.";
+
+/** App discontinuation (Terms section 3). */
+export const DISCONTINUE_NOTICE =
+  "If we decide to discontinue the app, we’ll give at least 30 days’ notice by email. Anyone who bought the app within the 12 months before that notice can ask for store credit under section 8.";
+
 export const LEGAL_LINKS = [
   { to: "/terms" as const, label: "Terms of Service" },
   { to: "/privacy" as const, label: "Privacy Policy" },

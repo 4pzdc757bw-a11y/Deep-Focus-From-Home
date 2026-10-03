@@ -1,6 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { FixItRule, LegalDoc } from "@/components/legal-doc";
-import { BUSINESS_ADDRESS, BUSINESS_EMAIL } from "@/lib/legal";
+import {
+  BUSINESS_ADDRESS,
+  BUSINESS_EMAIL,
+  CONSUMER_RIGHTS_LINE,
+  DISCONTINUE_NOTICE,
+  PAYMENT_DISPUTE_LINE,
+  REFUND_ENDS_ACCESS,
+  STORE_CREDIT_LIMITS,
+} from "@/lib/legal";
 
 export const Route = createFileRoute("/terms")({
   head: () => ({
@@ -89,9 +97,7 @@ function TermsPage() {
         and it depends on third-party hosting. We work to keep it running but
         don’t guarantee uninterrupted access. Your entries are saved in your own
         browser, so clearing browser data or switching devices may remove them,
-        and we can’t recover them. If we decide to discontinue the app, we’ll
-        try to give at least 30 days’ notice by email. If that happens within 12
-        months of your purchase, you can ask for store credit under section 8.
+        and we can’t recover them. {DISCONTINUE_NOTICE}
       </p>
       <p>
         Use the export or print option to keep your own copy of your entries.
@@ -145,6 +151,7 @@ function TermsPage() {
         authorize the charge for the items you selected. Taxes may apply where
         required.
       </p>
+      <p>{PAYMENT_DISPUTE_LINE}</p>
 
       <h2>8. Refunds and store credit</h2>
       <p>
@@ -153,11 +160,13 @@ function TermsPage() {
         below). If something else went wrong with your order, email
         jeffrey@jeffsebiz.com and explain the problem. We review each of those
         requests case by case and may offer store credit, replace or fix a
-        file, or in rare cases a refund. When we grant store credit, it equals what you paid
-        (unless we say otherwise), can be used toward any Jeffsebiz product, and
-        is good for 12 months from the purchase date. Full details:{" "}
+        file, or in rare cases a refund. When we grant store credit, it equals the
+        purchase price you paid (unless we say otherwise), can be used toward any
+        Jeffsebiz product, and is good for 12 months from the purchase date.{" "}
+        {STORE_CREDIT_LIMITS} Full details:{" "}
         <Link to="/store-credit">Store Credit / Digital Purchase Policy</Link>.
       </p>
+      <p>{REFUND_ENDS_ACCESS}</p>
       <FixItRule as="h3" />
 
       <h2>9. Acceptable use</h2>
@@ -182,6 +191,7 @@ function TermsPage() {
         purchase. Some states do not allow certain limits; in those places, our
         liability is limited as far as the law allows.
       </p>
+      <p>{CONSUMER_RIGHTS_LINE}</p>
 
       <h2>12. Indemnity</h2>
       <p>

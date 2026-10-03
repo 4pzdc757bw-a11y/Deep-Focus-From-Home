@@ -5,6 +5,7 @@ import {
   BUSINESS_EMAIL,
   BUSINESS_NAME,
   STORE_CREDIT_CHECKOUT_LINE,
+  STORE_CREDIT_LIMIT_ITEMS,
 } from "@/lib/legal";
 
 export const Route = createFileRoute("/store-credit")({
@@ -69,14 +70,16 @@ function StoreCreditPage() {
       <p>When we approve store credit:</p>
       <ul>
         <li>
-          Credit equals what you paid for that purchase (unless we say otherwise
-          in writing).
+          Credit equals the purchase price you paid for that purchase (unless we
+          say otherwise in writing).
         </li>
         <li>Credit can be used toward any jeffsebiz product.</li>
         <li>
           Credit is good for 12 months from the original purchase date.
         </li>
-        <li>Credit cannot be cashed out.</li>
+        {STORE_CREDIT_LIMIT_ITEMS.map((item) => (
+          <li key={item}>{item}</li>
+        ))}
       </ul>
 
       <h2>What we generally cannot do</h2>
