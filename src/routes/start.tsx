@@ -67,7 +67,7 @@ function StartPage() {
         <p className="font-display text-xl text-olive">Start Day 1 tomorrow morning.</p>
         <OptIn label="Send me the 7-day pack" />
         <p className="text-sm text-muted">
-          One email. You can leave anytime. No webinar.
+          One short email a day for a week. Leave anytime. No webinar.
         </p>
       </Card>
 

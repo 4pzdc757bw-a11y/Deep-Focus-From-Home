@@ -30,12 +30,12 @@ export const STARTER_DAYS = [
     day: 3,
     title: "Digital",
     job: "Park the phone for the first deep-work block.",
-    why: "Use this app to plan and start the day. During the block itself, the phone leaves your desk — the mere presence of a phone reduces attention.",
+    why: "Plan the day first. Then, for the block itself, the phone leaves your desk. Out of sight beats willpower.",
     actions: [
-      "Open Deep Focus, set today’s 1–3 outcomes, and start the block.",
+      "Write today’s 1–3 outcomes, then start the block.",
       "Then put the phone away for 60–90 minutes (another room, or face-down off the desk).",
-      "If you need the chime, leave only this screen on in another room — do not scroll.",
-      "Between blocks, come back to the app. Pick two short windows to check messages.",
+      "Need a timer? Use a kitchen timer or a clock, not the phone.",
+      "Between blocks, pick two short windows to check messages.",
     ],
   },
   {
@@ -80,7 +80,7 @@ export const STARTER_DAYS = [
     job: "Find your peak window. Plan next week there.",
     why: "Focus follows energy. Heroic blocks in a trough are how people quit the system.",
     actions: [
-      "Look at the energy log from the last few days.",
+      "Look back over the last few days (your one-line notes, or memory). When did focus feel easiest?",
       "Name your strongest two-hour window.",
       "Put next week’s hardest work inside it.",
       "Take one genuine outdoor or movement break this afternoon.",
@@ -103,7 +103,7 @@ export const CHAPTERS = [
       "You do not need every idea at once. Start with the chapter that names your biggest current friction. The goal is not perfection. It is reliable concentration that leaves you less drained.",
     ],
     action:
-      "Open Today. Write 1–3 outcomes for this workday and put one 60–90 minute block on the calendar before you do anything else.",
+      "Write 1–3 outcomes for this workday and put one 60–90 minute block on the calendar before you do anything else.",
   },
   {
     slug: "environment",
@@ -147,14 +147,14 @@ export const CHAPTERS = [
     summary:
       "Devices are engineered to capture attention. At home they are closer and less constrained. Treat them as a design problem.",
     body: [
-      "During deep-work blocks, park the phone off the desk. Use this app before and after the block — out of sight beats willpower.",
+      "During deep-work blocks, park the phone off the desk. Plan before the block and check messages after it — out of sight beats willpower.",
       "Turn off non-essential notifications. Keep only calls from favorites if you truly must.",
       "Schedule two short windows for personal messages instead of continuous availability.",
       "Close extra tabs. Check email on a timer, not as a default tab.",
       "The first 90 minutes of the workday are the most expensive to leak. Guard them first.",
     ],
     action:
-      "For the next three workdays, park the phone during the first 90-minute block. Note the urge, then keep working. Use the app between blocks.",
+      "For the next three workdays, park the phone during the first 90-minute block. Note the urge, then keep working. Check messages between blocks.",
   },
   {
     slug: "rituals",
@@ -294,8 +294,8 @@ export const FAQ = [
     a: "Start the next workday. Do not restart the week as punishment. A sick-child day is not a failed streak. Shrink the plan to one outcome and a short block.",
   },
   {
-    q: "Why park the phone if Deep Focus is a phone app?",
-    a: "The app is how you run the system — plan, start, check, shut down. The deep-work block is different: the mere presence of a phone reduces attention, even silenced. Open the app, start the block, then park the phone off your desk (or leave only this screen on in another room if you need the chime). Between blocks, come back to the app.",
+    q: "Why park the phone during a block?",
+    a: "Plan the day first. Then, for the deep-work block itself, park the phone off your desk — another room, or face-down and out of reach. Out of sight beats willpower. Need a timer? Use a kitchen timer or a clock, not the phone. Between blocks, pick two short windows to check messages.",
   },
   {
     q: "Do I need a spare room?",
@@ -307,6 +307,8 @@ export const FAQ = [
   },
   {
     q: "Will the bell ring if I lock my phone?",
+    /** About the app's bell: only shown to app buyers. */
+    appOnly: true,
     a: "The screen tries to stay awake during a block. If you lock the phone or leave the app, the bell rings when you open it again. It will not ding in another room. If you need the chime, leave only this screen on away from your desk — do not use the phone for anything else until the block ends.",
   },
   {
