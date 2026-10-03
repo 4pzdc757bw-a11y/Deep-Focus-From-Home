@@ -1,4 +1,4 @@
-import { getRouteApi, Link, useRouter } from "@tanstack/react-router";
+import { getRouteApi, Link, useRouter, useRouterState } from "@tanstack/react-router";
 import { Lock } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { Card } from "@/components/app-shell";
@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { APP_PRICE_LABEL, PRICE_LABEL } from "@/lib/offer";
 import { hasAccess, type AccessNeed, type UnlockProduct } from "@/lib/unlock/access";
 import { unlockByEmail } from "@/lib/unlock/unlock";
+import { NotReadyLinks } from "@/components/not-ready";
 import { readUnlockResult, unlockErrorText } from "@/lib/unlock/unlock-result";
 
 const rootApi = getRouteApi("__root__");
@@ -109,6 +110,7 @@ export function LockScreen({
   compact?: boolean;
 }) {
   const isApp = need === "app";
+  const onHome = useRouterState({ select: (st) => st.location.pathname }) === "/";
   const Heading = compact ? "h2" : "h1";
   return (
     <div className={compact ? "no-print" : "no-print flex flex-col gap-5"}>
@@ -146,6 +148,7 @@ export function LockScreen({
         <div className="border-t border-yellow pt-4">
           <UnlockDeviceForm />
         </div>
+        <NotReadyLinks compact showHome={!onHome} />
       </Card>
       {compact ? null : (
         <p className="text-sm text-muted">

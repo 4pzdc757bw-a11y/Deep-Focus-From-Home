@@ -1,7 +1,8 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Card } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { LegalFooter } from "@/components/legal-footer";
+import { NotReadyLinks } from "@/components/not-ready";
 import {
   APP_PRICE_LABEL,
   markPurchased,
@@ -124,13 +125,7 @@ function BuyPage() {
         )}
       </Card>
 
-      <p className="text-sm text-muted">
-        Not ready?{" "}
-        <Link to="/thanks" className="font-semibold text-olive">
-          Go back to the free pack
-        </Link>
-        .
-      </p>
+      <NotReadyLinks />
 
       <p className="text-sm text-muted">{STORE_CREDIT_CHECKOUT_LINE}</p>
       <LegalFooter />

@@ -14,6 +14,13 @@ const TABS = [
   { to: "/more", label: "Tools", icon: CalendarCheck },
 ] as const;
 
+/** Header links on marketing pages (no bottom nav there), so nobody is stuck. */
+const MARKETING_LINKS = [
+  { to: "/", label: "Home" },
+  { to: "/guide", label: "Guide" },
+  { to: "/intro", label: "FAQ" },
+] as const;
+
 const MARKETING = new Set(["/start", "/thanks", "/buy", "/terms", "/privacy", "/store-credit"]);
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -54,7 +61,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <SessionWatcher />
       <header className="no-print sticky top-0 z-20 border-b border-yellow/80 bg-sage/90 backdrop-blur-sm">
         <div className="mx-auto flex h-14 max-w-3xl items-center gap-3 px-4">
-          <Link to={marketing ? "/start" : "/"} className="flex min-w-0 items-center gap-3">
+          <Link to="/" className="flex min-w-0 items-center gap-3" aria-label="Deep Focus from Home — home">
             <img
               src="/images/logo.jpg"
               width={32} height={32} decoding="async"
@@ -71,12 +78,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
           </Link>
           {marketing ? (
-            <Link
-              to="/"
-              className="ml-auto text-xs font-semibold uppercase tracking-wide text-olive"
-            >
-              Open the app
-            </Link>
+            <nav aria-label="Site" className="ml-auto flex items-center gap-4">
+              {MARKETING_LINKS.map((l) => (
+                <Link
+                  key={l.to}
+                  to={l.to}
+                  className="inline-flex min-h-11 items-center text-xs font-semibold uppercase tracking-wide text-olive"
+                >
+                  {l.label}
+                </Link>
+              ))}
+            </nav>
           ) : (
             <span className="ml-auto hidden text-xs tracking-wide text-muted sm:inline">
               A system, not a test
