@@ -130,7 +130,7 @@ function HouseholdPage() {
         <div className="fridge-poster-brand flex items-baseline justify-between gap-3 border-b-2 border-olive/25 pb-3">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-gold sm:text-xs">
-              Deep Focus From Home
+              Deep Focus from Home
             </p>
             <p className="mt-0.5 text-[10px] uppercase tracking-[0.16em] text-muted sm:text-xs">
               Household agreement · fridge poster
@@ -248,7 +248,7 @@ function HouseholdPage() {
       <section className="door-stop-sign mt-5 rounded-lg border-2 border-olive bg-cream p-5 sm:p-6 print:mt-0">
         <div className="door-stop-brand flex items-baseline justify-between gap-3">
           <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-gold sm:text-xs">
-            Deep Focus From Home · door sign
+            Deep Focus from Home · door sign
           </p>
           <p className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.14em] text-olive sm:text-xs">
             Page 2 · tape on door
@@ -309,7 +309,7 @@ function HouseholdPage() {
         <div className="household-agreement-brand flex items-baseline justify-between gap-3 border-b-2 border-olive/25 pb-3">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-gold sm:text-xs">
-              Deep Focus From Home
+              Deep Focus from Home
             </p>
             <p className="mt-0.5 text-[10px] uppercase tracking-[0.16em] text-muted sm:text-xs">
               Household agreement · keep with the adults

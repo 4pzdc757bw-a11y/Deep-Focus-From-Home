@@ -8,7 +8,7 @@ export const Route = createFileRoute("/privacy")({
       {
         name: "description",
         content:
-          "Privacy Policy for Deep Focus From Home and related jeffsebiz.com digital products from JEFFSEBIZ LLC.",
+          "Privacy Policy for Deep Focus from Home and related jeffsebiz.com digital products from JEFFSEBIZ LLC.",
       },
     ],
   }),
@@ -19,7 +19,7 @@ function PrivacyPage() {
   return (
     <LegalDoc kicker="Legal" title="Privacy Policy">
       <p>
-        JEFFSEBIZ LLC (“we,” “us,” “Jeffsebiz”) runs Deep Focus From Home and
+        JEFFSEBIZ LLC (“we,” “us,” “Jeffsebiz”) runs Deep Focus from Home and
         related digital products. This page explains what information we collect
         and how we use it.
       </p>
@@ -128,7 +128,7 @@ function PrivacyPage() {
 
       <h2>6. App data on your device</h2>
       <p>
-        The Deep Focus From Home web app may store notes, focus or energy logs,
+        The Deep Focus from Home web app may store notes, focus or energy logs,
         and similar entries on your own device or browser (local storage). That
         information stays on your device unless you choose to share it with us
         (for example, by emailing us). We do not pull those local notes onto our

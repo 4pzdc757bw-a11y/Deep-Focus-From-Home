@@ -21,7 +21,7 @@ function TermsPage() {
       <p>
         These Terms cover your use of jeffsebiz.com and purchases of digital
         products from JEFFSEBIZ LLC (“we,” “us,” “Jeffsebiz”), including Deep
-        Focus From Home and related offers. By buying or using our products, you
+        Focus from Home and related offers. By buying or using our products, you
         agree to these Terms.
       </p>
 
@@ -55,9 +55,9 @@ function TermsPage() {
         United Kingdom.
       </p>
 
-      <h2>3. Deep Focus From Home app</h2>
+      <h2>3. Deep Focus from Home app</h2>
       <p>
-        When you buy the Deep Focus From Home app at the price shown at checkout,
+        When you buy the Deep Focus from Home app at the price shown at checkout,
         you get access to the browser-based web app, including tools such as the
         Daily OS, focus bells, and energy log, plus any handbook downloads listed
         on the checkout and thank-you pages for your purchase.

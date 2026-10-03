@@ -39,7 +39,7 @@ function BuyPage() {
         Two clear offers · pay once
       </p>
       <h1 className="font-display text-4xl leading-tight text-olive">
-        Remote Workers Deep Focus
+        Deep Focus from Home
       </h1>
       <p className="max-w-prose text-lg text-ink">
         Not a course. Not a streak app. Start with the handbook. The Deep
