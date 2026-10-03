@@ -66,13 +66,23 @@ export function stampClockNow(from = new Date()) {
   return `${pad(from.getHours())}:${pad(from.getMinutes())}`;
 }
 
-/** Minutes between two HH:MM strings (same day). Null if either invalid. */
+/** Longest gap we accept as a block that ran past midnight (e.g. 23:30 → 00:15). */
+const MAX_OVERNIGHT_MINUTES = 4 * 60;
+
+/**
+ * Minutes between two HH:MM strings (same day). Null if either is invalid or
+ * the end is before the start — except a short block that crossed midnight.
+ * Never returns a negative or wrapped-around duration (e.g. 20:55 → 10:30).
+ */
 export function durationMinutes(start: string, end: string) {
   const a = parseClock(start);
   const b = parseClock(end);
   if (!a || !b) return null;
   let ms = b.getTime() - a.getTime();
-  if (ms < 0) ms += 24 * 60 * 60 * 1000;
+  if (ms < 0) {
+    ms += 24 * 60 * 60 * 1000;
+    if (ms > MAX_OVERNIGHT_MINUTES * 60_000) return null;
+  }
   return Math.round(ms / 60_000);
 }
 

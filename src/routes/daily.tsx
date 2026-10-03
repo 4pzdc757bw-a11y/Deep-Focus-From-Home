@@ -25,11 +25,13 @@ function DailyPage() {
         <ArrowLeft className="size-4" />
         Back to starter week
       </Link>
-      <PageTitle
-        kicker={isToday ? "Daily OS · today" : `Daily OS · ${prettyDate(date)}`}
-        title="One page for this workday"
-        lede={`${prettyDate(date)}. Put the task in a time slot, write the outcome, ring the bell to start and to finish.`}
-      />
+      <div className="no-print">
+        <PageTitle
+          kicker={isToday ? "Daily OS · today" : `Daily OS · ${prettyDate(date)}`}
+          title="One page for this workday"
+          lede={`${prettyDate(date)}. Put the task in a time slot, write the outcome, ring the bell to start and to finish.`}
+        />
+      </div>
       <DailyOs date={date} />
     </div>
   );

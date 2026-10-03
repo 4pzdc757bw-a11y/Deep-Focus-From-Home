@@ -13,6 +13,7 @@ import { GettingStartedSheet } from "@/components/getting-started-sheet";
 import { useFocusStore } from "@/lib/store";
 import {
   addDaysKey,
+  cn,
   forceHomeFocusSetupPrompt,
   isWeekTwo,
   todayKey,
@@ -36,6 +37,9 @@ function Home() {
   const nextDay = STARTER_DAYS.find((d) => !starterDone.includes(d.day));
   const returning = hydrated && Boolean(starterStart);
   const showWelcome = hydrated && !starterStart;
+  // Before the store hydrates, render the welcome (CSS hides it for returning
+  // browsers) or a same-size placeholder, so the Daily OS below does not jump.
+  const preHydration = !hydrated;
   const nextDate = starterStart && nextDay ? addDaysKey(starterStart, nextDay.day - 1) : todayKey();
   const peak = peakFrom(energy);
   const [now, setNow] = useState(() => Date.now());
@@ -102,8 +106,12 @@ function Home() {
         </Card>
       ) : null}
 
-      {showWelcome ? (
-        <div className="no-print flex flex-col gap-5">
+      {preHydration ? (
+        <div className="df-pre-returning no-print" aria-hidden="true" />
+      ) : null}
+
+      {showWelcome || preHydration ? (
+        <div className={cn("no-print flex flex-col gap-5", preHydration && "df-pre-welcome")}>
           <PageTitle
             kicker="Welcome aboard"
             title="New here?"
@@ -121,7 +129,7 @@ function Home() {
 
           <Card>
             <p className="text-ink">
-              Four steps, a 7-day starter, and answers to the usual questions —
+              Five quick setup steps, a 7-day starter, and answers to the usual questions —
               kids, missed days, the phone, where your notes live.
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
@@ -183,7 +191,7 @@ function Home() {
           }}
         />
       ) : null}
-      <LegalFooter className="mt-8" />
+      <LegalFooter className="no-print mt-8" />
     </div>
   );
 }
