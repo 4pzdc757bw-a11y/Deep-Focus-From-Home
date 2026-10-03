@@ -1,3 +1,4 @@
+import { HandbookCheckoutLink } from "@/components/handbook-checkout-link";
 import { Link } from "@tanstack/react-router";
 import { BookOpen, X } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -21,7 +22,7 @@ export function HandbookFirstCard() {
       </p>
       <div className="flex flex-col gap-2 sm:flex-row">
         <Button asChild>
-          <Link to="/buy">Get the handbook ({PRICE_LABEL})</Link>
+          <HandbookCheckoutLink>Get the handbook ({PRICE_LABEL})</HandbookCheckoutLink>
         </Button>
         <Button variant="outline" asChild>
           <Link to="/guide/$slug" params={{ slug: "intro" }}>

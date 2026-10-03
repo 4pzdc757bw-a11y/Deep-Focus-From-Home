@@ -1,3 +1,4 @@
+import { HandbookCheckoutLink } from "@/components/handbook-checkout-link";
 import { LegalFooter } from "@/components/legal-footer";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, BookOpen } from "lucide-react";
@@ -154,9 +155,9 @@ function Home() {
           {!appUnlocked && !handbookBuyer ? (
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
               <Button size="lg" asChild>
-                <Link to="/buy">
+                <HandbookCheckoutLink>
                   Get the handbook, {PRICE_LABEL} <ArrowRight className="size-4" />
-                </Link>
+                </HandbookCheckoutLink>
               </Button>
               <Link
                 to="/start"
@@ -198,7 +199,7 @@ function Home() {
                 </Button>
               ) : (
                 <Button asChild>
-                  <Link to="/buy">Get the handbook ({PRICE_LABEL})</Link>
+                  <HandbookCheckoutLink>Get the handbook ({PRICE_LABEL})</HandbookCheckoutLink>
                 </Button>
               )}
               <Button variant="outline" asChild>
