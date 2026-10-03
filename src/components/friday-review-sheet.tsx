@@ -9,9 +9,10 @@ import { weekKey } from "@/lib/utils";
  * Friday Close day step after next-week planning: capture this week’s review.
  * Skip is one tap and never blocks Close.
  */
-export function FridayReviewSheet({ onDone }: { onDone: () => void }) {
+export function FridayReviewSheet({ onDone, date }: { onDone: () => void; date?: string }) {
   const titleId = useId();
-  const key = weekKey();
+  // The week of the day being closed (not the device clock's week).
+  const key = weekKey(date ? new Date(`${date}T12:00:00`) : new Date());
   const stored = useFocusStore((s) => s.weeks[key]?.fridayNote ?? "");
   const patchWeek = useFocusStore((s) => s.patchWeek);
   const [note, setNote] = useState(stored);

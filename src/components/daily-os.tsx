@@ -14,7 +14,7 @@ import {
   remainingLabel,
   stampClockNow,
 } from "@/lib/chime";
-import { catchUpBlocks, startPlan } from "@/lib/block-plan";
+import { catchUpBlocks, nextBlockTimes, startPlan, withLength } from "@/lib/block-plan";
 import { installPrintTextareaFit, printDaily, setActivePrintDate } from "@/lib/print";
 import { blockDefaults, endForStart, endsNextDay } from "@/lib/work-hours";
 import { useWorkdayKey } from "@/lib/workday";
@@ -222,18 +222,11 @@ export function DailyOs({ date }: { date?: string }) {
   function addBlock() {
     if (visible >= 3) return;
     const prev = entry.slots[visible - 1];
-    // New block: 15 min after a block that ran (real end, rounded up to the
-    // quarter hour), else the work-day default; moved to now if already past.
-    // Seeding start = previous end lets catchUpBlocks apply that rule.
-    const seed =
-      prev?.started && prev.end
-        ? { start: prev.end, end: prev.end }
-        : blockDefaults(visible, workHours, prev?.end);
-    const slots = entry.slots.map((s, i) => (i === visible ? { ...emptySlot(), ...seed } : s));
-    const moved = osDate === workday
-      ? catchUpBlocks(slots, visible + 1, osDate, workHours, new Date()).find((m) => m.index === visible)
-      : undefined;
-    const times = moved ?? (seed.start === seed.end ? blockDefaults(visible, workHours, prev?.end) : seed);
+    // Always pre-filled (no "Set time"): 15 min after the previous block's end,
+    // or now if later, rounded up to the quarter hour, 90 min long. "Now" counts
+    // when the previous block actually ran or this is today's page.
+    const useNow = Boolean(prev?.started) || osDate === workday;
+    const times = nextBlockTimes(prev, visible, workHours, useNow ? new Date() : null);
     patchSlot(visible, { start: times.start, end: times.end, auto: true });
     patch({ slotCount: (visible + 1) as 2 | 3 });
   }
@@ -264,7 +257,7 @@ export function DailyOs({ date }: { date?: string }) {
         // blocks 30 min after the previous block ends.
         const defaults = blockDefaults(i, workHours, entry.slots[i - 1]?.end);
         const endFallback = slot.start
-          ? endForStart(slot.start, workHours) || defaults.end
+          ? withLength({ start: slot.start, end: endForStart(slot.start, workHours) || defaults.end }).end
           : defaults.end;
         return (
           <Card key={i} className="daily-block flex flex-col gap-3">

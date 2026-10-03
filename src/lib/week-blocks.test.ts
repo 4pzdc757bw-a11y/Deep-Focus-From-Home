@@ -371,3 +371,77 @@ describe("AM/PM everywhere", () => {
     assert.deepEqual(parseWorkHours(withAmPm("23:00–07:00")), { start: 1380, stop: 1860, overnight: true });
   });
 });
+
+describe("app-filled block times", () => {
+  it("never zero length: equal end becomes start + 90", async () => {
+    const { withLength } = await import("./block-plan.ts");
+    assert.deepEqual(withLength({ start: "04:02", end: "04:02" }), { start: "04:02", end: "05:32" });
+    assert.deepEqual(withLength({ start: "23:00", end: "00:30" }), { start: "23:00", end: "00:30" });
+  });
+  it("Add block after a 4:02–4:02 bell block → 4:30–6:00 AM (15 min after, quarter hour)", async () => {
+    const { nextBlockTimes } = await import("./block-plan.ts");
+    const prev = { start: "04:02", end: "04:02", started: true };
+    assert.deepEqual(nextBlockTimes(prev, 1, "11:00 PM–7:00 AM", new Date(2026, 9, 3, 4, 3)), { start: "04:30", end: "06:00" });
+  });
+  it("Add block uses now when later than end + 15", async () => {
+    const { nextBlockTimes } = await import("./block-plan.ts");
+    const prev = { start: "03:53", end: "03:54", started: true };
+    assert.deepEqual(nextBlockTimes(prev, 1, "", new Date(2026, 9, 3, 4, 31)), { start: "04:45", end: "06:15" });
+    // Across midnight on a night shift.
+    assert.deepEqual(
+      nextBlockTimes({ start: "23:00", end: "23:50", started: true }, 1, "11 PM - 7 AM", new Date(2026, 9, 2, 23, 51)),
+      { start: "00:15", end: "01:45" },
+    );
+  });
+  it("Add block on a planned (future) day: 15 min after the planned end, no clock", async () => {
+    const { nextBlockTimes } = await import("./block-plan.ts");
+    assert.deepEqual(nextBlockTimes({ start: "23:00", end: "00:30" }, 1, "11 PM - 7 AM", null), { start: "00:45", end: "02:15" });
+  });
+  it("Add block with no previous times: work-day default, never blank", async () => {
+    const { nextBlockTimes } = await import("./block-plan.ts");
+    assert.deepEqual(nextBlockTimes({ start: "", end: "" }, 1, "", null), { start: "11:00", end: "12:30" });
+  });
+  it("catch-up never produces a zero-length block", async () => {
+    const { catchUpBlocks } = await import("./block-plan.ts");
+    const moves = catchUpBlocks([{ start: "09:00", end: "09:00" }], 1, "2026-10-05", "", new Date(2026, 9, 5, 11, 50));
+    assert.deepEqual(moves, [{ index: 0, start: "12:00", end: "13:30" }]);
+  });
+});
+
+describe("new day from the week plan", () => {
+  it("Wednesday uses the plan's Wednesday blocks (night shift = start day)", async () => {
+    const { planSlotsFor, mondayOf } = await import("./week-blocks.ts");
+    assert.equal(mondayOf("2026-10-07"), "2026-10-05");
+    assert.equal(mondayOf("2026-10-11"), "2026-10-05");
+    const weeks = {
+      "2026-10-05": { blocks: ["Mon 11:00 PM–12:30 AM (next day) · A", "Wed 11:00 PM–12:30 AM (next day) · Reports", "Wed 1:00 AM–1:00 AM · zero", ""] },
+    };
+    assert.deepEqual(planSlotsFor("2026-10-07", weeks), [
+      { start: "23:00", end: "00:30", task: "Reports" },
+      { start: "01:00", end: "02:30", task: "zero" },
+    ]);
+    assert.deepEqual(planSlotsFor("2026-10-08", weeks), []);
+  });
+  it("week carry-over suggestions never zero length", async () => {
+    const { suggestWeekBlocks } = await import("./week-blocks.ts");
+    const d = suggestWeekBlocks({ targetKey: "2026-10-12", weeks: { "2026-10-05": { blocks: ["Wed 4:00 AM–4:00 AM", "", "", ""] } }, dailies: {}, hours: "" });
+    assert.deepEqual(d.map((b) => [b.start, b.end]), [["04:00", "05:30"]]);
+  });
+});
+
+describe("Close day never moves backward", () => {
+  it("closing Wed Oct 7 opens Thu Oct 8, not Mon Oct 5", async () => {
+    const { nextDateForward, latestClosedDate } = await import("./close-day.ts");
+    const wd = [1, 2, 3, 4, 5];
+    assert.equal(nextDateForward("2026-10-07", "2026-10-02", wd, "2026-10-07"), "2026-10-08");
+    // Closing an older day after later ones were closed still goes forward.
+    assert.equal(nextDateForward("2026-10-02", "2026-10-02", wd, "2026-10-07"), "2026-10-08");
+    // Friday close → Monday; never before today.
+    assert.equal(nextDateForward("2026-10-09", "2026-10-02", wd, null), "2026-10-12");
+    assert.equal(nextDateForward("2026-09-30", "2026-10-02", wd, null), "2026-10-02");
+    assert.equal(
+      latestClosedDate({ "2026-10-02": { checks: { shutdown: true } }, "2026-10-07": { checks: { shutdown: true } }, "2026-10-08": { checks: { shutdown: false } } }),
+      "2026-10-07",
+    );
+  });
+});

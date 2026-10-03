@@ -1,5 +1,5 @@
 import { durationMinutes, stampClockNow } from "./chime.ts";
-import { parseWorkHours, spanMinutes, toClock, workMinutes } from "./work-hours.ts";
+import { blockDefaults, parseWorkHours, spanMinutes, toClock, toMinutes, workMinutes } from "./work-hours.ts";
 
 const DEFAULT_BLOCK_MINUTES = 90;
 const MAX_BLOCK_MINUTES = 4 * 60;
@@ -107,4 +107,40 @@ export function catchUpBlocks(
     prevRan = Boolean(slot.started);
   }
   return out;
+}
+
+/**
+ * App-filled times never end when they start: an equal (or unreadable) end
+ * becomes start + 90 min. Bell-stamped times never go through this.
+ */
+export function withLength(t: { start: string; end: string }): { start: string; end: string } {
+  const a = toMinutes(t.start);
+  if (a == null) return t;
+  const b = toMinutes(t.end);
+  if (b == null || b === a) return { start: t.start, end: toClock(a + DEFAULT_BLOCK_MINUTES) };
+  return t;
+}
+
+/**
+ * Times for a newly added block: 15 min after the previous block's end (or
+ * now, if later and the page is today's), rounded up to the quarter hour,
+ * 90 min long. With no previous times: the work-day default for that block.
+ */
+export function nextBlockTimes(
+  prev: { start: string; end: string; started?: boolean } | undefined,
+  index: number,
+  hours: string | undefined | null,
+  now: Date | null,
+): { start: string; end: string } {
+  const prevEnd = prev?.end ? toMinutes(prev.end) : null;
+  if (prevEnd == null) return withLength(blockDefaults(index, hours, prev?.end));
+  let base = prevEnd + GAP_AFTER_RUN;
+  if (now) {
+    const nowMin = now.getHours() * 60 + now.getMinutes();
+    // Minutes since the previous end, across midnight (night shifts).
+    const since = (nowMin - prevEnd + DAY) % DAY;
+    if (since < 12 * 60) base = Math.max(base, prevEnd + since);
+  }
+  const start = ceilQuarter(base);
+  return { start: toClock(start), end: toClock(start + DEFAULT_BLOCK_MINUTES) };
 }

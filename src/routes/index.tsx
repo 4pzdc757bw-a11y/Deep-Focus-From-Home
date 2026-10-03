@@ -5,6 +5,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, BookOpen } from "lucide-react";
 import { DailyOs } from "@/components/daily-os";
 import { useWorkdayKey } from "@/lib/workday";
+import { latestClosedDate, nextDateForward } from "@/lib/close-day";
 import { starterDayDate } from "@/lib/work-hours";
 import { useHasAccess, useUnlockedProduct } from "@/components/lock-screen";
 import { HandbookFirstCard, HandbookUnlockedCard } from "@/components/home-offer";
@@ -52,8 +53,16 @@ function Home() {
   const preHydration = !hydrated;
   const workday = useWorkdayKey();
   const workDays = useFocusStore((s) => s.household?.workDays);
-  const nextDate =
-    starterStart && nextDay ? starterDayDate(starterStart, nextDay.day, workDays) : workday;
+  const dailies = useFocusStore((s) => s.dailies);
+  // Never point backward: once today (or a later day) is closed, the next work day after it.
+  const latestClosed = latestClosedDate(dailies);
+  const forward =
+    latestClosed && latestClosed >= workday
+      ? nextDateForward(latestClosed, workday, workDays, latestClosed)
+      : workday;
+  const starterDate =
+    starterStart && nextDay ? starterDayDate(starterStart, nextDay.day, workDays) : null;
+  const nextDate = starterDate && starterDate > forward ? starterDate : forward;
   const peak = peakFrom(energy);
   const [now, setNow] = useState(() => Date.now());
   const [showHomeFocus, setShowHomeFocus] = useState(false);

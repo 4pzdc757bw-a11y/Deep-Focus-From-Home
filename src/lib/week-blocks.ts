@@ -61,7 +61,9 @@ export function parseWeekBlock(text: string | undefined | null): WeekBlockDraft 
 /** Times read back from a saved line, or null if it has none (free text). */
 export function parseWeekBlockTimes(text: string | undefined | null): WeekBlockDraft | null {
   const b = parseWeekBlock(text);
-  return b && b.day >= 0 && b.start && b.end ? b : null;
+  if (!b || b.day < 0 || !b.start) return null;
+  // No readable end (or equal to the start): 90 min, never zero length.
+  return { ...b, ...fixLength({ start: b.start, end: b.end || b.start }) };
 }
 
 type SuggestSlot = { start: string; end: string; started?: boolean; auto?: boolean };
@@ -92,7 +94,7 @@ export function suggestWeekBlocks(opts: {
     .reverse();
   for (const k of weekKeys) {
     const parsed = (weeks[k]?.blocks ?? []).map(parseWeekBlockTimes).filter(Boolean) as WeekBlockDraft[];
-    if (parsed.length) return parsed.slice(0, 4).map((b) => ({ ...b, task: "" }));
+    if (parsed.length) return parsed.slice(0, 4).map((b) => ({ ...b, ...fixLength(b), task: "" }));
   }
   // 2. Recent Today pages: Block 1 per work day. Planned times as typed; a
   // block that ran or that the app moved to "now" uses the work-day default
@@ -109,7 +111,7 @@ export function suggestWeekBlocks(opts: {
     const def = blockDefaults(0, hours);
     const start = snapClock(oneOff ? def.start : slot.start);
     const end = oneOff ? snapClock(def.end) : snapClock(slot.end);
-    byDay.set(day, { day, start, end, task: "" });
+    byDay.set(day, { day, ...fixLength({ start, end }), task: "" });
     if (byDay.size >= 4) break;
   }
   if (byDay.size) {
@@ -128,10 +130,40 @@ export function suggestWeekBlocks(opts: {
   }));
 }
 
+function fixLength(b: { start: string; end: string }) {
+  if (b.start !== b.end) return { start: b.start, end: b.end };
+  const [h, m] = b.start.split(":").map(Number);
+  return { start: b.start, end: clock((h ?? 0) * 60 + (m ?? 0) + 90) };
+}
+
 function shiftKey(dateKey: string, days: number) {
   const [y, m, d] = dateKey.split("-").map(Number);
   const date = new Date(y ?? 1970, (m ?? 1) - 1, d ?? 1);
   date.setDate(date.getDate() + days);
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+/** Monday (YYYY-MM-DD) of the week holding `dateKey`, like utils.weekKey. */
+export function mondayOf(dateKey: string) {
+  const day = weekdayOf(dateKey);
+  return shiftKey(dateKey, day === 0 ? -6 : 1 - day);
+}
+
+/**
+ * Blocks the week plan puts on work day `date` (its weekday; for a night shift
+ * the shift's start day), in time order, at most 3. App-filled, so a block
+ * that would end when it starts gets 90 min.
+ */
+export function planSlotsFor(
+  date: string,
+  weeks: Record<string, { blocks: readonly string[] } | undefined>,
+): { start: string; end: string; task: string }[] {
+  const day = weekdayOf(date);
+  const lines = weeks[mondayOf(date)]?.blocks ?? [];
+  return lines
+    .map(parseWeekBlockTimes)
+    .filter((b): b is WeekBlockDraft => Boolean(b && b.day === day))
+    .slice(0, 3)
+    .map((b) => ({ ...fixLength(b), task: b.task }));
 }

@@ -35,9 +35,10 @@ function emptyDraft(from: WeekState | undefined, key: string): WeekState {
  * Friday Close day gate: plan next week’s blocks before Friday review.
  * Skip is one tap and never blocks Close.
  */
-export function WeeklyPlannerSheet({ onDone }: { onDone: () => void }) {
+export function WeeklyPlannerSheet({ onDone, date }: { onDone: () => void; date?: string }) {
   const titleId = useId();
-  const key = nextWeekKey();
+  // The week after the day being closed (Fri Oct 9 → week of Oct 12), never an earlier one.
+  const key = nextWeekKey(date ? new Date(`${date}T12:00:00`) : new Date());
   const stored = useFocusStore((s) => s.weeks[key]);
   const patchWeek = useFocusStore((s) => s.patchWeek);
   const [step, setStep] = useState<Step>("ask");

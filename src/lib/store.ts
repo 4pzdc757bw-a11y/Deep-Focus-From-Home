@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { isDateKey, monthKey, weekKey } from "./utils";
 import { blockDefaults, endForStart, endsNextDay, workdayKey } from "./work-hours";
+import { planSlotsFor } from "./week-blocks";
 import type { BlockPrepId, DailyCheckId, ShutdownStepId } from "./content";
 
 export type BlockPrep = Record<BlockPrepId, boolean>;
@@ -171,14 +172,22 @@ function inferSlotCount(slots: DailyEntry["slots"], stored?: unknown): 1 | 2 | 3
   return n;
 }
 
-/** New day: Block 1 is prefilled at the start of the work day (9:00 if unset). */
-const emptyDaily = (hours?: string): DailyEntry => ({
-  slots: [
-    emptySlot(blockDefaults(0, hours).start, blockDefaults(0, hours).end),
-    emptySlot(),
-    emptySlot(),
-  ],
-  slotCount: 1,
+/**
+ * New day: the week plan's blocks for that weekday when there are any (times
+ * and tasks), else Block 1 at the start of the work day (9:00 AM if unset).
+ */
+const emptyDaily = (
+  hours?: string,
+  date?: string,
+  weeks?: Record<string, { blocks: readonly string[] } | undefined>,
+): DailyEntry => {
+  const plan = date && weeks ? planSlotsFor(date, weeks) : [];
+  const first = plan[0] ?? blockDefaults(0, hours);
+  const slot = (p?: { start: string; end: string; task?: string }) =>
+    p ? { ...emptySlot(p.start, p.end), task: p.task ?? "" } : emptySlot();
+  return {
+  slots: [slot({ ...first, task: plan[0]?.task ?? "" }), slot(plan[1]), slot(plan[2])],
+  slotCount: Math.min(3, Math.max(1, plan.length)) as 1 | 2 | 3,
   checks: {
     surface: false,
     phone: false,
@@ -189,7 +198,8 @@ const emptyDaily = (hours?: string): DailyEntry => ({
   shutdownSteps: emptyShutdownSteps(),
   note: "",
   partnerNote: "",
-});
+  };
+};
 
 const emptySetup = (): SetupState => ({
   location: "",
@@ -317,12 +327,12 @@ export const useFocusStore = create<FocusState>()(
       dailies: {},
       patchDaily: (date, patch) =>
         set((s) => {
-          const cur = s.dailies[date] ?? emptyDaily(s.household?.hours);
+          const cur = s.dailies[date] ?? emptyDaily(s.household?.hours, date, s.weeks);
           return { dailies: { ...s.dailies, [date]: { ...cur, ...patch } } };
         }),
       patchSlot: (date, index, patch) =>
         set((s) => {
-          const cur = s.dailies[date] ?? emptyDaily(s.household?.hours);
+          const cur = s.dailies[date] ?? emptyDaily(s.household?.hours, date, s.weeks);
           const slots = [...cur.slots] as DailyEntry["slots"];
           slots[index] = { ...slots[index], ...patch };
           return { dailies: { ...s.dailies, [date]: { ...cur, slots } } };
@@ -457,9 +467,10 @@ export function useDaily(day?: string) {
   // Default: the current work day (a night shift's small hours count as the evening before).
   const date = day ?? workdayKey(new Date(), hours);
   const raw = useFocusStore((s) => s.dailies[date]);
+  const weeks = useFocusStore((s) => s.weeks);
   const entry = raw
     ? migrateDaily(raw as unknown as Record<string, unknown>, hours)
-    : emptyDaily(hours);
+    : emptyDaily(hours, date, weeks);
   const patchDaily = useFocusStore((s) => s.patchDaily);
   const patchSlot = useFocusStore((s) => s.patchSlot);
   return {
