@@ -103,6 +103,22 @@ function BuyPage() {
             </li>
           ))}
         </ul>
+        <div className="rounded-md border border-yellow bg-paper p-3 text-sm text-ink">
+          <p className="font-semibold text-olive">What the app adds</p>
+          <p className="mt-1">
+            Free for everyone: the home page, How this works + FAQ, Chapter 1,
+            and the free 7-day starter week. The handbook adds the other six
+            chapters, the PDFs and the fillable forms.
+          </p>
+          <p className="mt-1">
+            The app adds the interactive tools, which are locked unless you
+            buy the app: the daily planner (Daily OS with the focus bell and
+            Close day), the energy log, home focus setup, the weekly planner,
+            the monthly review and the household agreement. Your entries are
+            filled in and saved in your browser, and you can print or save any
+            day as a PDF. It also includes everything in the handbook.
+          </p>
+        </div>
         <p className="text-3xl font-display text-olive">{APP_PRICE_LABEL}</p>
         <p className="text-sm text-muted">{APP_ACCESS_LINE}</p>
         {appCheckout ? (

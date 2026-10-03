@@ -150,6 +150,23 @@ function Home() {
             }
           />
 
+          {/* Visitors (e.g. from the Facebook Page button) land here: offers one tap away. */}
+          {!appUnlocked && !handbookBuyer ? (
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              <Button size="lg" asChild>
+                <Link to="/buy">
+                  Get the handbook, {PRICE_LABEL} <ArrowRight className="size-4" />
+                </Link>
+              </Button>
+              <Link
+                to="/buy"
+                className="inline-flex min-h-11 items-center text-sm font-semibold text-olive underline underline-offset-4"
+              >
+                See both offers
+              </Link>
+            </div>
+          ) : null}
+
           <div className="overflow-hidden rounded-lg border border-yellow">
             <img
               src="/images/cover.jpg"

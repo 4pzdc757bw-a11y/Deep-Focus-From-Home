@@ -1,6 +1,6 @@
 /** Vera-approved locked legal copy (Desktop JEFFSEBIZ/Legal + Offer-and-Policies). Do not invent. */
 
-export const LEGAL_EFFECTIVE_DATE = "October 1, 2026";
+export const LEGAL_EFFECTIVE_DATE = "October 3, 2026";
 
 /** Locked checkout / footer line from Store Credit policy. */
 export const STORE_CREDIT_CHECKOUT_LINE =
