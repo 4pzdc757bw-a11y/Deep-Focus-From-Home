@@ -1,4 +1,5 @@
 import { getRouteApi, Link, useRouter, useRouterState } from "@tanstack/react-router";
+import { AppCheckoutLink, HandbookCheckoutLink } from "@/components/handbook-checkout-link";
 import { ArrowLeft, Lock } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 import { Card } from "@/components/app-shell";
@@ -215,13 +216,13 @@ export function LockScreen({
                 <Link to="/guide">Read the handbook</Link>
               </Button>
               <Button variant="outline" asChild>
-                <Link to="/app">Add the app ({APP_PRICE_LABEL})</Link>
+                <AppCheckoutLink>Add the app ({APP_PRICE_LABEL})</AppCheckoutLink>
               </Button>
             </>
           ) : (
             <>
               <Button asChild>
-                <Link to="/buy">Get the handbook ({PRICE_LABEL})</Link>
+                <HandbookCheckoutLink>Get the handbook ({PRICE_LABEL})</HandbookCheckoutLink>
               </Button>
               {isApp ? (
                 <Button variant="outline" asChild>

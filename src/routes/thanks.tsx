@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { HandbookCheckoutLink } from "@/components/handbook-checkout-link";
 import { ArrowRight, Download } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/app-shell";
@@ -381,7 +382,7 @@ function ThanksPage() {
             </p>
             <div>
               <Button asChild>
-                <Link to="/buy">Get the {PRICE_LABEL} handbook</Link>
+                <HandbookCheckoutLink>Get the {PRICE_LABEL} handbook</HandbookCheckoutLink>
               </Button>
             </div>
             <p className="text-sm text-muted">No webinar. Keep it if Day 1 already helped.</p>

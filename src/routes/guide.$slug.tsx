@@ -1,4 +1,5 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { HandbookCheckoutLink } from "@/components/handbook-checkout-link";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Card, PageTitle } from "@/components/app-shell";
 import { LegalFooter } from "@/components/legal-footer";
@@ -52,7 +53,7 @@ function ChapterPage() {
           </p>
           <div className="flex flex-col gap-2 sm:flex-row">
             <Button asChild>
-              <Link to="/buy">Get the handbook ({PRICE_LABEL})</Link>
+              <HandbookCheckoutLink>Get the handbook ({PRICE_LABEL})</HandbookCheckoutLink>
             </Button>
           </div>
         </Card>
