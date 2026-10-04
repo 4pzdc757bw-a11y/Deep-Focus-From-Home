@@ -1,6 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { LegalDoc } from "@/components/legal-doc";
-import { STORE_CREDIT_CHECKOUT_LINE } from "@/lib/legal";
+import { FixItRule, LegalDoc } from "@/components/legal-doc";
+import {
+  BUSINESS_ADDRESS_LINES,
+  BUSINESS_EMAIL,
+  BUSINESS_NAME,
+  STORE_CREDIT_CHECKOUT_LINE,
+  STORE_CREDIT_LIMIT_ITEMS,
+} from "@/lib/legal";
 
 export const Route = createFileRoute("/store-credit")({
   head: () => ({
@@ -25,33 +31,14 @@ function StoreCreditPage() {
         automatic cash refunds on digital downloads or digital access.
       </p>
       <p>
-        If something went wrong with your order, email jeffrey@jeffsebiz.com,
+        If something went wrong with your order, email support@jeffsebiz.com,
         explain what happened, and we will review it. Delivery problems and
         duplicate charges are always fixed (see below). Other requests are
         reviewed case by case: we may offer store credit, replace or fix a file,
         or in rare cases issue a refund.
       </p>
 
-      <h2>Didn’t get your files, or charged twice?</h2>
-      <p>
-        Email jeffrey@jeffsebiz.com with the email you used to buy and your
-        Stripe receipt (or the date and amount).
-      </p>
-      <ul>
-        <li>
-          Files never arrived or won’t open: we’ll resend them or send a working
-          download link.
-        </li>
-        <li>
-          Charged more than once for the same order: we’ll refund the extra
-          charge to your original payment method.
-        </li>
-      </ul>
-      <p>
-        These fixes are separate from store credit. They’re not case-by-case.
-        We aim to reply within 3 business days (Monday to Friday, US Central
-        time, excluding US holidays).
-      </p>
+      <FixItRule />
 
       <h2>What this covers</h2>
       <p>
@@ -64,7 +51,7 @@ function StoreCreditPage() {
       <h2>How to contact us</h2>
       <ol>
         <li>
-          Email jeffrey@jeffsebiz.com from the address you used at checkout when
+          Email support@jeffsebiz.com from the address you used at checkout when
           you can.
         </li>
         <li>
@@ -83,14 +70,16 @@ function StoreCreditPage() {
       <p>When we approve store credit:</p>
       <ul>
         <li>
-          Credit equals what you paid for that purchase (unless we say otherwise
-          in writing).
+          Credit equals the purchase price you paid for that purchase (unless we
+          say otherwise in writing).
         </li>
         <li>Credit can be used toward any jeffsebiz product.</li>
         <li>
           Credit is good for 12 months from the original purchase date.
         </li>
-        <li>Credit cannot be cashed out.</li>
+        {STORE_CREDIT_LIMIT_ITEMS.map((item) => (
+          <li key={item}>{item}</li>
+        ))}
       </ul>
 
       <h2>What we generally cannot do</h2>
@@ -105,13 +94,13 @@ function StoreCreditPage() {
 
       <h2>Contact</h2>
       <p>
-        JEFFSEBIZ LLC
+        {BUSINESS_NAME}
         <br />
-        10 Holly Hill Drive
+        {BUSINESS_ADDRESS_LINES[0]}
         <br />
-        Alton, IL 62002-5224
+        {BUSINESS_ADDRESS_LINES[1]}
         <br />
-        Email: jeffrey@jeffsebiz.com
+        Email: {BUSINESS_EMAIL}
       </p>
     </LegalDoc>
   );

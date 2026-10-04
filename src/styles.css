@@ -19,6 +19,8 @@
 
 @layer base {
   html {
+    /* Native checkboxes, date and time pickers use the site's olive accent. */
+    accent-color: var(--color-olive);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -67,6 +69,31 @@
   }
 }
 
+/* Home pre-hydration placeholders (see PREPAINT_SCRIPT in __root.tsx) */
+.df-pre-returning {
+  display: none;
+}
+
+html[data-df-starter] .df-pre-returning {
+  display: block;
+  min-height: 12.75rem;
+}
+
+/* Day 1 card also carries the "read Guide chapters 1–4" note. */
+html[data-df-starter][data-df-day1] .df-pre-returning {
+  min-height: 21.25rem;
+}
+
+@media (min-width: 640px) {
+  html[data-df-starter][data-df-day1] .df-pre-returning {
+    min-height: 17.75rem;
+  }
+}
+
+html[data-df-starter] .df-pre-welcome {
+  display: none !important;
+}
+
 @media print {
   @page {
     size: letter portrait;
@@ -108,66 +135,191 @@
     print-color-adjust: exact !important;
   }
 
-  /* Daily OS: keep one Letter page when screen chrome is hidden (Safari-safe, no transforms) */
+  /* Daily OS: one US Letter page with 3 blocks + checks + both notes
+     (Safari-safe, no transforms). Textareas are sized to content via JS. */
   .daily-os {
-    gap: 0.4rem !important;
+    gap: 0.45rem !important;
+    font-size: 10pt !important;
+    line-height: 1.25 !important;
   }
 
   .daily-os .daily-block,
   .daily-os .daily-checks,
   .daily-os .daily-notes {
-    border: 1.5pt solid #3a4a32 !important;
+    border: 1.25pt solid #3a4a32 !important;
     background: #fffef8 !important;
-    padding: 0.4rem 0.55rem !important;
+    padding: 0.4rem 0.55rem 0.5rem !important;
     border-radius: 0.25rem !important;
     box-shadow: none !important;
+    gap: 0.3rem !important;
   }
 
-  /* Prefer keeping schedule/checks together; allow notes to split rather than orphan a blank page */
   .daily-os .daily-block,
   .daily-os .daily-checks {
     break-inside: avoid;
     page-break-inside: avoid;
   }
 
+  /* Very long notes may split rather than push the whole card to page 2 */
   .daily-os .daily-notes {
     break-inside: auto;
     page-break-inside: auto;
   }
 
-  .daily-os input,
-  .daily-os textarea {
-    border: 1pt solid #8b7a3e !important;
-    background: #fff !important;
-    color: #2c3528 !important;
-    font-size: 10.5pt !important;
-    min-height: 0 !important;
-    padding: 0.15rem 0.3rem !important;
+  /* Block: header across; times + duration left, task + outcome right */
+  .daily-os .daily-block {
+    display: grid !important;
+    grid-template-columns: 15rem 1fr;
+    column-gap: 0.6rem !important;
+    row-gap: 0.3rem !important;
+    align-items: end;
   }
 
-  .daily-os textarea {
-    min-height: 1.6rem !important;
+  .daily-os .daily-block > * {
+    grid-column: 1 / -1;
+  }
+
+  .daily-os .daily-block > .daily-times {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .daily-os .daily-block > .daily-duration {
+    grid-column: 1;
+    grid-row: 3;
+    align-self: center;
+    font-size: 9pt !important;
+  }
+
+  .daily-os .daily-block > label:nth-of-type(1) {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .daily-os .daily-block > label:nth-of-type(2) {
+    grid-column: 2;
+    grid-row: 3;
   }
 
   .daily-os .daily-block .grid {
-    gap: 0.35rem !important;
+    gap: 0.3rem !important;
   }
 
-  .daily-os label.flex.flex-col,
-  .daily-os .flex.flex-col.gap-3 {
-    gap: 0.35rem !important;
+  .daily-os label.flex.flex-col {
+    gap: 0.05rem !important;
+  }
+
+  .daily-os label.flex.flex-col > span:first-child,
+  .daily-os .daily-block > div:first-child > p,
+  .daily-os .daily-checks > p {
+    font-size: 7pt !important;
+    line-height: 1.2 !important;
+  }
+
+  .daily-os .daily-block > div:first-child span {
+    font-size: 9pt !important;
+  }
+
+  .daily-os input,
+  .daily-os textarea {
+    border: 0.75pt solid #8b7a3e !important;
+    background: #fff !important;
+    color: #2c3528 !important;
+    font-size: 10.5pt !important;
+    line-height: 1.3 !important;
+    min-height: 0 !important;
+    padding: 0.15rem 0.35rem !important;
+  }
+
+  .daily-os input {
+    height: 1.6rem !important;
+  }
+
+  /* Room to handwrite when empty; grows to fit typed notes */
+  .daily-os textarea {
+    min-height: 4rem !important;
+    resize: none !important;
+    overflow: hidden !important;
+  }
+
+  /* Checks: two columns */
+  .daily-os .daily-checks {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 0.75rem !important;
+    row-gap: 0 !important;
+  }
+
+  .daily-os .daily-checks > p {
+    grid-column: 1 / -1;
+  }
+
+  .daily-os .daily-checks label {
+    padding: 0.1rem 0 !important;
+    gap: 0.4rem !important;
+  }
+
+  .daily-os .daily-checks label > span {
+    font-size: 9.5pt !important;
+  }
+
+  /* Per-block "Before you ring the bell" + end-of-day checks: one compact row */
+  .daily-os .daily-prep,
+  .daily-os .daily-endday {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    align-items: center;
+    column-gap: 0.75rem !important;
+    row-gap: 0 !important;
+  }
+
+  .daily-os .daily-prep > p,
+  .daily-os .daily-endday > p:first-child,
+  .daily-os .daily-endday > p.daily-subhead {
+    font-size: 7pt !important;
+    line-height: 1.2 !important;
+    flex-basis: 100%;
+  }
+
+  .daily-os .daily-prep label,
+  .daily-os .daily-endday label,
+  .daily-os .daily-endday > p {
+    padding: 0 !important;
+    gap: 0.3rem !important;
+    min-height: 0 !important;
+  }
+
+  .daily-os .daily-prep label > span,
+  .daily-os .daily-endday label > span,
+  .daily-os .daily-endday > p.daily-status {
+    font-size: 9pt !important;
+  }
+
+  .daily-os .daily-endday > p.daily-subhead {
+    margin-top: 0.1rem !important;
+  }
+
+  .daily-os .daily-endday > p > span[aria-hidden] {
+    width: 11pt !important;
+    height: 11pt !important;
+    border: 1.5pt solid #3a4a32 !important;
   }
 
   .daily-print-header {
     display: block !important;
-    margin-bottom: 0.3rem;
+    margin-bottom: 0.15rem;
     border-bottom: 2pt solid #3a4a32;
-    padding-bottom: 0.2rem;
+    padding-bottom: 0.1rem;
+  }
+
+  .daily-print-header p {
+    font-size: 7pt !important;
   }
 
   .daily-print-header h1 {
-    font-size: 16pt !important;
-    line-height: 1.2 !important;
+    font-size: 15pt !important;
+    line-height: 1.15 !important;
   }
 
   /* Checkbox: ink border + visible check without relying on fill alone */
@@ -180,6 +332,17 @@
     min-width: 14pt !important;
     background: #fff !important;
     color: #3a4a32 !important;
+  }
+
+  .daily-os [role="checkbox"] {
+    width: 11pt !important;
+    height: 11pt !important;
+    min-width: 11pt !important;
+  }
+
+  .daily-os [role="checkbox"] svg {
+    width: 8pt !important;
+    height: 8pt !important;
   }
 
   [role="checkbox"][data-state="checked"],

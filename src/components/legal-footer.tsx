@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { LEGAL_LINKS } from "@/lib/legal";
+import { BUSINESS_ADDRESS, BUSINESS_EMAIL, BUSINESS_NAME, LEGAL_LINKS } from "@/lib/legal";
 
 export function LegalFooter({ className = "" }: { className?: string }) {
   return (
@@ -18,7 +18,7 @@ export function LegalFooter({ className = "" }: { className?: string }) {
         ))}
       </nav>
       <p className="mt-2 text-xs tracking-wide">
-        JEFFSEBIZ LLC · Alton, IL · jeffrey@jeffsebiz.com
+        {BUSINESS_NAME} · {BUSINESS_ADDRESS} · {BUSINESS_EMAIL}
       </p>
     </footer>
   );

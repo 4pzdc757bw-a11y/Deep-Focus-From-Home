@@ -1,11 +1,21 @@
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { Moon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { FridayReviewSheet } from "@/components/friday-review-sheet";
 import { SheetPortal } from "@/components/sheet-portal";
 import { WeeklyPlannerSheet } from "@/components/weekly-planner-sheet";
+import { Button } from "@/components/ui/button";
 import { closeDay } from "@/lib/close-day";
-import { cn, isFriday, todayKey } from "@/lib/utils";
+import { useFocusStore } from "@/lib/store";
+import { printDaily, printedRecently } from "@/lib/print";
+import { cn, isDateKey, isFriday } from "@/lib/utils";
+import { currentWorkdayKey } from "@/lib/workday";
+
+/** Friday review follows the work day: a Friday-night shift closes on Saturday morning. */
+function dayIsFriday(date: string) {
+  const [y, m, d] = date.split("-").map(Number);
+  return isFriday(new Date(y ?? 1970, (m ?? 1) - 1, d ?? 1));
+}
 
 type Phase =
   | "idle"
@@ -15,19 +25,39 @@ type Phase =
   | "offer-pdf";
 
 /**
- * Rightmost bottom-nav action: on Friday, Weekly Work Planner → Friday review
- * → confirm Close. Otherwise confirm → copy shutdown note to starter day,
- * mark day done, offer Save PDF, advance to next starter day.
+ * Close-day flow. `variant="nav"` is the rightmost bottom-nav action;
+ * `variant="inline"` is the outline button under the Shutdown note.
+ * On Friday: Weekly Work Planner → Friday review → confirm Close. Otherwise
+ * confirm → copy shutdown note to starter day (if in week one), mark day
+ * done, offer Save PDF, advance to the next calendar day.
  */
-export function CloseDayButton({ className }: { className?: string }) {
+export function CloseDayButton({
+  className,
+  variant = "nav",
+}: {
+  className?: string;
+  variant?: "nav" | "inline";
+}) {
   const navigate = useNavigate();
+  const starterStart = useFocusStore((s) => s.starterStart);
+  // Close the day being viewed (/daily?date=Wed closes Wednesday), else today's work day.
+  const viewedDate = useRouterState({
+    select: (s) =>
+      s.location.pathname === "/daily"
+        ? ((s.location.search as { date?: unknown }).date as string | undefined)
+        : undefined,
+  });
+  const closingDate = () => (isDateKey(viewedDate) ? viewedDate : currentWorkdayKey());
   const [phase, setPhase] = useState<Phase>("idle");
-  const [next, setNext] = useState<{ nextDay: number | null; nextDate: string } | null>(
+  const [next, setNext] = useState<{ closedDate: string; nextDate: string } | null>(
     null,
   );
+  // Printed / saved this day's PDF in the last ~10 min → don't ask again.
+  const [alreadySaved, setAlreadySaved] = useState(false);
 
   function startClose() {
-    if (isFriday()) {
+    setAlreadySaved(printedRecently(closingDate()));
+    if (dayIsFriday(closingDate())) {
       setPhase("week-plan");
       return;
     }
@@ -43,34 +73,42 @@ export function CloseDayButton({ className }: { className?: string }) {
   }
 
   function runClose() {
-    const result = closeDay(todayKey());
-    setNext({ nextDay: result.nextDay, nextDate: result.nextDate });
+    const closedDate = closingDate();
+    const result = closeDay(closedDate);
+    setNext({ closedDate, nextDate: result.nextDate });
+    if (printedRecently(closedDate)) {
+      // Already saved a few minutes ago: straight to the next work day.
+      setPhase("idle");
+      void navigate({ to: "/daily", search: { date: result.nextDate } });
+      return;
+    }
     setPhase("offer-pdf");
   }
 
-  function savePdfThenAdvance() {
+  /** Close, then print again even though it was saved recently. */
+  function runCloseAndSaveAgain() {
+    const closedDate = closingDate();
+    const result = closeDay(closedDate);
+    savePdfThenAdvance({ closedDate, nextDate: result.nextDate });
+  }
+
+  function savePdfThenAdvance(target = next) {
     setPhase("idle");
-    const nextDay = next?.nextDay ?? null;
-    const nextDate = next?.nextDate;
-    // Land on Today so the Daily OS is what prints, then offer Save as PDF.
-    void navigate({ to: "/" }).then(() => {
+    const closedDate = target?.closedDate ?? closingDate();
+    const nextDate = target?.nextDate;
+    // Land on the closed day's Daily OS so it is what prints, then offer Save as PDF.
+    void navigate({ to: "/daily", search: { date: closedDate } }).then(() => {
       window.setTimeout(() => {
-        window.print();
-        if (nextDay != null && nextDate) {
-          void navigate({ to: "/daily", search: { date: nextDate } });
-        } else {
-          void navigate({ to: "/starter" });
-        }
+        printDaily(closedDate);
+        if (nextDate) void navigate({ to: "/daily", search: { date: nextDate } });
       }, 200);
     });
   }
 
   function advance() {
     setPhase("idle");
-    if (next?.nextDay != null) {
+    if (next?.nextDate) {
       void navigate({ to: "/daily", search: { date: next.nextDate } });
-    } else {
-      void navigate({ to: "/starter" });
     }
   }
 
@@ -91,25 +129,38 @@ export function CloseDayButton({ className }: { className?: string }) {
 
   return (
     <>
-      <button
-        type="button"
-        className={cn(
-          "flex min-h-14 w-full flex-col items-center justify-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted",
-          className,
-        )}
-        onClick={startClose}
-        aria-haspopup="dialog"
-      >
-        <Moon className="size-5" strokeWidth={1.8} />
-        Close day
-      </button>
+      {variant === "inline" ? (
+        <Button
+          type="button"
+          variant="outline"
+          className={className}
+          onClick={startClose}
+          aria-haspopup="dialog"
+        >
+          <Moon className="size-4" />
+          Close day
+        </Button>
+      ) : (
+        <button
+          type="button"
+          className={cn(
+            "flex min-h-14 w-full flex-col items-center justify-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted",
+            className,
+          )}
+          onClick={startClose}
+          aria-haspopup="dialog"
+        >
+          <Moon className="size-5" strokeWidth={1.8} />
+          Close day
+        </button>
+      )}
 
       {phase === "week-plan" ? (
-        <WeeklyPlannerSheet onDone={afterWeekPlan} />
+        <WeeklyPlannerSheet onDone={afterWeekPlan} date={closingDate()} />
       ) : null}
 
       {phase === "friday-review" ? (
-        <FridayReviewSheet onDone={afterFridayReview} />
+        <FridayReviewSheet onDone={afterFridayReview} date={closingDate()} />
       ) : null}
 
       {phase === "confirm" ? (
@@ -133,10 +184,18 @@ export function CloseDayButton({ className }: { className?: string }) {
                 Close today?
               </h2>
               <p className="mt-2 text-ink">
-                Copies your Shutdown note into this starter day’s “one line,”
-                marks the day done, keeps the Daily OS in local history, then
-                offers Save PDF and moves you to the next day.
+                Marks today done (and copies your Shutdown note into the starter
+                day’s “one line” during week one), keeps the Daily OS in local
+                history, then{" "}
+                {alreadySaved
+                  ? "moves you to your next work day."
+                  : "offers Save PDF and moves you to your next work day."}
               </p>
+              {alreadySaved ? (
+                <p className="mt-2 text-sm text-olive">
+                  You already saved today’s PDF, so it won’t ask again.
+                </p>
+              ) : null}
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
               <button
@@ -153,6 +212,15 @@ export function CloseDayButton({ className }: { className?: string }) {
               >
                 Not yet
               </button>
+              {alreadySaved ? (
+                <button
+                  type="button"
+                  className="inline-flex min-h-11 items-center px-1 text-sm font-semibold text-gold underline underline-offset-4"
+                  onClick={runCloseAndSaveAgain}
+                >
+                  Close and save PDF again
+                </button>
+              ) : null}
             </div>
           </div>
         </div>
@@ -183,12 +251,25 @@ export function CloseDayButton({ className }: { className?: string }) {
                 Opens print — choose “Save as PDF” to keep a copy of today’s OS.
                 Your notes stay on this device either way.
               </p>
+              {!starterStart ? (
+                <p className="mt-3 rounded-md border border-yellow bg-paper p-3 text-sm text-ink">
+                  Tip: you haven’t set up your 7-day starter week yet.{" "}
+                  <Link
+                    to="/starter"
+                    className="font-semibold text-olive underline"
+                    onClick={() => setPhase("idle")}
+                  >
+                    Set it up
+                  </Link>{" "}
+                  when you’re ready — it gives each day one small job.
+                </p>
+              ) : null}
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
               <button
                 type="button"
                 className="inline-flex h-11 items-center justify-center rounded-md bg-olive px-4 text-sm font-semibold text-cream"
-                onClick={savePdfThenAdvance}
+                onClick={() => savePdfThenAdvance()}
               >
                 Save PDF
               </button>

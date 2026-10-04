@@ -7,7 +7,8 @@ import {
   formatEnergyScore,
 } from "@/components/energy-scale";
 import { useFocusStore } from "@/lib/store";
-import { todayKey } from "@/lib/utils";
+import { TIME_OF_DAY_OPTIONS } from "@/lib/time-of-day";
+import { cn, todayKey } from "@/lib/utils";
 
 export type EnergyCheckInContext = {
   date: string;
@@ -112,6 +113,27 @@ export function EnergyCheckInSheet({
                   autoFocus
                 />
               </Field>
+              <div className="-mt-1 flex flex-wrap gap-1.5" role="group" aria-label="Time of day">
+                {TIME_OF_DAY_OPTIONS.map((option) => {
+                  const selected = slot.trim().toLowerCase() === option.toLowerCase();
+                  return (
+                    <button
+                      key={option}
+                      type="button"
+                      aria-pressed={selected}
+                      onClick={() => setSlot(option)}
+                      className={cn(
+                        "min-h-11 rounded-md border px-3 text-sm font-semibold transition-colors",
+                        selected
+                          ? "border-olive bg-olive text-cream"
+                          : "border-yellow bg-paper text-olive hover:border-gold",
+                      )}
+                    >
+                      {option}
+                    </button>
+                  );
+                })}
+              </div>
               <EnergyScalePicker
                 label="Energy"
                 value={energy}

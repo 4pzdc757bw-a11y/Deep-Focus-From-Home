@@ -19,7 +19,7 @@ export { downloadErrorMessage, downloadErrorStatus };
 function parseSessionId(raw: unknown): string {
   if (typeof raw !== "string" || !raw.trim()) {
     throw new DownloadAuthError(
-      "Missing checkout session id. Open this page from your Stripe payment confirmation, or email jeffrey@jeffsebiz.com with your receipt.",
+      "Missing checkout session id. Open this page from your Stripe payment confirmation, or email support@jeffsebiz.com with your receipt.",
     );
   }
   return raw.trim();

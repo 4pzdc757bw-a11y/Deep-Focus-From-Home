@@ -1,26 +1,18 @@
 /**
- * Dev/preview (Vite) half of the platform PWA chrome: serves the ?install=1
- * tutorial and the per-app manifest, and injects missing PWA head tags into
- * app documents. The deployed-app half lives in server/middleware/grok-pwa.ts;
- * both share scripts/grok-pwa-shared.mjs.
+ * Dev/preview (Vite) half of the platform head chrome: injects OG/share head
+ * tags into app documents and answers 404 for the removed web app manifest
+ * (Deep Focus is browser-only, not installable). The deployed-app half lives
+ * in server/middleware/grok-pwa.ts; both share scripts/grok-pwa-shared.mjs.
  */
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import {
-  acceptsHtml,
   createHeadInjector,
   injectGrokPwaHead,
   isDocumentPath,
-  isInstallQuery,
-  renderInstallPageHtml,
-  renderWebManifest,
+  isRemovedManifestPath,
   snapshotOgIdentity,
 } from "./grok-pwa-shared.mjs";
 
 export const GROK_OG_IDENTITY_ID = "virtual:grok-og-identity";
-
-const INSTALL_PAGE_PATH = join(dirname(fileURLToPath(import.meta.url)), "install-page.html");
 
 function requestHost(req) {
   const forwarded = req.headers["x-forwarded-host"];
@@ -28,51 +20,16 @@ function requestHost(req) {
   return Array.isArray(host) ? host[0] : host;
 }
 
-export function renderInstallPage(hostHeader, url = "/") {
-  const template = readFileSync(INSTALL_PAGE_PATH, "utf8");
-  return renderInstallPageHtml(template, { host: hostHeader, url });
-}
-
-function sendHtml(res, html) {
-  const body = Buffer.from(html, "utf8");
-  res.statusCode = 200;
-  res.setHeader("content-type", "text/html; charset=utf-8");
-  res.setHeader("cache-control", "no-cache");
-  res.setHeader("content-length", String(body.byteLength));
-  res.end(body);
-}
-
 function serveGrokPwa(middlewares) {
   middlewares.use((req, res, next) => {
-    const rawUrl = req.url ?? "";
-    const pathOnly = rawUrl.split("?", 1)[0] ?? "";
-    const method = (req.method ?? "GET").toUpperCase();
-    if (method !== "GET") {
-      next();
+    const pathOnly = (req.url ?? "").split("?", 1)[0] ?? "";
+    if (isRemovedManifestPath(pathOnly)) {
+      res.statusCode = 404;
+      res.setHeader("content-type", "text/plain; charset=utf-8");
+      res.setHeader("cache-control", "no-store");
+      res.end("Not found");
       return;
     }
-
-    if (pathOnly === "/__grok/manifest.webmanifest" || pathOnly === "/__grok/manifest.json") {
-      const body = Buffer.from(renderWebManifest(requestHost(req)), "utf8");
-      res.statusCode = 200;
-      res.setHeader("content-type", "application/manifest+json; charset=utf-8");
-      res.setHeader("cache-control", "no-cache");
-      res.setHeader("content-length", String(body.byteLength));
-      res.end(body);
-      return;
-    }
-
-    if (isInstallQuery(rawUrl) && isDocumentPath(pathOnly) && acceptsHtml(req.headers.accept)) {
-      try {
-        sendHtml(res, renderInstallPage(requestHost(req), rawUrl));
-      } catch (err) {
-        console.error("[app-builder] install page missing:", err);
-        res.statusCode = 500;
-        res.end("install page unavailable");
-      }
-      return;
-    }
-
     next();
   });
 }
@@ -92,7 +49,6 @@ function wrapHtmlResponses(middlewares, cwd) {
     const looksLikeDocument =
       method === "GET" &&
       String(req.headers.accept ?? "").includes("text/html") &&
-      !isInstallQuery(rawUrl) &&
       isDocumentPath(pathOnly);
     if (!looksLikeDocument) {
       next();

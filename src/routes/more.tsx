@@ -12,9 +12,9 @@ import {
 } from "lucide-react";
 import { useRef, useState } from "react";
 import { Card, PageTitle } from "@/components/app-shell";
-import { InstallCard } from "@/components/install-card";
 import { LegalFooter } from "@/components/legal-footer";
 import { Button } from "@/components/ui/button";
+import { useHasAccess } from "@/components/lock-screen";
 import { downloadBackup, importBackup } from "@/lib/backup";
 
 export const Route = createFileRoute("/more")({ component: MorePage });
@@ -65,6 +65,7 @@ const LINKS = [
 ] as const;
 
 function MorePage() {
+  const appUnlocked = useHasAccess("app");
   const fileRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const [status, setStatus] = useState("");
@@ -74,7 +75,11 @@ function MorePage() {
       <PageTitle
         kicker="Tools"
         title="The rest of the system"
-        lede="This app is the companion to the Deep Focus from Home handbook. The book is the why. These pages are the forms. Saved on this device — export a copy so it cannot vanish."
+        lede={
+          appUnlocked
+            ? "This app is the companion to the Deep Focus from Home handbook. The book is the why. These pages are the forms. Saved on this device — export a copy so it cannot vanish."
+            : "The forms that go with the Deep Focus from Home handbook. Notes are saved on this device — export a copy so they cannot vanish."
+        }
       />
       <Card className="flex flex-col gap-3">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
@@ -118,15 +123,17 @@ function MorePage() {
         <Button asChild>
           <Link to="/start">Start here</Link>
         </Button>
-        <Button
-          variant="outline"
-          onClick={() => {
-            useFocusStore.getState().setTourOpen(true);
-            void navigate({ to: "/" });
-          }}
-        >
-          Replay getting started
-        </Button>
+        {appUnlocked ? (
+          <Button
+            variant="outline"
+            onClick={() => {
+              useFocusStore.getState().setTourOpen(true);
+              void navigate({ to: "/" });
+            }}
+          >
+            Replay getting started
+          </Button>
+        ) : null}
       </div>
       {LINKS.map((item) => {
         const Icon = item.icon;
@@ -174,7 +181,6 @@ function MorePage() {
           </Link>
         </div>
       </Card>
-      <InstallCard />
       <LegalFooter />
     </div>
   );
