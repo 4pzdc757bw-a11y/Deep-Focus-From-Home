@@ -36,21 +36,67 @@ function clockMatches(text: string): number[] {
   return out;
 }
 
-function toClock(mins: number) {
-  const clamped = Math.max(0, Math.min(23 * 60 + 59, Math.round(mins)));
+const DAY = 24 * 60;
+
+/** Minutes → "HH:MM" on the clock. Minutes past midnight wrap (25:30 → 01:30). */
+export function toClock(mins: number) {
+  const m = ((Math.round(mins) % DAY) + DAY) % DAY;
   const pad = (n: number) => String(n).padStart(2, "0");
-  return `${pad(Math.floor(clamped / 60))}:${pad(clamped % 60)}`;
+  return `${pad(Math.floor(m / 60))}:${pad(m % 60)}`;
 }
 
+export type WorkHours = {
+  /** Start of the work day, minutes after midnight (0–1439). */
+  start: number;
+  /**
+   * End of the work day in minutes after the START DAY's midnight, so it is
+   * always later than `start`. Overnight hours (11 PM–7 AM) give 1860
+   * (7:00 the next morning). Null when no stop time is set.
+   */
+  stop: number | null;
+  /** True when the work day runs past midnight (stop is next morning). */
+  overnight: boolean;
+};
+
 /** "10:00–21:00" (as saved by Household / Getting started) → minutes; null if unset. */
-export function parseWorkHours(hours: string | undefined | null) {
-  // Also accepts "11:30 AM – 5 PM" / "9am-5pm" typed on the Household page.
+export function parseWorkHours(hours: string | undefined | null): WorkHours | null {
+  // Also accepts "11:30 AM – 5 PM" / "9am-5pm" / "11 PM – 7 AM" typed on the Household page.
   const times = clockMatches(hours ?? "");
   if (!times.length) return null;
   const start = times[0]!;
-  const stop = times.length > 1 ? times[1]! : null;
-  // Overnight or zero-length hours: keep the start, ignore the stop.
-  return { start, stop: stop != null && stop > start ? stop : null };
+  const raw = times.length > 1 ? times[1]! : null;
+  // Same start and stop: treat as no stop. Stop earlier than start: overnight shift.
+  if (raw == null || raw === start) return { start, stop: null, overnight: false };
+  if (raw < start) return { start, stop: raw + DAY, overnight: true };
+  return { start, stop: raw, overnight: false };
+}
+
+/**
+ * A clock time on the work day's own timeline (minutes after the start day's
+ * midnight). For overnight hours, times before the start belong to the next
+ * morning (01:30 → 1530); otherwise it is just the clock minutes.
+ */
+export function workMinutes(hhmm: string, hours: string | undefined | null): number | null {
+  const m = toMinutes(hhmm);
+  if (m == null) return null;
+  const wh = parseWorkHours(hours);
+  if (wh?.overnight && m < wh.start) return m + DAY;
+  return m;
+}
+
+/** Minutes from start to end, wrapping past midnight (23:00 → 00:30 = 90). Null if unreadable. */
+export function spanMinutes(start: string, end: string): number | null {
+  const a = toMinutes(start);
+  const b = toMinutes(end);
+  if (a == null || b == null) return null;
+  return b > a ? b - a : b + DAY - a;
+}
+
+/** End is earlier on the clock than start, so it falls on the next calendar day. */
+export function endsNextDay(start: string, end: string) {
+  const a = toMinutes(start);
+  const b = toMinutes(end);
+  return a != null && b != null && b < a;
 }
 
 /**
@@ -67,7 +113,8 @@ export function blockDefaults(
   const wh = parseWorkHours(hours);
   const dayStart = wh?.start ?? (toMinutes(FALLBACK_START) as number);
   const dayStop = wh?.stop ?? null;
-  const prev = prevEnd ? toMinutes(prevEnd) : null;
+  // Previous block's end on the work day's timeline (past midnight for night shifts).
+  const prev = prevEnd ? workMinutes(prevEnd, hours) : null;
   let start =
     index > 0 && prev != null
       ? prev + GAP_MINUTES
@@ -82,19 +129,78 @@ export function blockDefaults(
       end = dayStop;
     }
   }
-  if (end > 23 * 60 + 59) end = 23 * 60 + 59;
   return { start: toClock(start), end: toClock(end) };
 }
 
-/** End for a given start: start + 90 min, kept inside the work day. */
+/**
+ * End for a given start: start + 90 min, kept inside the work day. May be
+ * after midnight (23:00 → "00:30"); use endsNextDay() to label it.
+ */
 export function endForStart(start: string, hours: string | undefined | null) {
-  const s = toMinutes(start);
+  const s = workMinutes(start, hours);
   if (s == null) return "";
   const stop = parseWorkHours(hours)?.stop ?? null;
   let end = s + BLOCK_MINUTES;
   if (stop != null && s < stop && end > stop) end = stop;
-  if (end > 23 * 60 + 59) return "";
   return toClock(end);
+}
+
+/** "00:30" after a "23:00" start → "12:30 AM (next day)"; otherwise clock12. */
+export function endLabel(start: string, end: string) {
+  return endsNextDay(start, end) ? `${clock12(end)} (next day)` : clock12(end);
+}
+
+/**
+ * Picker choices in `step`-minute steps on the work day's timeline:
+ * starts from the work start up to the last slot before the stop; ends from
+ * just after the start up to the stop (past midnight for night shifts).
+ * No work hours → 6 AM–10 PM, ends up to 4 h after the start.
+ */
+export function blockTimeOptions(
+  hours: string | undefined | null,
+  kind: "start" | "end",
+  start?: string,
+  step = 15,
+): string[] {
+  const wh = parseWorkHours(hours);
+  const lo = wh?.start ?? 6 * 60;
+  const hi = wh?.stop ?? Math.max(22 * 60, lo + 8 * 60);
+  const out: string[] = [];
+  if (kind === "start") {
+    for (let m = Math.ceil(lo / step) * step; m <= hi; m += step) out.push(toClock(m));
+    return out;
+  }
+  const s = start ? workMinutes(start, hours) : null;
+  const from = s != null ? s + step : lo + step;
+  // A start at (or after) the stop still gets a normal 90-minute choice.
+  const to = s != null && s >= hi ? s + BLOCK_MINUTES : hi;
+  for (let m = Math.ceil(from / step) * step; m <= to; m += step) out.push(toClock(m));
+  return out;
+}
+
+/**
+ * Which calendar day a moment belongs to as a WORK DAY. Daytime hours: the
+ * calendar date. Overnight hours (e.g. 11 PM–7 AM): the small hours belong to
+ * the shift that started the evening before, until halfway between the stop
+ * and the next start (7 AM–11 PM → until 3 PM). So Mon 11 PM – Tue 7 AM is
+ * Monday's work day.
+ */
+export function workdayKey(now: Date, hours: string | undefined | null) {
+  const wh = parseWorkHours(hours);
+  const key = (d: Date) => {
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  };
+  if (!wh?.overnight || wh.stop == null) return key(now);
+  const stopClock = wh.stop - DAY;
+  const cutoff = stopClock + (wh.start - stopClock) / 2;
+  const mins = now.getHours() * 60 + now.getMinutes();
+  if (mins < cutoff) {
+    const prev = new Date(now);
+    prev.setDate(prev.getDate() - 1);
+    return key(prev);
+  }
+  return key(now);
 }
 
 /** "10:00" → "10:00", "09:30" → "9:30" — short label for placeholders. */
@@ -141,7 +247,7 @@ export function normalizeWorkDays(days: readonly number[] | undefined | null): n
   return valid.length ? valid.sort((a, b) => a - b) : [...DEFAULT_WORK_DAYS];
 }
 
-function weekdayOf(dateKey: string) {
+export function weekdayOf(dateKey: string) {
   const [y, m, d] = dateKey.split("-").map(Number);
   return new Date(y ?? 1970, (m ?? 1) - 1, d ?? 1).getDay();
 }
@@ -175,4 +281,57 @@ export function nextWorkdayFrom(
 ) {
   const next = nextWorkday(dateKey, workDays);
   return next > today ? next : today;
+}
+
+/* ---------- Starter week dates ---------- */
+
+/**
+ * Dates (YYYY-MM-DD) of starter Days 1–7. Day 1 is the start date (the day
+ * they began, even if it is not a picked work day); Days 2–7 fall on the next
+ * picked work days (Mon–Fri if none picked), skipping days off. Dates are work
+ * days, so for a night shift they are the days each shift starts.
+ */
+export function starterDayDates(start: string, workDays?: readonly number[] | null): string[] {
+  const out = [start];
+  while (out.length < 7) out.push(nextWorkday(out[out.length - 1]!, workDays));
+  return out;
+}
+
+/** Date of starter day `day` (1–7). */
+export function starterDayDate(start: string, day: number, workDays?: readonly number[] | null) {
+  return starterDayDates(start, workDays)[Math.min(7, Math.max(1, day)) - 1]!;
+}
+
+/** Starter day 1–7 that falls on `date`, or null. */
+export function starterDayOn(start: string | null, date: string, workDays?: readonly number[] | null) {
+  if (!start) return null;
+  const i = starterDayDates(start, workDays).indexOf(date);
+  return i >= 0 ? i + 1 : null;
+}
+
+/* ---------- AM/PM display ---------- */
+
+const SIMPLE_RANGE = /^\s*(\d{1,2}:\d{2})\s*[–—-]\s*(\d{1,2}:\d{2})\s*$/;
+
+/**
+ * Show times with AM/PM: "23:00–07:00" → "11:00 PM–7:00 AM (next day)";
+ * other text keeps its words, with each bare 24-hour time given AM/PM
+ * ("9:00–12:00 and 13:30–16:00" → "9:00 AM–12:00 PM and 1:30 PM–4:00 PM").
+ * Times that already say AM/PM are left alone.
+ */
+export function withAmPm(text: string | undefined | null): string {
+  const raw = text ?? "";
+  const simple = SIMPLE_RANGE.exec(raw);
+  if (simple) {
+    const [a, b] = [simple[1]!, simple[2]!];
+    if (toMinutes(a) != null && toMinutes(b) != null) return `${clock12(a)}–${endLabel(a, b)}`;
+  }
+  return raw.replace(/\b(\d{1,2}):(\d{2})\b(?!\s*[ap]\.?\s?m\b)/gi, (m) =>
+    toMinutes(m) != null ? clock12(m) : m,
+  );
+}
+
+/** Saved work hours in AM/PM form ("11:00 PM–7:00 AM"), as Getting started stores them. */
+export function workHoursText(start: string, stop: string) {
+  return `${clock12(start)}–${clock12(stop)}`;
 }

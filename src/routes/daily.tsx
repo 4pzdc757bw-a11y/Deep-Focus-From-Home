@@ -3,7 +3,8 @@ import { ArrowLeft, SkipForward } from "lucide-react";
 import { nextDateAfterClose } from "@/lib/close-day";
 import { DailyOs } from "@/components/daily-os";
 import { PageTitle } from "@/components/app-shell";
-import { isDateKey, prettyDate, todayKey } from "@/lib/utils";
+import { isDateKey, prettyDate } from "@/lib/utils";
+import { useWorkdayKey } from "@/lib/workday";
 
 export const Route = createFileRoute("/daily")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -14,8 +15,9 @@ export const Route = createFileRoute("/daily")({
 
 function DailyPage() {
   const { date: searchDate } = Route.useSearch();
-  const date = searchDate ?? todayKey();
-  const isToday = date === todayKey();
+  const workday = useWorkdayKey();
+  const date = searchDate ?? workday;
+  const isToday = date === workday;
   const navigate = useNavigate();
 
   /** Day off: open the next work day without marking anything done. */

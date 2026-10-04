@@ -11,10 +11,10 @@ export type UnlockByEmailResult =
   | { ok: false; error: string };
 
 export const UNLOCK_FALLBACK_MESSAGE =
-  "Something went wrong. Try again, or email jeffrey@jeffsebiz.com with your Stripe receipt.";
+  "Something went wrong. Try again, or email support@jeffsebiz.com with the receipt email you got when you paid.";
 
 export const NO_PURCHASE_MESSAGE =
-  "No purchase found for that email. Use the email you entered at checkout, or email jeffrey@jeffsebiz.com with your Stripe receipt.";
+  "No purchase found for that email. Use the email you paid with, or email support@jeffsebiz.com with the receipt email you got when you paid.";
 
 function messageOf(value: unknown): string {
   if (typeof value === "string") return value.trim();

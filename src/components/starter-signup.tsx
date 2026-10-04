@@ -1,4 +1,5 @@
 import { type FormEvent, useEffect, useId, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/app-shell";
 import { saveLeadEmail } from "@/lib/offer";
@@ -149,6 +150,7 @@ export function StarterSignupForm({
           {status === "sending" ? "Sending…" : buttonLabel}
         </Button>
       </div>
+      <SignupConsentLine />
       {status === "error" && error ? (
         <p role="alert" aria-live="assertive"
           className="rounded-md border border-gold bg-paper px-3 py-2 text-sm font-semibold text-ink">
@@ -156,6 +158,24 @@ export function StarterSignupForm({
         </p>
       ) : null}
     </form>
+  );
+}
+
+/**
+ * Vera-approved signup disclosure, shown with every sign-up form. No
+ * pre-ticked boxes: submitting the form is the opt-in, and Kit's double
+ * opt-in email confirms it.
+ */
+export function SignupConsentLine({ className }: { className?: string }) {
+  return (
+    <p className={cn("text-sm text-muted", className)}>
+      One short email a day for 7 days, then occasional updates and offers from
+      Jeffsebiz. Unsubscribe anytime. See our{" "}
+      <Link to="/privacy" className="font-semibold text-olive underline underline-offset-4">
+        Privacy Policy
+      </Link>
+      .
+    </p>
   );
 }
 
@@ -183,9 +203,6 @@ export function StarterSignupCard({ title, className }: { title: string; classNa
       </p>
       <p className="font-display text-xl text-olive">{title}</p>
       <StarterSignupForm />
-      <p className="text-sm text-muted">
-        One short email a day for a week. Leave anytime. No webinar.
-      </p>
     </Card>
   );
 }

@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { Moon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { FridayReviewSheet } from "@/components/friday-review-sheet";
@@ -8,7 +8,14 @@ import { Button } from "@/components/ui/button";
 import { closeDay } from "@/lib/close-day";
 import { useFocusStore } from "@/lib/store";
 import { printDaily, printedRecently } from "@/lib/print";
-import { cn, isFriday, todayKey } from "@/lib/utils";
+import { cn, isDateKey, isFriday } from "@/lib/utils";
+import { currentWorkdayKey } from "@/lib/workday";
+
+/** Friday review follows the work day: a Friday-night shift closes on Saturday morning. */
+function dayIsFriday(date: string) {
+  const [y, m, d] = date.split("-").map(Number);
+  return isFriday(new Date(y ?? 1970, (m ?? 1) - 1, d ?? 1));
+}
 
 type Phase =
   | "idle"
@@ -33,6 +40,14 @@ export function CloseDayButton({
 }) {
   const navigate = useNavigate();
   const starterStart = useFocusStore((s) => s.starterStart);
+  // Close the day being viewed (/daily?date=Wed closes Wednesday), else today's work day.
+  const viewedDate = useRouterState({
+    select: (s) =>
+      s.location.pathname === "/daily"
+        ? ((s.location.search as { date?: unknown }).date as string | undefined)
+        : undefined,
+  });
+  const closingDate = () => (isDateKey(viewedDate) ? viewedDate : currentWorkdayKey());
   const [phase, setPhase] = useState<Phase>("idle");
   const [next, setNext] = useState<{ closedDate: string; nextDate: string } | null>(
     null,
@@ -41,8 +56,8 @@ export function CloseDayButton({
   const [alreadySaved, setAlreadySaved] = useState(false);
 
   function startClose() {
-    setAlreadySaved(printedRecently(todayKey()));
-    if (isFriday()) {
+    setAlreadySaved(printedRecently(closingDate()));
+    if (dayIsFriday(closingDate())) {
       setPhase("week-plan");
       return;
     }
@@ -58,7 +73,7 @@ export function CloseDayButton({
   }
 
   function runClose() {
-    const closedDate = todayKey();
+    const closedDate = closingDate();
     const result = closeDay(closedDate);
     setNext({ closedDate, nextDate: result.nextDate });
     if (printedRecently(closedDate)) {
@@ -72,14 +87,14 @@ export function CloseDayButton({
 
   /** Close, then print again even though it was saved recently. */
   function runCloseAndSaveAgain() {
-    const closedDate = todayKey();
+    const closedDate = closingDate();
     const result = closeDay(closedDate);
     savePdfThenAdvance({ closedDate, nextDate: result.nextDate });
   }
 
   function savePdfThenAdvance(target = next) {
     setPhase("idle");
-    const closedDate = target?.closedDate ?? todayKey();
+    const closedDate = target?.closedDate ?? closingDate();
     const nextDate = target?.nextDate;
     // Land on the closed day's Daily OS so it is what prints, then offer Save as PDF.
     void navigate({ to: "/daily", search: { date: closedDate } }).then(() => {
@@ -141,11 +156,11 @@ export function CloseDayButton({
       )}
 
       {phase === "week-plan" ? (
-        <WeeklyPlannerSheet onDone={afterWeekPlan} />
+        <WeeklyPlannerSheet onDone={afterWeekPlan} date={closingDate()} />
       ) : null}
 
       {phase === "friday-review" ? (
-        <FridayReviewSheet onDone={afterFridayReview} />
+        <FridayReviewSheet onDone={afterFridayReview} date={closingDate()} />
       ) : null}
 
       {phase === "confirm" ? (

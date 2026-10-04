@@ -1,7 +1,12 @@
+import { UnlockDeviceForm } from "@/components/lock-screen";
+import { HandbookCheckoutLink } from "@/components/handbook-checkout-link";
 import { LegalFooter } from "@/components/legal-footer";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, BookOpen } from "lucide-react";
 import { DailyOs } from "@/components/daily-os";
+import { useWorkdayKey } from "@/lib/workday";
+import { latestClosedDate, nextDateForward } from "@/lib/close-day";
+import { starterDayDate } from "@/lib/work-hours";
 import { useHasAccess, useUnlockedProduct } from "@/components/lock-screen";
 import { HandbookFirstCard, HandbookUnlockedCard } from "@/components/home-offer";
 import { StarterSignupCard } from "@/components/starter-signup";
@@ -15,11 +20,9 @@ import { HomeFocusSetupSheet } from "@/components/home-focus-setup-sheet";
 import { GettingStartedSheet } from "@/components/getting-started-sheet";
 import { useFocusStore } from "@/lib/store";
 import {
-  addDaysKey,
   cn,
   forceHomeFocusSetupPrompt,
   isWeekTwo,
-  todayKey,
   weekdayLong,
 } from "@/lib/utils";
 import { useEffect, useState } from "react";
@@ -39,6 +42,7 @@ function Home() {
   const tourOpen = useFocusStore((s) => s.tourOpen);
   const setTourOpen = useFocusStore((s) => s.setTourOpen);
   const [tourClosed, setTourClosed] = useState(false);
+  const [showUnlock, setShowUnlock] = useState(false);
   const nextDay = STARTER_DAYS.find((d) => !starterDone.includes(d.day));
   const returning = hydrated && Boolean(starterStart);
   // Visitors without the app always get the welcome (the free starter week can
@@ -47,7 +51,18 @@ function Home() {
   // Before the store hydrates, render the welcome (CSS hides it for returning
   // browsers) or a same-size placeholder, so the Daily OS below does not jump.
   const preHydration = !hydrated;
-  const nextDate = starterStart && nextDay ? addDaysKey(starterStart, nextDay.day - 1) : todayKey();
+  const workday = useWorkdayKey();
+  const workDays = useFocusStore((s) => s.household?.workDays);
+  const dailies = useFocusStore((s) => s.dailies);
+  // Never point backward: once today (or a later day) is closed, the next work day after it.
+  const latestClosed = latestClosedDate(dailies);
+  const forward =
+    latestClosed && latestClosed >= workday
+      ? nextDateForward(latestClosed, workday, workDays, latestClosed)
+      : workday;
+  const starterDate =
+    starterStart && nextDay ? starterDayDate(starterStart, nextDay.day, workDays) : null;
+  const nextDate = starterDate && starterDate > forward ? starterDate : forward;
   const peak = peakFrom(energy);
   const [now, setNow] = useState(() => Date.now());
   const [showHomeFocus, setShowHomeFocus] = useState(false);
@@ -64,9 +79,9 @@ function Home() {
     }
     const force = forceHomeFocusSetupPrompt();
     const due =
-      force || (isWeekTwo(starterStart) && !homeFocusWeekTwoPrompted);
+      force || (isWeekTwo(starterStart, workday, workDays) && !homeFocusWeekTwoPrompted);
     setShowHomeFocus(due);
-  }, [hydrated, starterStart, homeFocusWeekTwoPrompted, homeFocusDismissed, appUnlocked]);
+  }, [hydrated, starterStart, homeFocusWeekTwoPrompted, homeFocusDismissed, appUnlocked, workday, workDays]);
 
   useEffect(() => {
     if (!session.running || !session.endsAt) return;
@@ -150,6 +165,23 @@ function Home() {
             }
           />
 
+          {/* Visitors (e.g. from the Facebook Page button) land here: offers one tap away. */}
+          {!appUnlocked && !handbookBuyer ? (
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              <Button size="lg" asChild>
+                <HandbookCheckoutLink>
+                  Get the handbook, {PRICE_LABEL} <ArrowRight className="size-4" />
+                </HandbookCheckoutLink>
+              </Button>
+              <Link
+                to="/start"
+                className="inline-flex min-h-11 items-center text-sm font-semibold text-olive underline underline-offset-4"
+              >
+                Or try the free 7-day starter
+              </Link>
+            </div>
+          ) : null}
+
           <div className="overflow-hidden rounded-lg border border-yellow">
             <img
               src="/images/cover.jpg"
@@ -162,7 +194,7 @@ function Home() {
           <Card>
             <p className="text-ink">
               {appUnlocked
-                ? "Five quick setup steps, a 7-day starter, and answers to the usual questions — kids, missed days, the phone, where your notes live."
+                ? "Four quick setup steps, a 7-day starter, and answers to the usual questions — kids, missed days, the phone, where your notes live."
                 : "Seven short chapters, one action each, and answers to the usual questions — kids, missed days, the phone, where your notes live."}
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
@@ -179,17 +211,27 @@ function Home() {
                 <Button asChild>
                   <Link to="/guide">Read the handbook</Link>
                 </Button>
-              ) : (
-                <Button asChild>
-                  <Link to="/buy">Get the handbook ({PRICE_LABEL})</Link>
-                </Button>
-              )}
+              ) : null}
               <Button variant="outline" asChild>
                 <Link to="/intro" preload="intent">
                   How this works + FAQ <ArrowRight className="size-4" />
                 </Link>
               </Button>
+              {!appUnlocked && !handbookBuyer ? (
+                <Button
+                  variant="outline"
+                  aria-expanded={showUnlock}
+                  onClick={() => setShowUnlock((v) => !v)}
+                >
+                  Already bought? Get your copy
+                </Button>
+              ) : null}
             </div>
+            {showUnlock && !appUnlocked && !handbookBuyer ? (
+              <div className="mt-4 border-t border-yellow pt-4">
+                <UnlockDeviceForm />
+              </div>
+            ) : null}
           </Card>
 
           {appUnlocked ? (

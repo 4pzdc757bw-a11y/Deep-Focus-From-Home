@@ -2,9 +2,9 @@ import { Link } from "@tanstack/react-router";
 import { BookOpen, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Card } from "@/components/app-shell";
-import { UnlockDeviceForm, useAppPitchAllowed } from "@/components/lock-screen";
+import { useAppPitchAllowed } from "@/components/lock-screen";
 import { Button } from "@/components/ui/button";
-import { APP_PRICE_LABEL, PRICE_LABEL } from "@/lib/offer";
+import { APP_ACCESS_LINE, APP_PRICE_LABEL, PRICE_LABEL } from "@/lib/offer";
 
 /** Home for visitors who have not bought anything: lead with the handbook. */
 export function HandbookFirstCard() {
@@ -20,17 +20,11 @@ export function HandbookFirstCard() {
         PDF, {PRICE_LABEL}, pay once.
       </p>
       <div className="flex flex-col gap-2 sm:flex-row">
-        <Button asChild>
-          <Link to="/buy">Get the handbook ({PRICE_LABEL})</Link>
-        </Button>
         <Button variant="outline" asChild>
           <Link to="/guide/$slug" params={{ slug: "intro" }}>
             <BookOpen className="size-4" /> Read Chapter 1 free
           </Link>
         </Button>
-      </div>
-      <div className="border-t border-yellow pt-4">
-        <UnlockDeviceForm />
       </div>
     </Card>
   );
@@ -83,8 +77,8 @@ export function HandbookUnlockedCard() {
         <div className="flex items-start gap-2 rounded-md border border-yellow bg-paper p-3 text-sm text-ink">
           <p className="flex-1">
             Optional add-on: the Deep Focus app is a daily planner, focus bell, energy log and
-            weekly planner in your browser. {APP_PRICE_LABEL}, pay once.{" "}
-            <Link to="/buy" className="font-semibold text-olive underline underline-offset-4">
+            weekly planner in your browser, nothing to install. {APP_PRICE_LABEL}. {APP_ACCESS_LINE}{" "}
+            <Link to="/app" className="font-semibold text-olive underline underline-offset-4">
               Have a look
             </Link>
           </p>

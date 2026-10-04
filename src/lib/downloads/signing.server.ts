@@ -89,7 +89,7 @@ export function verifySignedDownloadParams(input: {
   const now = input.nowSeconds ?? Math.floor(Date.now() / 1000);
   if (exp < now) {
     throw new DownloadAuthError(
-      "This download link has expired. Refresh the thanks page or email jeffrey@jeffsebiz.com with your Stripe receipt.",
+      "This download link has expired. Refresh the thanks page or email support@jeffsebiz.com with the receipt email you got when you paid.",
     );
   }
 
