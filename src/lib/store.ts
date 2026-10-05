@@ -120,6 +120,9 @@ type FocusState = {
   starterStart: string | null;
   starterDone: number[];
   starterNotes: Record<number, string>;
+  /** Starter write-in boxes: day -> field id -> text (see STARTER_WRITE_INS). */
+  starterWriteIns: Record<number, Record<string, string>>;
+  setStarterWriteIn: (day: number, field: string, value: string) => void;
   startStarter: () => void;
   /** Move week one to start on `date` (YYYY-MM-DD). */
   setStarterStart: (date: string) => void;
@@ -304,6 +307,23 @@ function migrateDaily(raw: Record<string, unknown>, hours?: string): DailyEntry 
   };
 }
 
+/** Keep only { day: { field: string } } from saved or imported data; anything else is dropped. */
+export function readStarterWriteIns(raw: unknown): Record<number, Record<string, string>> {
+  const out: Record<number, Record<string, string>> = {};
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return out;
+  for (const [day, fields] of Object.entries(raw as Record<string, unknown>)) {
+    const n = Number(day);
+    if (!Number.isInteger(n) || n < 1 || n > 7) continue;
+    if (!fields || typeof fields !== "object" || Array.isArray(fields)) continue;
+    const clean: Record<string, string> = {};
+    for (const [k, v] of Object.entries(fields as Record<string, unknown>)) {
+      if (typeof v === "string") clean[k] = v;
+    }
+    out[n] = clean;
+  }
+  return out;
+}
+
 export const useFocusStore = create<FocusState>()(
   persist(
     (set) => ({
@@ -312,6 +332,7 @@ export const useFocusStore = create<FocusState>()(
       starterStart: null,
       starterDone: [],
       starterNotes: {},
+      starterWriteIns: {},
       startStarter: () =>
         set((s) => ({ starterStart: s.starterStart ?? workdayKey(new Date(), s.household?.hours) })),
       setStarterStart: (date) =>
@@ -324,6 +345,11 @@ export const useFocusStore = create<FocusState>()(
         })),
       setStarterNote: (day, note) =>
         set((s) => ({ starterNotes: { ...s.starterNotes, [day]: note } })),
+      setStarterWriteIn: (day, field, value) =>
+        set((s) => {
+          const all = readStarterWriteIns(s.starterWriteIns);
+          return { starterWriteIns: { ...all, [day]: { ...all[day], [field]: value } } };
+        }),
       dailies: {},
       patchDaily: (date, patch) =>
         set((s) => {
@@ -404,7 +430,7 @@ export const useFocusStore = create<FocusState>()(
     {
       name: "deep-focus-from-home",
       skipHydration: true,
-      version: 3,
+      version: 4,
       storage: createJSONStorage(() => {
         if (typeof window === "undefined") {
           return {
@@ -449,6 +475,8 @@ export const useFocusStore = create<FocusState>()(
         return {
           ...state,
           dailies,
+          // v4: starter write-in boxes. Older saves have none; keep only well-formed text.
+          starterWriteIns: readStarterWriteIns(state.starterWriteIns),
           session: {
             running: prev.running ?? false,
             slotIndex: prev.slotIndex ?? 0,

@@ -88,6 +88,115 @@ export const STARTER_DAYS = [
   },
 ] as const;
 
+/** The free fillable 7-day pack (same file the site and the Kit emails link to). */
+export const STARTER_PDF = "/downloads/7-day-starter-pack.pdf";
+
+/** Plain-words note at the top of the starter (page and PDF): where each day's steps get done. */
+export const STARTER_HOW_IT_WORKS = [
+  "Each day has one job. Do the steps in your real workday, not on this page.",
+  "Anything a step asks you to write goes in the boxes under that day (saved in this browser on this device) or on the printed PDF.",
+  "Calendar steps go on whatever calendar you already use: phone, Google or paper.",
+] as const;
+
+export type StarterWriteIn = {
+  id: string;
+  label: string;
+  /** "time" shows a time picker and "long" a taller box on the page; the PDF prints blank lines. */
+  kind?: "text" | "time" | "long";
+  placeholder?: string;
+};
+
+/**
+ * Write-in boxes under each starter day, only where a step asks the reader to
+ * write or choose something. Same labels on /starter and in the PDF.
+ */
+export const STARTER_WRITE_INS: Record<
+  number,
+  { fields: StarterWriteIn[]; note?: string }
+> = {
+  1: {
+    fields: [
+      {
+        id: "surface",
+        label: "My work surface",
+        placeholder: "e.g. the desk in the spare room",
+      },
+    ],
+  },
+  2: {
+    fields: [
+      {
+        id: "coreHours",
+        label: "My core hours",
+        placeholder: "e.g. 9:00–12:00",
+      },
+      {
+        id: "signal",
+        label: "My signal",
+        placeholder: "e.g. door closed, headphones on",
+      },
+      {
+        id: "emergency",
+        label: "What counts as an emergency",
+        placeholder: "e.g. someone is hurt or the school calls",
+      },
+      {
+        id: "choresRule",
+        label: "My chores rule",
+        placeholder: "e.g. chores wait for a break",
+      },
+    ],
+  },
+  3: {
+    fields: [
+      { id: "outcomes", label: "Today’s 1–3 outcomes", kind: "long" },
+      {
+        id: "checkWindows",
+        label: "My two message-check windows",
+        placeholder: "e.g. 11:30 and 3:00",
+      },
+    ],
+  },
+  4: {
+    fields: [
+      {
+        id: "morningStart",
+        label: "My morning start (5–7 minutes)",
+        kind: "long",
+      },
+      { id: "shutdown", label: "My shutdown (5 minutes)", kind: "long" },
+    ],
+  },
+  5: {
+    fields: [
+      { id: "block1Start", label: "Block 1 start", kind: "time" },
+      { id: "block1End", label: "Block 1 end", kind: "time" },
+      { id: "block2Start", label: "Block 2 start", kind: "time" },
+      { id: "block2End", label: "Block 2 end", kind: "time" },
+    ],
+    note: "Also put these on your calendar.",
+  },
+  6: {
+    fields: [
+      { id: "partner", label: "My accountability partner’s name" },
+      {
+        id: "coworking",
+        label: "My coworking session time",
+        placeholder: "e.g. Thursday 10:00, video call with Sam",
+      },
+    ],
+  },
+  7: {
+    fields: [
+      {
+        id: "peakWindow",
+        label: "My strongest two-hour window",
+        placeholder: "e.g. 9:00–11:00",
+      },
+    ],
+  },
+};
+
 export const CHAPTERS = [
   {
     slug: "intro",

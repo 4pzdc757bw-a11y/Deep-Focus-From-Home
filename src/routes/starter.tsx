@@ -6,8 +6,8 @@ import { useHasAccess } from "@/components/lock-screen";
 import { Card, PageTitle } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { CheckRow } from "@/components/ui/checkbox";
-import { Textarea } from "@/components/ui/input";
-import { STARTER_DAYS } from "@/lib/content";
+import { Input, Textarea } from "@/components/ui/input";
+import { STARTER_DAYS, STARTER_HOW_IT_WORKS, STARTER_PDF, STARTER_WRITE_INS } from "@/lib/content";
 import { useFocusStore } from "@/lib/store";
 import { StarterSignupCard } from "@/components/starter-signup";
 import { prettyDate, todayKey } from "@/lib/utils";
@@ -20,6 +20,8 @@ function StarterPage() {
   const notes = useFocusStore((s) => s.starterNotes);
   const toggle = useFocusStore((s) => s.toggleStarterDay);
   const setNote = useFocusStore((s) => s.setStarterNote);
+  const writeIns = useFocusStore((s) => s.starterWriteIns);
+  const setWriteIn = useFocusStore((s) => s.setStarterWriteIn);
   const start = useFocusStore((s) => s.startStarter);
   const setStart = useFocusStore((s) => s.setStarterStart);
   const started = useFocusStore((s) => s.starterStart);
@@ -42,16 +44,29 @@ function StarterPage() {
         }
       />
       {appUnlocked ? null : (
-        <p className="-mt-3 text-sm text-muted">
-          Prefer paper?{" "}
-          <a
-            href="/downloads/7-day-starter-pack.pdf"
-            download
-            className="inline-flex items-center gap-1 font-semibold text-olive underline underline-offset-4"
-          >
-            <Download className="size-4" /> Download the 7-day pack (PDF)
-          </a>
-        </p>
+        <Card className="flex flex-col gap-3 border-2 border-olive">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
+            First step
+          </p>
+          <Button asChild size="lg" className="h-auto min-h-12 w-full py-3 text-base sm:w-auto sm:self-start">
+            <a href={STARTER_PDF} download>
+              <Download className="size-5 shrink-0" /> Download your fillable 7-day pack (PDF)
+            </a>
+          </Button>
+          <p className="text-ink">Or fill it in right here on this page, day by day.</p>
+        </Card>
+      )}
+      {appUnlocked ? null : (
+        <Card className="flex flex-col gap-2 border-l-4 border-l-olive">
+          <h2 className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
+            How this week works
+          </h2>
+          {STARTER_HOW_IT_WORKS.map((line) => (
+            <p key={line} className="text-ink">
+              {line}
+            </p>
+          ))}
+        </Card>
       )}
       {appUnlocked ? null : <StarterSignupCard title="Get each day by email, too." />}
       {!started ? (
@@ -76,6 +91,14 @@ function StarterPage() {
                 </li>
               ))}
             </ul>
+            <StarterWriteIns
+              day={d.day}
+              values={writeIns?.[d.day] ?? {}}
+              onChange={(field, value) => {
+                if (!started) start();
+                setWriteIn(d.day, field, value);
+              }}
+            />
             {appUnlocked ? (
               <Button variant="outline" asChild>
                 <Link
@@ -107,6 +130,66 @@ function StarterPage() {
       })}
       <LegalFooter className="mt-8" />
     </div>
+  );
+}
+
+/** Labeled boxes for the steps that ask you to write or choose something. Saved in this browser. */
+function StarterWriteIns({
+  day,
+  values,
+  onChange,
+}: {
+  day: number;
+  values: Record<string, string>;
+  onChange: (field: string, value: string) => void;
+}) {
+  const spec = STARTER_WRITE_INS[day];
+  if (!spec || spec.fields.length === 0) return null;
+  const grid = spec.fields.every((f) => f.kind === "time");
+  return (
+    <fieldset className="flex flex-col gap-3 rounded-md border border-yellow bg-paper/60 p-3">
+      <legend className="px-1 text-xs font-semibold uppercase tracking-[0.14em] text-olive">
+        Write it here
+      </legend>
+      <div className={grid ? "grid grid-cols-2 gap-3" : "flex flex-col gap-3"}>
+        {spec.fields.map((f) => {
+          const id = `starter-${day}-${f.id}`;
+          const value = values[f.id] ?? "";
+          return (
+            <div key={f.id} className="flex flex-col gap-1.5">
+              <label
+                htmlFor={id}
+                className="text-xs font-semibold uppercase tracking-[0.14em] text-gold"
+              >
+                {f.label}
+              </label>
+              {f.kind === "long" ? (
+                <Textarea
+                  id={id}
+                  className="min-h-20"
+                  placeholder={f.placeholder}
+                  value={value}
+                  onChange={(e) => onChange(f.id, e.target.value)}
+                />
+              ) : (
+                <Input
+                  id={id}
+                  type={f.kind === "time" ? "time" : "text"}
+                  placeholder={f.placeholder}
+                  value={value}
+                  onChange={(e) => onChange(f.id, e.target.value)}
+                />
+              )}
+            </div>
+          );
+        })}
+      </div>
+      {spec.note ? (
+        <p className="flex items-center gap-1.5 text-sm font-semibold text-olive">
+          <CalendarDays className="size-4 shrink-0" aria-hidden="true" /> {spec.note}
+        </p>
+      ) : null}
+    </fieldset>
   );
 }
 
