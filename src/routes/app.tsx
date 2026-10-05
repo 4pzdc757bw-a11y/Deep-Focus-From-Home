@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Card } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { LegalFooter } from "@/components/legal-footer";
+import { PreviewAppButton } from "@/components/app-preview-button";
 import {
   APP_ACCESS_LINE,
   APP_PRICE_LABEL,
@@ -80,6 +81,7 @@ function AppOfferPage() {
         </div>
         <p className="text-3xl font-display text-olive">{APP_PRICE_LABEL}</p>
         <p className="text-sm text-muted">{APP_ACCESS_LINE}</p>
+        <PreviewAppButton />
         {appCheckout ? (
           <Button variant="outline" asChild>
             <a href={appCheckout} rel="noopener noreferrer">

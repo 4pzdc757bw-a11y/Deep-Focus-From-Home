@@ -1,4 +1,5 @@
 import { getRouteApi, Link, useRouter, useRouterState } from "@tanstack/react-router";
+import { PreviewAppButton } from "@/components/app-preview-button";
 import { AppCheckoutLink, HandbookCheckoutLink } from "@/components/handbook-checkout-link";
 import { ArrowLeft, Lock } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
@@ -218,6 +219,7 @@ export function LockScreen({
               <Button variant="outline" asChild>
                 <AppCheckoutLink>Add the app ({APP_PRICE_LABEL})</AppCheckoutLink>
               </Button>
+              <PreviewAppButton variant="outline" />
             </>
           ) : (
             <>
