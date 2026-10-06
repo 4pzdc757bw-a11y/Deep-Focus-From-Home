@@ -64,7 +64,7 @@ export async function readPaidDownloadFile(
   } catch (err) {
     console.error("[downloads] Failed to read private file:", diskPath, err);
     throw new DownloadConfigError(
-      "Paid download file is missing on the server. Contact support@jeffsebiz.com with your receipt.",
+      "Paid download file is missing on the server. Contact support@deepfocusfromhome.com with your receipt.",
     );
   }
 }

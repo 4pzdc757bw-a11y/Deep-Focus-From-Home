@@ -158,7 +158,7 @@ function TermsPage() {
         We do not offer automatic cash refunds on digital downloads or digital
         access. Delivery problems and duplicate charges are always fixed (see
         below). If something else went wrong with your order, email
-        support@jeffsebiz.com and explain the problem. We review each of those
+        support@deepfocusfromhome.com and explain the problem. We review each of those
         requests case by case and may offer store credit, replace or fix a
         file, or in rare cases a refund. When we grant store credit, it equals the
         purchase price you paid (unless we say otherwise in writing), can be used toward any
@@ -214,7 +214,7 @@ function TermsPage() {
       </p>
 
       <h2>15. Contact</h2>
-      <p>Questions about these Terms: support@jeffsebiz.com</p>
+      <p>Questions about these Terms: support@deepfocusfromhome.com</p>
     </LegalDoc>
   );
 }
