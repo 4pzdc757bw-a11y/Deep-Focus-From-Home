@@ -17,7 +17,7 @@ export const Route = createFileRoute("/terms")({
       {
         name: "description",
         content:
-          "Terms of Service / Terms of Sale for jeffsebiz.com digital products from JEFFSEBIZ LLC.",
+          "Terms of Service / Terms of Sale for digital products from JEFFSEBIZ LLC on deepfocusfromhome.com, jeffsebiz.com, and our other product sites from JEFFSEBIZ LLC.",
       },
     ],
   }),
@@ -28,7 +28,7 @@ function TermsPage() {
   return (
     <LegalDoc kicker="Legal" title="Terms of Service / Terms of Sale">
       <p>
-        These Terms cover your use of jeffsebiz.com and purchases of digital
+        These Terms cover your use of deepfocusfromhome.com, jeffsebiz.com, and our other product sites, and purchases of digital
         products from JEFFSEBIZ LLC (“we,” “us,” “Jeffsebiz”), including Deep
         Focus from Home and related offers. By buying or using our products, you
         agree to these Terms.
@@ -42,7 +42,7 @@ function TermsPage() {
 
       <h2>2. What we sell</h2>
       <p>
-        We sell digital products through jeffsebiz.com. That may include
+        We sell digital products through deepfocusfromhome.com, jeffsebiz.com, and our other product sites. That may include
         handbooks and other PDFs, fillable worksheets, web apps and related
         tools, email newsletters people opt into, and other digital downloads we
         offer from time to time.
@@ -95,9 +95,7 @@ function TermsPage() {
         the app, not for the life of the buyer. The app runs on our website, so
         it isn’t available while the site is down for maintenance or outages,
         and it depends on third-party hosting. We work to keep it running but
-        don’t guarantee uninterrupted access. Your entries are saved in your own
-        browser, so clearing browser data or switching devices may remove them,
-        and we can’t recover them. {DISCONTINUE_NOTICE}
+        don’t guarantee uninterrupted access. Your entries are saved in your own browser, so clearing browser data, using a private or incognito window, or switching devices may remove them, and we can’t recover them. {DISCONTINUE_NOTICE}
       </p>
       <p>
         Use the export or print option to keep your own copy of your entries.
