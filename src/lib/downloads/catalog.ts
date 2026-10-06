@@ -52,4 +52,4 @@ export function isDownloadFileKey(raw: unknown): raw is DownloadFileKey {
 }
 
 /** Support contact when checkout session id is missing. */
-export const DOWNLOAD_SUPPORT_EMAIL = "support@jeffsebiz.com";
+export const DOWNLOAD_SUPPORT_EMAIL = "support@deepfocusfromhome.com";

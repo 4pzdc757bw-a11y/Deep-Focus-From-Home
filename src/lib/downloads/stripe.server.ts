@@ -57,7 +57,7 @@ export async function assertPaidCheckoutSession(
   const id = sessionId.trim();
   if (!id || !id.startsWith("cs_")) {
     throw new DownloadAuthError(
-      "Missing or invalid Stripe checkout session id. Open the link from your payment confirmation, or email support@jeffsebiz.com with your receipt.",
+      "Missing or invalid Stripe checkout session id. Open the link from your payment confirmation, or email support@deepfocusfromhome.com with your receipt.",
     );
   }
 
@@ -69,7 +69,7 @@ export async function assertPaidCheckoutSession(
       err instanceof Error ? err.message : "Stripe session lookup failed.";
     console.error("[downloads] Stripe session retrieve failed:", message);
     throw new DownloadAuthError(
-      "We could not confirm this payment. Double-check the link from checkout, or email support@jeffsebiz.com with your receipt.",
+      "We could not confirm this payment. Double-check the link from checkout, or email support@deepfocusfromhome.com with your receipt.",
     );
   }
 
