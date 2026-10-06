@@ -59,8 +59,9 @@ function TermsPage() {
         before that sale goes live.
       </p>
       <p>
-        We currently don’t sell to customers in the European Union or the
-        United Kingdom.
+        We currently don’t sell to customers in the European Union, the United
+        Kingdom, Norway, Iceland, Liechtenstein, Switzerland, or the Isle of
+        Man.
       </p>
 
       <h2>3. Deep Focus from Home app</h2>
