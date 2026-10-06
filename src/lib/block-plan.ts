@@ -191,6 +191,55 @@ export function defaultDayTimes(
   return out;
 }
 
+/**
+ * A new day's times from that weekday's own week plan: the planned blocks in
+ * time order. Days with no plan get the 4 default blocks. A planned day with
+ * fewer than 4 blocks gets more after its last one only while they fit in the
+ * work hours (at least an hour before the stop), so a day planned to the end
+ * (9–11:30 + a 1–5 PM Zoom) stays as planned.
+ */
+export function planDayTimes(
+  planned: readonly { start: string; end: string }[],
+  hours: string | undefined | null,
+): { start: string; end: string }[] {
+  if (!planned.length) return defaultDayTimes(DEFAULT_DAY_BLOCKS, hours);
+  const out = planned
+    .slice(0, MAX_DAY_BLOCKS)
+    .map((p) => withLength({ start: p.start, end: p.end || p.start }));
+  const stop = parseWorkHours(hours)?.stop ?? null;
+  while (out.length < DEFAULT_DAY_BLOCKS) {
+    const next = nextBlockTimes(out[out.length - 1], out.length, hours, null);
+    if (stop != null) {
+      const at = workMinutes(next.start, hours);
+      if (at == null || at + MIN_FIT_MINUTES > stop) break;
+    }
+    out.push(next);
+  }
+  return out;
+}
+
+/**
+ * Times for a block added after `prev` with a given length (Move to
+ * tomorrow keeps the block's length): 15 min after `prev` ends, on the
+ * quarter hour; the work-day start when there is no block before it.
+ */
+export function addedBlockTimes(
+  prev: { start: string; end: string } | undefined,
+  index: number,
+  minutes: number,
+  hours: string | undefined | null,
+): { start: string; end: string } {
+  const base = prev?.end ? nextBlockTimes(prev, index, hours, null) : withLength(blockDefaults(0, hours));
+  const a = toMinutes(base.start) ?? 0;
+  return { start: base.start, end: toClock(a + minutes) };
+}
+
+/** Slots with block `index` taken out (later ones move up, an empty one at the end). */
+export function withoutSlot<T>(slots: readonly T[], index: number, empty: () => T): T[] {
+  if (index < 0 || index >= slots.length) return [...slots];
+  return [...slots.slice(0, index), ...slots.slice(index + 1), empty()];
+}
+
 type CountSlot = { start: string; end: string; task?: string; outcome?: string };
 
 function hasContent(slot: CountSlot | null | undefined) {

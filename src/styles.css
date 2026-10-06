@@ -324,6 +324,11 @@ html[data-df-starter] .df-pre-welcome {
     line-height: 1.15 !important;
   }
 
+  /* Length is a screen control; paper shows Starts / Ends (+ duration) */
+  .daily-os .daily-times {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
   /* Block times print as text ("10:45 AM"), boxed like the inputs */
   .daily-os .daily-time-text {
     display: flex !important;

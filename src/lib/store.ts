@@ -1,15 +1,19 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { isDateKey, monthKey, weekKey } from "./utils";
-import { endForStart, endsNextDay, workdayKey } from "./work-hours";
+import { endForStart, endsNextDay, nextWorkdayFrom, workdayKey } from "./work-hours";
 import { planSlotsFor } from "./week-blocks";
 import {
   DAY_BLOCKS_LAYOUT,
   MAX_DAY_BLOCKS,
+  addedBlockTimes,
   dayBlockCount,
   defaultDayTimes,
   fillBlankTimes,
+  planDayTimes,
+  withoutSlot,
 } from "./block-plan";
+import { blockLength } from "./week-blocks";
 import type { BlockPrepId, DailyCheckId, ShutdownStepId } from "./content";
 
 export type BlockPrep = Record<BlockPrepId, boolean>;
@@ -118,7 +122,12 @@ export type HouseholdState = {
 
 export type WeekState = {
   theme: string;
-  blocks: [string, string, string, string];
+  /**
+   * The week's planned blocks, one line each: "Tue 1:00 PM–3:00 PM · Zoom
+   * with corporate". Every line names its own day, so each weekday is set up
+   * on its own (up to 8 a day). Older saves have 4 lines ("" when unused).
+   */
+  blocks: string[];
   coworking: string;
   fridayNote: string;
 };
@@ -145,6 +154,13 @@ type FocusState = {
   dailies: Record<string, DailyEntry>;
   patchDaily: (date: string, patch: Partial<DailyEntry>) => void;
   patchSlot: (date: string, index: number, patch: Partial<DailySlot>) => void;
+  /** Take a not-started block off a day (later blocks move up). */
+  removeSlot: (date: string, index: number) => void;
+  /**
+   * Move a not-started block's task (same length) to the next work day as an
+   * added block; if that day already has 8, add it to its Other things note.
+   */
+  moveSlotToNextDay: (date: string, index: number) => MoveResult | null;
   session: SessionState;
   setSession: (patch: Partial<SessionState>) => void;
   energy: EnergyRow[];
@@ -155,6 +171,12 @@ type FocusState = {
   /** True after Save/Skip on the week-two Home focus setup prompt (once). */
   homeFocusWeekTwoPrompted: boolean;
   markHomeFocusWeekTwoPrompted: () => void;
+  /**
+   * True once the "Make these blocks match your real day" box on the Daily OS
+   * is hidden, or the user has changed their blocks on the Week page.
+   */
+  blockSetupDone: boolean;
+  markBlockSetupDone: () => void;
   /** True after the first-open walkthrough is finished or skipped. */
   tourDone: boolean;
   setTourDone: (v: boolean) => void;
@@ -169,6 +191,8 @@ type FocusState = {
   patchMonth: (key: string, patch: Partial<MonthState>) => void;
 };
 
+export type MoveResult = { to: string; how: "added" | "noted"; task: string };
+
 export const emptySlot = (start = "", end = ""): DailySlot => ({
   start,
   end,
@@ -177,19 +201,19 @@ export const emptySlot = (start = "", end = ""): DailySlot => ({
 });
 
 /**
- * New day: 4 blocks (more if the week plan has more for that weekday), with
- * times filled in: the week plan's blocks first (times and tasks), else
- * Block 1 at the start of the work day (9:00 AM if unset); the rest follow
- * 15 min after the block before.
+ * New day: that weekday's own blocks from the week plan (times and tasks;
+ * more added after them while the work day has room, up to 4), else 4
+ * default blocks: Block 1 at the start of the work day (9:00 AM if unset),
+ * the rest 15 min after the block before.
  */
 const emptyDaily = (
   hours?: string,
   date?: string,
   weeks?: Record<string, { blocks: readonly string[] } | undefined>,
 ): DailyEntry => {
-  const plan = date && weeks ? planSlotsFor(date, weeks) : [];
-  const count = dayBlockCount([], plan.length, true);
-  const times = defaultDayTimes(count, hours, plan);
+  const plan = date && weeks ? planSlotsFor(date, weeks, hours) : [];
+  const times = planDayTimes(plan, hours);
+  const count = times.length;
   const slots = Array.from({ length: MAX_DAY_BLOCKS }, (_, i) => {
     const t = times[i];
     return t ? { ...emptySlot(t.start, t.end), task: plan[i]?.task ?? "" } : emptySlot();
@@ -232,7 +256,7 @@ const emptyHousehold = (): HouseholdState => ({
 
 const emptyWeek = (): WeekState => ({
   theme: "",
-  blocks: ["", "", "", ""],
+  blocks: [],
   coworking: "",
   fridayNote: "",
 });
@@ -333,6 +357,34 @@ function finishDaily(
   };
 }
 
+/** Nothing typed, ticked or rung on this day: safe to rebuild from the week plan. */
+function isUntouchedDaily(entry: DailyEntry) {
+  const slotsClean = entry.slots.every(
+    (sl) =>
+      !sl.task.trim() &&
+      !sl.outcome.trim() &&
+      !sl.started &&
+      !sl.edited &&
+      !(sl.prep && Object.values(sl.prep).some(Boolean)),
+  );
+  return (
+    slotsClean &&
+    !entry.note.trim() &&
+    !entry.partnerNote.trim() &&
+    !entry.otherNote.trim() &&
+    !Object.values(entry.checks).some(Boolean) &&
+    !Object.values(entry.shutdownSteps).some(Boolean)
+  );
+}
+
+function addDaysTo(dateKey: string, days: number) {
+  const [y, m, d] = dateKey.split("-").map(Number);
+  const date = new Date(y ?? 1970, (m ?? 1) - 1, d ?? 1);
+  date.setDate(date.getDate() + days);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
 /** The saved day in the current shape (8 slots, 1–8 visible), or a new day. */
 function currentDaily(s: Pick<FocusState, "dailies" | "household" | "weeks">, date: string) {
   const raw = s.dailies[date];
@@ -369,6 +421,53 @@ export const useFocusStore = create<FocusState>()(
           const cur = currentDaily(s, date);
           return { dailies: { ...s.dailies, [date]: { ...cur, ...patch } } };
         }),
+      removeSlot: (date, index) =>
+        set((s) => {
+          const cur = currentDaily(s, date);
+          const slot = cur.slots[index];
+          if (!slot || slot.started || cur.slotCount <= 1 || index >= cur.slotCount) return {};
+          if (s.session.date === date && (s.session.running || s.session.phase === "live") && s.session.slotIndex === index) return {};
+          const slots = withoutSlot(cur.slots, index, emptySlot);
+          // The bell's block number follows its block up the page.
+          const session =
+            s.session.date === date && s.session.slotIndex > index
+              ? { ...s.session, slotIndex: s.session.slotIndex - 1 }
+              : s.session;
+          return {
+            dailies: { ...s.dailies, [date]: { ...cur, slots, slotCount: cur.slotCount - 1 } },
+            session,
+          };
+        }),
+      moveSlotToNextDay: (date, index) => {
+        const s = useFocusStore.getState();
+        const cur = currentDaily(s, date);
+        const slot = cur.slots[index];
+        const task = slot?.task.trim() ?? "";
+        if (!slot || slot.started || !task || index >= cur.slotCount) return null;
+        const hours = s.household?.hours;
+        const to = nextWorkdayFrom(date, workdayKey(new Date(), hours), s.household?.workDays);
+        const target = currentDaily(s, to);
+        let how: MoveResult["how"];
+        let next: DailyEntry;
+        if (target.slotCount < MAX_DAY_BLOCKS) {
+          const i = target.slotCount;
+          const times = addedBlockTimes(target.slots[i - 1], i, blockLength(slot), hours);
+          const slots = [...target.slots];
+          slots[i] = { ...emptySlot(times.start, times.end), task, outcome: slot.outcome, prep: emptyPrep() };
+          next = { ...target, slots, slotCount: i + 1 };
+          how = "added";
+        } else {
+          const line = `Moved from ${date}: ${task}`;
+          const otherNote = target.otherNote.trim() ? `${target.otherNote.trimEnd()}\n${line}` : line;
+          next = { ...target, otherNote };
+          how = "noted";
+        }
+        set((st) => ({ dailies: { ...st.dailies, [to]: next } }));
+        // Then take it off this day (or clear it if it is the only block).
+        if (cur.slotCount > 1) useFocusStore.getState().removeSlot(date, index);
+        else useFocusStore.getState().patchSlot(date, index, { task: "", outcome: "" });
+        return { to, how, task };
+      },
       patchSlot: (date, index, patch) =>
         set((s) => {
           if (index < 0 || index >= MAX_DAY_BLOCKS) return {};
@@ -398,6 +497,8 @@ export const useFocusStore = create<FocusState>()(
       setSetup: (patch) => set((s) => ({ setup: { ...s.setup, ...patch } })),
       homeFocusWeekTwoPrompted: false,
       markHomeFocusWeekTwoPrompted: () => set({ homeFocusWeekTwoPrompted: true }),
+      blockSetupDone: false,
+      markBlockSetupDone: () => set({ blockSetupDone: true }),
       tourDone: false,
       setTourDone: (v) => set({ tourDone: v }),
       tourOpen: false,
@@ -442,7 +543,25 @@ export const useFocusStore = create<FocusState>()(
       patchWeek: (key, patch) =>
         set((s) => {
           const cur = s.weeks[key] ?? emptyWeek();
-          return { weeks: { ...s.weeks, [key]: { ...cur, ...patch } } };
+          const weeks = { ...s.weeks, [key]: { ...cur, ...patch } };
+          if (!patch.blocks) return { weeks };
+          // Days of this week (today on) that were opened but not touched yet
+          // follow the new plan for their own weekday. Anything typed, ticked
+          // or rung is left alone.
+          const hours = s.household?.hours;
+          const today = workdayKey(new Date(), hours);
+          let dailies = s.dailies;
+          for (let i = 0; i < 7; i++) {
+            const date = addDaysTo(key, i);
+            const saved = s.dailies[date];
+            if (!saved || date < today) continue;
+            if (s.session.date === date && (s.session.running || s.session.phase !== "idle")) continue;
+            const entry = migrateDaily(saved as unknown as Record<string, unknown>, hours);
+            if (!isUntouchedDaily(entry)) continue;
+            if (dailies === s.dailies) dailies = { ...s.dailies };
+            dailies[date] = emptyDaily(hours, date, weeks);
+          }
+          return { weeks, dailies };
         }),
       months: {},
       patchMonth: (key, patch) =>

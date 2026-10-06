@@ -132,3 +132,99 @@ describe("late open with 4 blocks", () => {
     ]);
   });
 });
+
+describe("each weekday has its own plan on /week", () => {
+  it("setting Tuesday never touches Monday (no auto copy)", async () => {
+    const { setDayBlocks, dayBlocks } = await import("./week-blocks.ts");
+    const mon = setDayBlocks([], 1, [
+      { start: "09:00", end: "10:30", task: "Client reports" },
+      { start: "10:45", end: "11:30", task: "Email" },
+    ]);
+    const week = setDayBlocks(mon, 2, [
+      { start: "09:00", end: "11:30", task: "Project build" }, // 2.5 h
+      { start: "13:00", end: "15:00", task: "Zoom with corporate" }, // 2 h
+    ]);
+    assert.deepEqual(dayBlocks(week, 1).map((x) => x.block.task), ["Client reports", "Email"]);
+    assert.deepEqual(
+      dayBlocks(week, 2).map((x) => [x.block.start, x.block.end, x.block.task]),
+      [["09:00", "11:30", "Project build"], ["13:00", "15:00", "Zoom with corporate"]],
+    );
+    assert.equal(dayBlocks(week, 3).length, 0);
+  });
+  it("weekend days and up to 8 blocks a day", async () => {
+    const { setDayBlocks, dayBlocks } = await import("./week-blocks.ts");
+    const ten = Array.from({ length: 10 }, (_, i) => ({ start: `${String(8 + i).padStart(2, "0")}:00`, end: `${String(8 + i).padStart(2, "0")}:45`, task: "" }));
+    const week = setDayBlocks([], 6, ten);
+    assert.equal(dayBlocks(week, 6).length, 8);
+  });
+  it("lengths from 15 min to 4 h; any start, across midnight too", async () => {
+    const { BLOCK_LENGTHS, blockLength, endAfter } = await import("./week-blocks.ts");
+    assert.equal(BLOCK_LENGTHS[0], 15);
+    assert.equal(BLOCK_LENGTHS.at(-1), 240);
+    assert.ok(BLOCK_LENGTHS.includes(45) && BLOCK_LENGTHS.includes(150) && BLOCK_LENGTHS.includes(180));
+    assert.equal(endAfter("09:00", 150), "11:30");
+    assert.equal(endAfter("23:00", 180), "02:00");
+    assert.equal(blockLength({ start: "23:00", end: "02:00" }), 180);
+    assert.equal(blockLength({ start: "09:00", end: "09:45" }), 45);
+  });
+  it("Copy this day to… only copies when asked, and only to the days picked", async () => {
+    const { setDayBlocks, copyDayBlocks, dayBlocks } = await import("./week-blocks.ts");
+    let week = setDayBlocks([], 1, [{ start: "09:00", end: "10:30", task: "Reports" }]);
+    week = setDayBlocks(week, 2, [{ start: "13:00", end: "15:00", task: "Zoom" }]);
+    const copied = copyDayBlocks(week, 1, [3, 4]);
+    assert.deepEqual(dayBlocks(copied, 3).map((x) => x.block.task), ["Reports"]);
+    assert.deepEqual(dayBlocks(copied, 4).map((x) => x.block.task), ["Reports"]);
+    assert.deepEqual(dayBlocks(copied, 2).map((x) => x.block.task), ["Zoom"]);
+  });
+  it("free-text lines from older plans are kept", async () => {
+    const { setDayBlocks } = await import("./week-blocks.ts");
+    const out = setDayBlocks(["hardest task", "", "Mon 9:00 AM–10:30 AM"], 1, []);
+    assert.deepEqual(out, ["hardest task"]);
+  });
+});
+
+describe("a day's page starts from its own plan", () => {
+  const weeks = {
+    "2026-10-05": {
+      blocks: [
+        "Mon 9:00 AM–10:30 AM · Client reports",
+        "Tue 1:00 PM–3:00 PM · Zoom with corporate",
+        "Tue 9:00 AM–11:30 AM · Project build",
+      ],
+    },
+  };
+  it("Tuesday gets Tuesday's blocks in time order", () => {
+    assert.deepEqual(planSlotsFor("2026-10-06", weeks, "9am-5pm"), [
+      { start: "09:00", end: "11:30", task: "Project build" },
+      { start: "13:00", end: "15:00", task: "Zoom with corporate" },
+    ]);
+  });
+  it("a planned day only gets more blocks while the work day has room", async () => {
+    const { planDayTimes } = await import("./block-plan.ts");
+    // Tue: 9–11:30 and 1–3 → room for 3:15–4:45 only (5:00 + 1 h is past the 5 PM stop).
+    assert.deepEqual(pairs(planDayTimes(planSlotsFor("2026-10-06", weeks, "9am-5pm"), "9am-5pm")), [
+      ["09:00", "11:30"], ["13:00", "15:00"], ["15:15", "16:45"],
+    ]);
+    // Planned to the end of the day → exactly as planned.
+    assert.deepEqual(pairs(planDayTimes([{ start: "09:00", end: "11:30" }, { start: "13:00", end: "17:00" }], "9am-5pm")), [
+      ["09:00", "11:30"], ["13:00", "17:00"],
+    ]);
+    // Monday (1 block at 9) fills to 4 inside 9–5.
+    assert.equal(planDayTimes(planSlotsFor("2026-10-05", weeks, "9am-5pm"), "9am-5pm").length, 4);
+    // Wednesday has no plan → the 4 standard blocks.
+    assert.deepEqual(planDayTimes(planSlotsFor("2026-10-07", weeks, "9am-5pm"), "9am-5pm"), defaultDayTimes(4, "9am-5pm"));
+  });
+});
+
+describe("changing the day on the fly", () => {
+  it("removing a block moves the later ones up and keeps 8 slots", async () => {
+    const { withoutSlot } = await import("./block-plan.ts");
+    const out = withoutSlot(["a", "b", "c", "d", "", "", "", ""], 1, () => "");
+    assert.deepEqual(out, ["a", "c", "d", "", "", "", "", ""]);
+  });
+  it("Move to tomorrow: added after the last block, same length", async () => {
+    const { addedBlockTimes } = await import("./block-plan.ts");
+    assert.deepEqual(addedBlockTimes({ start: "14:15", end: "15:45" }, 4, 45, "9am-5pm"), { start: "16:00", end: "16:45" });
+    assert.deepEqual(addedBlockTimes(undefined, 0, 150, "9am-5pm"), { start: "09:00", end: "11:30" });
+  });
+});

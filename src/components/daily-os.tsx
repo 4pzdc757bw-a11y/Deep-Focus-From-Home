@@ -1,4 +1,14 @@
-import { Bell, BellRing, Check, Plus } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import {
+  ArrowRight,
+  Bell,
+  BellRing,
+  CalendarRange,
+  Check,
+  Plus,
+  Trash2,
+  X,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Card } from "@/components/app-shell";
 import { CloseDayButton } from "@/components/close-day-button";
@@ -26,6 +36,7 @@ import {
 import { installPrintTextareaFit, printDaily, setActivePrintDate } from "@/lib/print";
 import { blockDefaults, clock12, endForStart, endsNextDay } from "@/lib/work-hours";
 import { useWorkdayKey } from "@/lib/workday";
+import { BLOCK_LENGTHS, blockLength, endAfter } from "@/lib/week-blocks";
 import {
   beginSession,
   completeSession,
@@ -34,10 +45,28 @@ import {
 } from "@/lib/session-runtime";
 import { partnerMessage } from "@/lib/backup";
 import { shareOrCopy } from "@/lib/share";
-import { emptyPrep, emptySlot, migrateDaily, useDaily, useFocusStore } from "@/lib/store";
+import {
+  emptySlot,
+  emptyPrep,
+  migrateDaily,
+  useDaily,
+  useFocusStore,
+  type MoveResult,
+} from "@/lib/store";
 import { cn, prettyDate } from "@/lib/utils";
 
 const blockLabel = (i: number) => `Block ${i + 1}`;
+
+/** 45 → "45 min", 90 → "1 h 30 min", 120 → "2 h". */
+function lengthLabel(minutes: number) {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (!h) return `${m} min`;
+  return m ? `${h} h ${m} min` : `${h} h`;
+}
+
+const lengthSelectClass =
+  "h-11 w-full rounded-md border border-yellow bg-paper px-2 text-base text-ink outline-none focus:border-gold focus:ring-2 focus:ring-gold/30 disabled:opacity-70";
 
 function TimeField({
   label,
@@ -116,6 +145,46 @@ function NoteField({
   );
 }
 
+/**
+ * Top of the Daily OS until hidden or the week's blocks are set: a nudge to
+ * make the default blocks match how their day really runs.
+ */
+function BlockSetupPrompt() {
+  const hydrated = useFocusStore((s) => s.hydrated);
+  const done = useFocusStore((s) => s.blockSetupDone);
+  const markDone = useFocusStore((s) => s.markBlockSetupDone);
+  if (!hydrated || done) return null;
+  return (
+    <section
+      aria-label="Set up your blocks"
+      className="daily-setup-prompt no-print relative flex flex-col gap-3 rounded-lg border-2 border-olive/40 bg-paper p-4 pr-11 sm:flex-row sm:items-center"
+    >
+      <p className="text-pretty text-ink sm:flex-1">
+        <span className="font-semibold text-olive">
+          Make these blocks match your real day.
+        </span>{" "}
+        Set up each day on the Week page the way it really runs: block times,
+        lengths, meetings. Every day can be different.
+      </p>
+      <Link
+        to="/week"
+        className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-md bg-olive px-4 text-sm font-semibold text-cream hover:bg-olive/90"
+      >
+        <CalendarRange className="size-4" />
+        Set up my week
+      </Link>
+      <button
+        type="button"
+        onClick={markDone}
+        aria-label="Hide this tip"
+        className="absolute right-2 top-2 grid size-9 place-items-center rounded-md text-muted hover:bg-cream hover:text-olive"
+      >
+        <X className="size-4" />
+      </button>
+    </section>
+  );
+}
+
 function StatusLine({
   done,
   label,
@@ -159,6 +228,18 @@ export function DailyOs({ date }: { date?: string }) {
   const [now, setNow] = useState(() => Date.now());
   const [ringing, setRinging] = useState(false);
   const [shareState, setShareState] = useState("");
+  const [moved, setMoved] = useState<MoveResult | null>(null);
+  const movedRef = useRef<HTMLParagraphElement>(null);
+  // The note sits under the blocks; bring it into view so the move is seen.
+  useEffect(() => {
+    if (moved)
+      movedRef.current?.scrollIntoView?.({
+        behavior: "smooth",
+        block: "nearest",
+      });
+  }, [moved]);
+  const removeSlot = useFocusStore((s) => s.removeSlot);
+  const moveSlotToNextDay = useFocusStore((s) => s.moveSlotToNextDay);
   const [energyPrompt, setEnergyPrompt] = useState<EnergyCheckInContext | null>(
     null,
   );
@@ -273,19 +354,24 @@ export function DailyOs({ date }: { date?: string }) {
     patch({ slotCount: visible + 1 });
   }
 
-  function removeLast() {
+  /** Any block that has not started can go (later blocks move up); one always stays. */
+  function removeAt(index: number) {
     if (visible <= MIN_DAY_BLOCKS) return;
-    const index = visible - 1;
     const slot = entry.slots[index];
+    if (!slot || slot.started) return;
     if (
-      (slot?.task.trim() || slot?.outcome.trim()) &&
+      (slot.task.trim() || slot.outcome.trim()) &&
       !window.confirm(`Remove ${blockLabel(index)} and what you wrote in it?`)
     ) {
       return;
     }
-    // Clear everything, flags included, so a block added back later starts fresh.
-    patchSlot(index, { ...emptySlot(), prep: emptyPrep(), started: false, edited: false, auto: false });
-    patch({ slotCount: visible - 1 });
+    setMoved(null);
+    removeSlot(osDate, index);
+  }
+
+  /** Carry a not-started block's task (same length) to the next work day. */
+  function moveToNextDay(index: number) {
+    setMoved(moveSlotToNextDay(osDate, index));
   }
 
   return (
@@ -293,6 +379,8 @@ export function DailyOs({ date }: { date?: string }) {
       className={cn("daily-os flex flex-col gap-5", visible > 3 && "daily-os-compact")}
       data-blocks={visible}
     >
+      <BlockSetupPrompt />
+
       <div className="daily-print-header hidden print:block">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-olive">
           Deep Focus from Home · Daily OS
@@ -302,8 +390,14 @@ export function DailyOs({ date }: { date?: string }) {
 
       {entry.slots.slice(0, visible).map((slot, i) => {
         const active = activeHere && session.slotIndex === i;
-        // Only the last block can go, never Block 1, a running block or one that rang.
-        const removable = i > 0 && i === visible - 1 && !active && !slot.started;
+        // Blocks that have not started can be changed, moved or removed;
+        // a running block or one whose bell rang stays as it is.
+        const locked = active || Boolean(slot.started);
+        const length = slot.start && slot.end ? blockLength(slot) : 0;
+        const lengths =
+          length && !BLOCK_LENGTHS.includes(length)
+            ? [...BLOCK_LENGTHS, length].sort((a, b) => a - b)
+            : BLOCK_LENGTHS;
         const doneHere =
           session.phase === "done" && session.date === osDate && session.slotIndex === i;
         const dur =
@@ -331,32 +425,61 @@ export function DailyOs({ date }: { date?: string }) {
                     {dur ? `${doneHere ? " · " : ""}${dur}` : null}
                   </span>
                 ) : null}
-                {removable ? (
-                  <button
-                    type="button"
-                    className="no-print min-h-8 text-sm font-semibold text-gold underline-offset-2 hover:underline"
-                    aria-label={`Remove ${blockLabel(i)}`}
-                    onClick={removeLast}
-                  >
-                    Remove
-                  </button>
-                ) : null}
               </div>
             </div>
-            <div className="daily-times grid grid-cols-2 gap-3">
+            <div className="daily-times grid grid-cols-3 gap-3">
               <TimeField
                 label="Starts"
                 value={slot.start}
                 fallback={defaults.start}
-                onChange={(start) => patchSlot(i, { start, edited: true })}
-                readOnly={active}
+                // A new start keeps the block's length (Block 2 ran over → push Block 3).
+                onChange={(start) =>
+                  patchSlot(i, {
+                    start,
+                    ...(slot.start && slot.end && start
+                      ? { end: endAfter(start, blockLength(slot)) }
+                      : {}),
+                    edited: true,
+                  })
+                }
+                readOnly={locked}
               />
+              <div className="daily-length-field print:hidden">
+                <Field label="Length">
+                  {locked ? (
+                    // Running or rung: show what it really is, not a picker.
+                    <span className="daily-length-locked flex h-11 items-center px-1 text-base text-ink">
+                      {dur || "—"}
+                    </span>
+                  ) : (
+                    <select
+                      className={cn("daily-length", lengthSelectClass)}
+                      aria-label={`${blockLabel(i)} length`}
+                      value={length || ""}
+                      disabled={!slot.start}
+                      onChange={(e) =>
+                        patchSlot(i, {
+                          end: endAfter(slot.start, Number(e.target.value)),
+                          edited: true,
+                        })
+                      }
+                    >
+                      {length ? null : <option value="">—</option>}
+                      {lengths.map((m) => (
+                        <option key={m} value={m}>
+                          {lengthLabel(m)}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </Field>
+              </div>
               <TimeField
                 label={slot.start && slot.end && endsNextDay(slot.start, slot.end) ? "Ends (next day)" : "Ends"}
                 value={slot.end}
                 fallback={endFallback}
                 onChange={(end) => patchSlot(i, { end, edited: true })}
-                readOnly={active}
+                readOnly={locked}
               />
             </div>
             {i === 0 && !active && !doneHere && !slot.started ? (
@@ -366,7 +489,8 @@ export function DailyOs({ date }: { date?: string }) {
               </p>
             ) : null}
             {dur && (doneHere || (slot.start && slot.end && !active)) ? (
-              <p className="daily-duration text-sm text-muted print:text-ink">
+              // Paper only: on screen the Length field and the header show it.
+              <p className="daily-duration hidden text-sm text-muted print:block print:text-ink">
                 Duration: <span className="font-semibold text-olive">{dur}</span>
               </p>
             ) : null}
@@ -453,10 +577,58 @@ export function DailyOs({ date }: { date?: string }) {
                   Start · ring the bell
                 </Button>
               )}
+              {!locked && slot.task.trim() ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  aria-label={`Move ${blockLabel(i)} to tomorrow`}
+                  onClick={() => moveToNextDay(i)}
+                >
+                  <ArrowRight className="size-4" />
+                  Move to tomorrow
+                </Button>
+              ) : null}
+              {!locked && visible > MIN_DAY_BLOCKS ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  aria-label={`Remove ${blockLabel(i)}`}
+                  onClick={() => removeAt(i)}
+                >
+                  <Trash2 className="size-4" />
+                  Remove
+                </Button>
+              ) : null}
             </div>
           </Card>
         );
       })}
+
+      {moved ? (
+        <p
+          ref={movedRef}
+          role="status"
+          className="no-print rounded-md border border-olive/40 bg-paper px-4 py-3 text-sm text-ink"
+        >
+          {moved.how === "added" ? (
+            <>
+              Moved “{moved.task}” to {prettyDate(moved.to)}, same length.{" "}
+            </>
+          ) : (
+            <>
+              {prettyDate(moved.to)} already has {MAX_DAY_BLOCKS} blocks, so “
+              {moved.task}” went into its Other things I did today note.{" "}
+            </>
+          )}
+          <Link
+            to="/daily"
+            search={{ date: moved.to }}
+            className="font-semibold text-olive underline underline-offset-2"
+          >
+            Open that day
+          </Link>
+        </p>
+      ) : null}
 
       {visible < MAX_DAY_BLOCKS ? (
         <Button type="button" variant="outline" className="no-print" onClick={addBlock}>

@@ -10,6 +10,7 @@ export const Route = createFileRoute("/week")({ component: WeekPage });
 function WeekPage() {
   const { key, entry, patch } = useWeek();
   const hydrated = useFocusStore((s) => s.hydrated);
+  const markBlockSetupDone = useFocusStore((s) => s.markBlockSetupDone);
   // Nothing planned yet: show blocks from the user's own schedule (saved on first change).
   const suggested = hydrated && !hasAnyBlock(entry.blocks);
   const blocks = suggested ? suggestedWeekLines(key) : entry.blocks;
@@ -19,8 +20,13 @@ function WeekPage() {
       <PageTitle
         kicker="Weekly planner"
         title="Protect the blocks before the week starts"
-        lede={`Week of ${prettyDate(key)}. Two to four immovable sessions. One coworking appointment. Always editable here — Friday Close also opens this planner for next week.`}
+        lede={`Week of ${prettyDate(key)}. Pick a day and give it its own blocks. One coworking appointment. Always editable here — Friday Close also opens this planner for next week.`}
       />
+      <p className="week-setup-line rounded-md border border-yellow bg-paper px-4 py-3 text-ink">
+        <span className="font-semibold text-olive">Make your blocks match your real day.</span> Set
+        up each day here the way it really runs: block times, lengths, meetings. Every day can be
+        different, and each day’s page starts from its own plan.
+      </p>
       <Card className="flex flex-col gap-3">
         <Field label="This week’s outcome">
           <Input
@@ -34,7 +40,13 @@ function WeekPage() {
             Filled in from your schedule. Change anything; it saves as you go.
           </p>
         ) : null}
-        <WeekBlocksEditor blocks={blocks} onChange={(next) => patch({ blocks: next })} />
+        <WeekBlocksEditor
+          blocks={blocks}
+          onChange={(next) => {
+            patch({ blocks: next });
+            markBlockSetupDone();
+          }}
+        />
         <Field label="Body-doubling / coworking">
           <Input
             value={entry.coworking}

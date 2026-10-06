@@ -416,7 +416,7 @@ describe("new day from the week plan", () => {
     const weeks = {
       "2026-10-05": { blocks: ["Mon 11:00 PM–12:30 AM (next day) · A", "Wed 11:00 PM–12:30 AM (next day) · Reports", "Wed 1:00 AM–1:00 AM · zero", ""] },
     };
-    assert.deepEqual(planSlotsFor("2026-10-07", weeks), [
+    assert.deepEqual(planSlotsFor("2026-10-07", weeks, "11 PM - 7 AM"), [
       { start: "23:00", end: "00:30", task: "Reports" },
       { start: "01:00", end: "02:30", task: "zero" },
     ]);
