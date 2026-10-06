@@ -9,7 +9,7 @@ export const Route = createFileRoute("/privacy")({
       {
         name: "description",
         content:
-          "Privacy Policy for Deep Focus from Home and related jeffsebiz.com digital products from JEFFSEBIZ LLC.",
+          "Privacy Policy for Deep Focus from Home and related digital products from JEFFSEBIZ LLC on deepfocusfromhome.com, jeffsebiz.com, and our other product sites.",
       },
     ],
   }),
@@ -133,8 +133,7 @@ function PrivacyPage() {
         and similar entries on your own device or browser (local storage). That
         information stays on your device unless you choose to share it with us
         (for example, by emailing us). We do not pull those local notes onto our
-        servers as part of normal app use. If you clear your browser data or
-        switch devices, those entries may be lost, and we can’t recover them.
+        servers as part of normal app use. If you clear your browser data, use a private or incognito window, or switch devices, those entries may be lost, and we can’t recover them.
       </p>
 
       <h2>7. How long we keep it</h2>

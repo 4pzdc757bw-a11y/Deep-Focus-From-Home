@@ -15,7 +15,7 @@ export const Route = createFileRoute("/store-credit")({
       {
         name: "description",
         content:
-          "Store Credit and Digital Purchase Policy for jeffsebiz.com digital products from JEFFSEBIZ LLC.",
+          "Store Credit and Digital Purchase Policy for digital products from JEFFSEBIZ LLC on deepfocusfromhome.com, jeffsebiz.com, and our other product sites.",
       },
     ],
   }),
@@ -42,8 +42,7 @@ function StoreCreditPage() {
 
       <h2>What this covers</h2>
       <p>
-        This policy covers digital products sold by JEFFSEBIZ LLC on
-        jeffsebiz.com — handbooks, worksheets, web apps and related tools, and
+        This policy covers digital products sold by JEFFSEBIZ LLC on deepfocusfromhome.com, jeffsebiz.com, and our other product sites — handbooks, worksheets, web apps and related tools, and
         other digital downloads we offer from time to time. The checkout page for
         your order controls the exact product and price.
       </p>
