@@ -197,6 +197,38 @@ export const STARTER_WRITE_INS: Record<
   },
 };
 
+/**
+ * "What the full handbook adds": last box on /starter (after Day 7) and page 8
+ * of the free PDF. Every bullet is something the $17 handbook purchase really
+ * delivers (handbook PDF chapters + Fillables.zip in private/downloads/handbook).
+ * The button goes straight to the live $17 handbook Stripe Payment Link (the
+ * same VITE_STRIPE_HANDBOOK_PAYMENT_LINK /buy uses; vercel.json), with /buy as
+ * the "Or read the details first" link. "$17" must match PRICE_LABEL in offer.ts
+ * (offer.ts reads import.meta.env, so the PDF builder can't import it).
+ */
+export const STARTER_HANDBOOK_ADDS = {
+  heading: "What the full handbook adds",
+  lead: [
+    "This free pack is week one: one small job a day.",
+    "The Deep Focus from Home handbook by Jeffsebiz is the full system behind it, with much more detail and the forms already set up for you, as phone and desktop PDFs.",
+  ],
+  bullets: [
+    "All seven chapters in full, plus the introduction. Each goes deeper than its day here: lighting and posture, browser profiles, focus sprints, and what to do on a low-energy day.",
+    "Daily Focus Operating System: one page for each workday, with morning setup, up to three deep-work blocks, a note to your accountability partner and a 5-minute shutdown.",
+    "Energy & Focus Log: rate your energy and focus morning, afternoon and evening for three to five days, then name your peak window from real numbers, not memory.",
+    "Weekly Deep Work Planner and Monthly Focus Review: plan next week’s blocks on Friday, and once a month keep one or two changes and drop the rest.",
+    "Household Focus Agreement: core hours, the do-not-disturb signal and what counts as an emergency, plus a kid version to read out loud and put on the fridge.",
+    "Home Focus Setup Worksheet: your workspace, household rules, phone and app rules, and your morning and shutdown routines, written down once.",
+    "Meetings and messages: how to cluster meetings so mornings stay free, and how to check email and chat at two or three set times a day.",
+  ],
+  button: "Get the handbook, $17",
+  payNote: "Pay once. No subscription.",
+  bothOptions: "Or read the details first",
+} as const;
+
+/** One line at the end of Day 7 in the PDF, pointing at the page above. */
+export const STARTER_PDF_DAY7_MORE = "Ready for more? See page 8.";
+
 export const CHAPTERS = [
   {
     slug: "intro",

@@ -17,6 +17,11 @@ Each day starts on its own page (page 1 = title, "How this week works" and Day 1
 so any single day prints cleanly. "by Jeffsebiz" sits under the title and in
 every page footer (brand rule: keep "by Jeffsebiz" visible).
 Free-pack copy only: it never tells the reader to use the paid app.
+Page 8 is "What the full handbook adds" (STARTER_HANDBOOK_ADDS): its button
+links straight to the live $17 handbook Stripe Payment Link, read from
+vercel.json (VITE_STRIPE_HANDBOOK_PAYMENT_LINK, the same link /buy uses), and
+"Or read the details first" links to deepfocusfromhome.com/buy. Day 7 ends with
+"Ready for more? See page 8."
 """
 import json
 import os
@@ -25,7 +30,7 @@ import sys
 from pathlib import Path
 
 from reportlab.lib import colors
-from reportlab.lib.enums import TA_CENTER
+from reportlab.lib.enums import TA_CENTER, TA_LEFT
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.platypus import Flowable, KeepTogether, PageBreak, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
@@ -33,6 +38,17 @@ from xml.sax.saxutils import escape
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "public/downloads/7-day-starter-pack.pdf"
+BUY_URL = "https://deepfocusfromhome.com/buy"
+BUY_URL_LABEL = "deepfocusfromhome.com/buy"
+
+
+def handbook_checkout_url():
+    """The live $17 handbook Stripe Payment Link, from vercel.json (same env /buy uses)."""
+    env = json.loads((ROOT / "vercel.json").read_text())["env"]
+    url = env.get("VITE_STRIPE_HANDBOOK_PAYMENT_LINK", "").strip()
+    assert url.startswith("https://buy.stripe.com/"), "VITE_STRIPE_HANDBOOK_PAYMENT_LINK missing in vercel.json"
+    assert "/test_" not in url, "refusing a Stripe test-mode link in the free PDF"
+    return url
 
 HEADER_LINE = (
     "Phone rule: Plan the day first. During the deep-work block, park the phone off your desk. "
@@ -70,7 +86,10 @@ async function main() {
     fs.writeFileSync(tmp, js);
     try { m = await import(tmp); } finally { fs.unlinkSync(tmp); }
   }
-  process.stdout.write(JSON.stringify({ days: m.STARTER_DAYS, writeIns: m.STARTER_WRITE_INS }));
+  process.stdout.write(JSON.stringify({
+    days: m.STARTER_DAYS, writeIns: m.STARTER_WRITE_INS,
+    adds: m.STARTER_HANDBOOK_ADDS, day7More: m.STARTER_PDF_DAY7_MORE,
+  }));
 }
 main().catch((e) => { console.error(e); process.exit(1); });
 """
@@ -85,7 +104,8 @@ def load_content():
                          capture_output=True, text=True).stdout
     data = json.loads(out)
     assert len(data["days"]) == 7, "expected 7 starter days"
-    return data["days"], data["writeIns"]
+    assert data["adds"] and data["day7More"], "missing STARTER_HANDBOOK_ADDS in content.ts"
+    return data["days"], data["writeIns"], data["adds"], data["day7More"]
 
 
 title = ParagraphStyle("title", fontName="Helvetica-Bold", fontSize=18, leading=22,
@@ -105,6 +125,19 @@ bullet = ParagraphStyle("bullet", parent=body, leftIndent=10, bulletIndent=-5,
                         bulletColor=colors.black)
 write_head = ParagraphStyle("writehead", fontName="Helvetica-Bold", fontSize=8, leading=10,
                             textColor=OLIVE, spaceBefore=4, spaceAfter=2)
+more_note = ParagraphStyle("more", fontName="Helvetica-Bold", fontSize=10, leading=13,
+                           textColor=OLIVE, spaceBefore=10)
+adds_head = ParagraphStyle("addshead", fontName="Helvetica-Bold", fontSize=16, leading=20,
+                           textColor=OLIVE, spaceBefore=4, spaceAfter=8)
+adds_lead = ParagraphStyle("addslead", fontName="Helvetica", fontSize=11, leading=15,
+                           textColor=INK, spaceAfter=6)
+adds_bullet = ParagraphStyle("addsbullet", parent=body, fontSize=10.5, leading=14.5, spaceAfter=7,
+                             leftIndent=12, bulletIndent=0, bulletFontName="Helvetica",
+                             bulletFontSize=12, bulletColor=OLIVE)
+pay_note = ParagraphStyle("paynote", fontName="Helvetica", fontSize=9, leading=12,
+                          textColor=MUTED, alignment=TA_LEFT, spaceBefore=6)
+both_link = ParagraphStyle("bothlink", fontName="Helvetica-Bold", fontSize=10, leading=13,
+                           textColor=OLIVE, alignment=TA_LEFT, spaceBefore=4)
 cal_note = ParagraphStyle("calnote", fontName="Helvetica-Bold", fontSize=9, leading=12,
                           textColor=OLIVE, spaceBefore=2)
 
@@ -173,6 +206,54 @@ class DoneBox(Flowable):
         c.drawString(17, 4.5, "I completed today’s job.")
 
 
+class LinkButton(Flowable):
+    """Olive button with a clickable link annotation over it (works on screen; prints as a label)."""
+
+    def __init__(self, label, url, width=220, height=30):
+        super().__init__()
+        self.label, self.url = label, url
+        self.bw, self.bh = width, height
+
+    def wrap(self, availWidth, availHeight):
+        self.width, self.height = self.bw, self.bh
+        return self.width, self.height
+
+    def draw(self):
+        c = self.canv
+        c.setFillColor(OLIVE)
+        c.roundRect(0, 0, self.bw, self.bh, 5, stroke=0, fill=1)
+        c.setFillColor(colors.white)
+        c.setFont("Helvetica-Bold", 12)
+        c.drawCentredString(self.bw / 2, self.bh / 2 - 4, self.label)
+        c.linkURL(self.url, (0, 0, self.bw, self.bh), relative=1, thickness=0)
+
+
+def handbook_page(adds, checkout_url, avail):
+    """Page 8: what the $17 handbook adds beyond this pack, with the checkout link."""
+    out = [
+        Paragraph(escape(adds["heading"]), adds_head),
+        Paragraph(escape(" ".join(adds["lead"])), adds_lead),
+        Spacer(1, 4),
+    ]
+    for b in adds["bullets"]:
+        out.append(Paragraph(escape(b), adds_bullet, bulletText="•"))
+    out += [
+        Spacer(1, 10),
+        LinkButton(adds["button"], checkout_url),
+        Paragraph(escape(adds["payNote"]), pay_note),
+        Paragraph(f'<a href="{BUY_URL}" color="#3A4A32"><u>{escape(adds["bothOptions"])}: '
+                  f'{BUY_URL_LABEL}</u></a>', both_link),
+    ]
+    box = Table([[out]], colWidths=[avail])
+    box.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), BOXBG),
+        ("LINEBEFORE", (0, 0), (0, -1), 3, OLIVE),
+        ("LEFTPADDING", (0, 0), (-1, -1), 16), ("RIGHTPADDING", (0, 0), (-1, -1), 16),
+        ("TOPPADDING", (0, 0), (-1, -1), 14), ("BOTTOMPADDING", (0, 0), (-1, -1), 16),
+    ]))
+    return [box]
+
+
 def write_in_block(day, spec, avail):
     fields = spec.get("fields", [])
     if not fields:
@@ -212,7 +293,8 @@ def draw_footer(canv, doc):
 
 
 def build():
-    days, write_ins = load_content()
+    days, write_ins, adds, day7_more = load_content()
+    checkout_url = handbook_checkout_url()
     doc = SimpleDocTemplate(
         str(OUT), pagesize=letter,
         leftMargin=54, rightMargin=54, topMargin=50.4, bottomMargin=54,
@@ -253,7 +335,10 @@ def build():
         # Same prompt as the app's starter page ("One line about what you actually did…").
         part.append(WriteIn(f"day{n}_note", "One line about what you actually did", 1))
         story.append(KeepTogether(part))
-    story += [Spacer(1, 18), Paragraph(escape(FOOTER_LINE), note)]
+    story += [Spacer(1, 18), Paragraph(escape(FOOTER_LINE), note),
+              Paragraph(escape(day7_more), more_note)]
+    story.append(PageBreak())
+    story += handbook_page(adds, checkout_url, avail)
     doc.build(story, onFirstPage=draw_footer, onLaterPages=draw_footer)
     print(f"wrote {OUT}")
 

@@ -3,11 +3,18 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, CalendarDays, Download } from "lucide-react";
 import { useRef } from "react";
 import { useHasAccess } from "@/components/lock-screen";
+import { HandbookCheckoutLink } from "@/components/handbook-checkout-link";
 import { Card, PageTitle } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { CheckRow } from "@/components/ui/checkbox";
 import { Input, Textarea } from "@/components/ui/input";
-import { STARTER_DAYS, STARTER_HOW_IT_WORKS, STARTER_PDF, STARTER_WRITE_INS } from "@/lib/content";
+import {
+  STARTER_DAYS,
+  STARTER_HANDBOOK_ADDS,
+  STARTER_HOW_IT_WORKS,
+  STARTER_PDF,
+  STARTER_WRITE_INS,
+} from "@/lib/content";
 import { useFocusStore } from "@/lib/store";
 import { StarterSignupCard } from "@/components/starter-signup";
 import { prettyDate, todayKey } from "@/lib/utils";
@@ -31,6 +38,8 @@ function StarterPage() {
   const dayDates = starterDayDates(origin, workDays);
   // The starter week is the free 7-day pack. The Daily OS links are app-only.
   const appUnlocked = useHasAccess("app");
+  // Handbook (or app) buyers already have everything in the "what it adds" box.
+  const handbookUnlocked = useHasAccess("handbook");
 
   return (
     <div className="flex flex-col gap-5">
@@ -128,8 +137,52 @@ function StarterPage() {
           </Card>
         );
       })}
+      {handbookUnlocked ? null : <HandbookAddsCard />}
       <LegalFooter className="mt-8" />
     </div>
+  );
+}
+
+/**
+ * After Day 7: what the $17 handbook adds beyond the free pack (same copy as
+ * page 8 of the PDF). The button goes straight to the live handbook Stripe
+ * Payment Link, the same one /buy uses (falls back to /buy if it isn't set).
+ */
+function HandbookAddsCard() {
+  const adds = STARTER_HANDBOOK_ADDS;
+  return (
+    <Card className="flex flex-col gap-3 border-2 border-olive">
+      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
+        After week one
+      </p>
+      <h2 className="font-display text-2xl text-olive">{adds.heading}</h2>
+      {adds.lead.map((line) => (
+        <p key={line} className="text-ink">
+          {line}
+        </p>
+      ))}
+      <ul className="flex flex-col gap-1.5 text-ink">
+        {adds.bullets.map((b) => (
+          <li key={b} className="border-l-2 border-yellow pl-3">
+            {b}
+          </li>
+        ))}
+      </ul>
+      <div className="flex flex-col gap-2 sm:items-start">
+        <Button asChild size="lg" className="w-full sm:w-auto">
+          <HandbookCheckoutLink>
+            {adds.button} <ArrowRight className="size-4" />
+          </HandbookCheckoutLink>
+        </Button>
+        <p className="text-sm text-muted">{adds.payNote}</p>
+        <Link
+          to="/buy"
+          className="text-sm font-semibold text-olive underline underline-offset-4"
+        >
+          {adds.bothOptions}
+        </Link>
+      </div>
+    </Card>
   );
 }
 
