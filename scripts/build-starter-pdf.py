@@ -13,6 +13,9 @@ Needs Python 3 with reportlab, and Node. Reads content.ts with Node 22+
 --experimental-strip-types, or falls back to the repo's TypeScript compiler on
 older Node. Set NODE=/path/to/node to pick a Node.
 Keeps the original Sep 2026 look: US Letter, Helvetica, olive headings.
+Each day starts on its own page (page 1 = title, "How this week works" and Day 1)
+so any single day prints cleanly. "by Jeffsebiz" sits under the title and in
+every page footer (brand rule: keep "by Jeffsebiz" visible).
 Free-pack copy only: it never tells the reader to use the paid app.
 """
 import json
@@ -25,7 +28,7 @@ from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import ParagraphStyle
-from reportlab.platypus import Flowable, KeepTogether, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+from reportlab.platypus import Flowable, KeepTogether, PageBreak, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 from xml.sax.saxutils import escape
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -35,6 +38,8 @@ HEADER_LINE = (
     "Phone rule: Plan the day first. During the deep-work block, park the phone off your desk. "
     "Check messages between blocks."
 )
+BRAND_LINE = "by Jeffsebiz"
+PAGE_FOOTER = "Deep Focus from Home — 7-Day Starter Pack  ·  by Jeffsebiz"
 FOOTER_LINE = "Daily check (after Day 3): Phone parked for the block (off desk / out of reach)."
 # The page says "the boxes under that day (saved in this browser…)"; the PDF version of the same note.
 PDF_HOW_IT_WORKS = [
@@ -84,7 +89,9 @@ def load_content():
 
 
 title = ParagraphStyle("title", fontName="Helvetica-Bold", fontSize=18, leading=22,
-                       textColor=OLIVE, alignment=TA_CENTER, spaceAfter=8)
+                       textColor=OLIVE, alignment=TA_CENTER, spaceAfter=2)
+byline = ParagraphStyle("byline", fontName="Helvetica-Bold", fontSize=10, leading=13,
+                        textColor=GOLD, alignment=TA_CENTER, spaceAfter=8)
 note = ParagraphStyle("note", fontName="Helvetica", fontSize=9, leading=12, textColor=MUTED)
 how_head = ParagraphStyle("howhead", fontName="Helvetica-Bold", fontSize=10, leading=13,
                           textColor=OLIVE, spaceAfter=3)
@@ -191,6 +198,19 @@ def write_in_block(day, spec, avail):
     return out
 
 
+def draw_footer(canv, doc):
+    """Brand footer on every page: 'by Jeffsebiz' stays visible on any printed day."""
+    canv.saveState()
+    canv.setStrokeColor(LINE)
+    canv.setLineWidth(0.5)
+    canv.line(doc.leftMargin, 38, doc.leftMargin + doc.width, 38)
+    canv.setFont("Helvetica", 8)
+    canv.setFillColor(MUTED)
+    canv.drawString(doc.leftMargin, 27, PAGE_FOOTER)
+    canv.drawRightString(doc.leftMargin + doc.width, 27, f"Page {doc.page}")
+    canv.restoreState()
+
+
 def build():
     days, write_ins = load_content()
     doc = SimpleDocTemplate(
@@ -210,13 +230,16 @@ def build():
     ]))
     story = [
         Paragraph("Deep Focus from Home — 7-Day Starter Pack", title),
+        Paragraph(escape(BRAND_LINE), byline),
         box,
         Spacer(1, 8),
         Paragraph(escape(HEADER_LINE), note),
         Spacer(1, 6),
     ]
-    for d in days:
+    for i, d in enumerate(days):
         n = d["day"]
+        if i:
+            story.append(PageBreak())  # one day per page so each day prints on its own
         part = [
             Paragraph(f"Day {n}: {escape(d['title'])}", day_head),
             Paragraph(f"<b>Job:</b> {escape(d['job'])}", body),
@@ -231,7 +254,7 @@ def build():
         part.append(WriteIn(f"day{n}_note", "One line about what you actually did", 1))
         story.append(KeepTogether(part))
     story += [Spacer(1, 18), Paragraph(escape(FOOTER_LINE), note)]
-    doc.build(story)
+    doc.build(story, onFirstPage=draw_footer, onLaterPages=draw_footer)
     print(f"wrote {OUT}")
 
 
