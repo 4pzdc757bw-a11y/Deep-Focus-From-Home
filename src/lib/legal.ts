@@ -8,6 +8,10 @@ export const BUSINESS_ADDRESS_LINES = ["333 W Bethalto Dr, Ste C #210", "Bethalt
 export const BUSINESS_ADDRESS = BUSINESS_ADDRESS_LINES.join(", ");
 export const BUSINESS_EMAIL = "support@deepfocusfromhome.com";
 
+/** Vera-confirmed (#65): no-sale countries. Same line on /buy and Terms. */
+export const NO_SALE_COUNTRIES_LINE =
+  "We currently don’t sell to customers in the European Union, the United Kingdom, Norway, Iceland, Liechtenstein, Switzerland, or the Isle of Man.";
+
 /** Locked checkout / footer line from Store Credit policy. */
 export const STORE_CREDIT_CHECKOUT_LINE =
   "Digital products, no automatic refunds. If something’s wrong, email support@deepfocusfromhome.com. We aim to reply within 3 business days, fix delivery problems, and refund duplicate charges. Other requests are reviewed case by case.";
