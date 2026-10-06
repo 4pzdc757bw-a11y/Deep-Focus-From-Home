@@ -9,7 +9,7 @@ export const Route = createFileRoute("/privacy")({
       {
         name: "description",
         content:
-          "Privacy Policy for Deep Focus from Home and related digital products from JEFFSEBIZ LLC on deepfocusfromhome.com, jeffsebiz.com, and our other product sites from JEFFSEBIZ LLC.",
+          "Privacy Policy for Deep Focus from Home and related digital products from JEFFSEBIZ LLC on deepfocusfromhome.com, jeffsebiz.com, and our other product sites.",
       },
     ],
   }),

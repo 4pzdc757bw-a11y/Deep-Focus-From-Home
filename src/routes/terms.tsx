@@ -17,7 +17,7 @@ export const Route = createFileRoute("/terms")({
       {
         name: "description",
         content:
-          "Terms of Service / Terms of Sale for digital products from JEFFSEBIZ LLC on deepfocusfromhome.com, jeffsebiz.com, and our other product sites from JEFFSEBIZ LLC.",
+          "Terms of Service / Terms of Sale for digital products from JEFFSEBIZ LLC on deepfocusfromhome.com, jeffsebiz.com, and our other product sites.",
       },
     ],
   }),

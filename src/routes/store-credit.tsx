@@ -15,7 +15,7 @@ export const Route = createFileRoute("/store-credit")({
       {
         name: "description",
         content:
-          "Store Credit and Digital Purchase Policy for digital products from JEFFSEBIZ LLC on deepfocusfromhome.com, jeffsebiz.com, and our other product sites from JEFFSEBIZ LLC.",
+          "Store Credit and Digital Purchase Policy for digital products from JEFFSEBIZ LLC on deepfocusfromhome.com, jeffsebiz.com, and our other product sites.",
       },
     ],
   }),
