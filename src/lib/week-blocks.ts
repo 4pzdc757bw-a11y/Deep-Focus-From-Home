@@ -15,6 +15,7 @@ import {
   toClock as clock,
   weekdayOf,
 } from "./work-hours.ts";
+import { MAX_DAY_BLOCKS } from "./block-plan.ts";
 
 export type WeekBlockDraft = {
   /** 0 = Sunday … 6 = Saturday. */
@@ -152,7 +153,7 @@ export function mondayOf(dateKey: string) {
 
 /**
  * Blocks the week plan puts on work day `date` (its weekday; for a night shift
- * the shift's start day), in time order, at most 3. App-filled, so a block
+ * the shift's start day), in plan order, at most 8 (the Daily OS limit). App-filled, so a block
  * that would end when it starts gets 90 min.
  */
 export function planSlotsFor(
@@ -164,6 +165,6 @@ export function planSlotsFor(
   return lines
     .map(parseWeekBlockTimes)
     .filter((b): b is WeekBlockDraft => Boolean(b && b.day === day))
-    .slice(0, 3)
+    .slice(0, MAX_DAY_BLOCKS)
     .map((b) => ({ ...fixLength(b), task: b.task }));
 }

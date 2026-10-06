@@ -14,9 +14,17 @@ import {
   remainingLabel,
   stampClockNow,
 } from "@/lib/chime";
-import { catchUpBlocks, nextBlockTimes, startPlan, withLength } from "@/lib/block-plan";
+import {
+  MAX_DAY_BLOCKS,
+  MIN_DAY_BLOCKS,
+  catchUpBlocks,
+  clampBlockCount,
+  nextBlockTimes,
+  startPlan,
+  withLength,
+} from "@/lib/block-plan";
 import { installPrintTextareaFit, printDaily, setActivePrintDate } from "@/lib/print";
-import { blockDefaults, endForStart, endsNextDay } from "@/lib/work-hours";
+import { blockDefaults, clock12, endForStart, endsNextDay } from "@/lib/work-hours";
 import { useWorkdayKey } from "@/lib/workday";
 import {
   beginSession,
@@ -26,10 +34,10 @@ import {
 } from "@/lib/session-runtime";
 import { partnerMessage } from "@/lib/backup";
 import { shareOrCopy } from "@/lib/share";
-import { emptyPrep, emptySlot, useDaily, useFocusStore } from "@/lib/store";
+import { emptyPrep, emptySlot, migrateDaily, useDaily, useFocusStore } from "@/lib/store";
 import { cn, prettyDate } from "@/lib/utils";
 
-const SLOT_LABELS = ["Block 1", "Block 2", "Block 3"] as const;
+const blockLabel = (i: number) => `Block ${i + 1}`;
 
 function TimeField({
   label,
@@ -47,21 +55,25 @@ function TimeField({
   return (
     <Field label={label}>
       {value ? (
-        <Input
-          type="time"
-          value={value}
-          readOnly={readOnly}
-          className={readOnly ? undefined : "cursor-pointer"}
-          onClick={(e) => {
-            if (readOnly) return;
-            try {
-              e.currentTarget.showPicker?.();
-            } catch {
-              /* older browsers: native focus/typing still works */
-            }
-          }}
-          onChange={(e) => onChange(e.target.value)}
-        />
+        <>
+          {/* Paper copy: plain "10:45 AM" (a time input prints with a clock icon and gets cut off). */}
+          <span className="daily-time-text hidden">{clock12(value)}</span>
+          <Input
+            type="time"
+            value={value}
+            readOnly={readOnly}
+            className={cn("print:hidden", !readOnly && "cursor-pointer")}
+            onClick={(e) => {
+              if (readOnly) return;
+              try {
+                e.currentTarget.showPicker?.();
+              } catch {
+                /* older browsers: native focus/typing still works */
+              }
+            }}
+            onChange={(e) => onChange(e.target.value)}
+          />
+        </>
       ) : (
         <button
           type="button"
@@ -72,6 +84,34 @@ function TimeField({
           Set time
         </button>
       )}
+    </Field>
+  );
+}
+
+/**
+ * A notes box. On paper the text prints as plain wrapped text (the textarea
+ * is hidden), so it grows to fit whatever column width print gives it.
+ */
+function NoteField({
+  label,
+  value,
+  placeholder,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  placeholder: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <Field label={label}>
+      <Textarea
+        className="print:hidden"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+      />
+      <span className="daily-note-text hidden">{value}</span>
     </Field>
   );
 }
@@ -138,7 +178,7 @@ export function DailyOs({ date }: { date?: string }) {
     return () => setActivePrintDate(null);
   }, [osDate]);
 
-  const visible = Math.min(3, Math.max(1, entry.slotCount ?? 1)) as 1 | 2 | 3;
+  const visible = clampBlockCount(entry.slotCount);
   const activeHere = session.running && session.date === osDate;
 
   useEffect(() => {
@@ -160,12 +200,14 @@ export function DailyOs({ date }: { date?: string }) {
     const st = useFocusStore.getState();
     if (st.session.running && st.session.date === osDate) return;
     const fresh = st.dailies[osDate];
-    const entry = fresh ? { ...entryRef.current, slots: fresh.slots, slotCount: fresh.slotCount } : entryRef.current;
+    const entry = fresh
+      ? migrateDaily(fresh as unknown as Record<string, unknown>, st.household?.hours)
+      : entryRef.current;
     // Blocks rung before the `started` flag existed: today's last session covers them.
     const rungUpTo =
       entry.checks.block && st.session.date === osDate ? st.session.slotIndex : -1;
     const slots = entry.slots.map((sl, i) => (i <= rungUpTo ? { ...sl, started: true } : sl));
-    const moves = catchUpBlocks(slots, entry.slotCount ?? 1, osDate, workHours, new Date());
+    const moves = catchUpBlocks(slots, clampBlockCount(entry.slotCount), osDate, workHours, new Date());
     for (const mv of moves) patchSlot(mv.index, { start: mv.start, end: mv.end, auto: true });
     // Only on open / day change; edits afterwards are the user's.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -220,7 +262,7 @@ export function DailyOs({ date }: { date?: string }) {
   }
 
   function addBlock() {
-    if (visible >= 3) return;
+    if (visible >= MAX_DAY_BLOCKS) return;
     const prev = entry.slots[visible - 1];
     // Always pre-filled (no "Set time"): 15 min after the previous block's end,
     // or now if later, rounded up to the quarter hour, 90 min long. "Now" counts
@@ -228,18 +270,29 @@ export function DailyOs({ date }: { date?: string }) {
     const useNow = Boolean(prev?.started) || osDate === workday;
     const times = nextBlockTimes(prev, visible, workHours, useNow ? new Date() : null);
     patchSlot(visible, { start: times.start, end: times.end, auto: true });
-    patch({ slotCount: (visible + 1) as 2 | 3 });
+    patch({ slotCount: visible + 1 });
   }
 
   function removeLast() {
-    if (visible <= 1) return;
+    if (visible <= MIN_DAY_BLOCKS) return;
     const index = visible - 1;
-    patchSlot(index, emptySlot());
-    patch({ slotCount: (visible - 1) as 1 | 2 });
+    const slot = entry.slots[index];
+    if (
+      (slot?.task.trim() || slot?.outcome.trim()) &&
+      !window.confirm(`Remove ${blockLabel(index)} and what you wrote in it?`)
+    ) {
+      return;
+    }
+    // Clear everything, flags included, so a block added back later starts fresh.
+    patchSlot(index, { ...emptySlot(), prep: emptyPrep(), started: false, edited: false, auto: false });
+    patch({ slotCount: visible - 1 });
   }
 
   return (
-    <div className="daily-os flex flex-col gap-5">
+    <div
+      className={cn("daily-os flex flex-col gap-5", visible > 3 && "daily-os-compact")}
+      data-blocks={visible}
+    >
       <div className="daily-print-header hidden print:block">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-olive">
           Deep Focus from Home · Daily OS
@@ -249,6 +302,8 @@ export function DailyOs({ date }: { date?: string }) {
 
       {entry.slots.slice(0, visible).map((slot, i) => {
         const active = activeHere && session.slotIndex === i;
+        // Only the last block can go, never Block 1, a running block or one that rang.
+        const removable = i > 0 && i === visible - 1 && !active && !slot.started;
         const doneHere =
           session.phase === "done" && session.date === osDate && session.slotIndex === i;
         const dur =
@@ -261,28 +316,32 @@ export function DailyOs({ date }: { date?: string }) {
           : defaults.end;
         return (
           <Card key={i} className="daily-block flex flex-col gap-3">
-            <div className="flex items-center justify-between gap-2">
+            <div className="daily-block-head flex items-center justify-between gap-2">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
-                {SLOT_LABELS[i]}
+                {blockLabel(i)}
               </p>
-              {active ? (
-                <span className="tabular-nums text-sm font-semibold text-olive">
-                  {remainingLabel(left)} left
-                </span>
-              ) : doneHere || dur ? (
-                <span className="text-sm font-semibold text-olive">
-                  {doneHere ? "Block complete" : null}
-                  {dur ? `${doneHere ? " · " : ""}${dur}` : null}
-                </span>
-              ) : i > 0 && i === visible - 1 ? (
-                <button
-                  type="button"
-                  className="no-print text-sm font-semibold text-gold"
-                  onClick={removeLast}
-                >
-                  Remove
-                </button>
-              ) : null}
+              <div className="flex items-center gap-3">
+                {active ? (
+                  <span className="tabular-nums text-sm font-semibold text-olive">
+                    {remainingLabel(left)} left
+                  </span>
+                ) : doneHere || dur ? (
+                  <span className="text-sm font-semibold text-olive">
+                    {doneHere ? "Block complete" : null}
+                    {dur ? `${doneHere ? " · " : ""}${dur}` : null}
+                  </span>
+                ) : null}
+                {removable ? (
+                  <button
+                    type="button"
+                    className="no-print min-h-8 text-sm font-semibold text-gold underline-offset-2 hover:underline"
+                    aria-label={`Remove ${blockLabel(i)}`}
+                    onClick={removeLast}
+                  >
+                    Remove
+                  </button>
+                ) : null}
+              </div>
             </div>
             <div className="daily-times grid grid-cols-2 gap-3">
               <TimeField
@@ -315,7 +374,7 @@ export function DailyOs({ date }: { date?: string }) {
               <Input
                 value={slot.task}
                 placeholder="What you will sit down and do"
-                aria-label={`${SLOT_LABELS[i]} task`}
+                aria-label={`${blockLabel(i)} task`}
                 onChange={(e) => patchSlot(i, { task: e.target.value })}
               />
             </Field>
@@ -323,7 +382,7 @@ export function DailyOs({ date }: { date?: string }) {
               <Input
                 value={slot.outcome}
                 placeholder="What done looks like"
-                aria-label={`${SLOT_LABELS[i]} outcome`}
+                aria-label={`${blockLabel(i)} outcome`}
                 onChange={(e) => patchSlot(i, { outcome: e.target.value })}
               />
             </Field>
@@ -399,28 +458,42 @@ export function DailyOs({ date }: { date?: string }) {
         );
       })}
 
-      {visible < 3 ? (
+      {visible < MAX_DAY_BLOCKS ? (
         <Button type="button" variant="outline" className="no-print" onClick={addBlock}>
           <Plus className="size-4" />
           Add another block
+          <span className="font-normal text-muted">
+            ({visible} of {MAX_DAY_BLOCKS})
+          </span>
         </Button>
-      ) : null}
+      ) : (
+        <p className="no-print text-center text-sm text-muted">
+          {MAX_DAY_BLOCKS} blocks is the most for one day. Log anything else under Other
+          things I did today.
+        </p>
+      )}
 
       <Card className="daily-notes flex flex-col gap-3">
-        <Field label="Note to accountability partner">
-          <Textarea
+        <div className="daily-notes-fields flex flex-col gap-3">
+          <NoteField
+            label="Note to accountability partner"
             value={entry.partnerNote}
-            onChange={(e) => patch({ partnerNote: e.target.value })}
+            onChange={(partnerNote) => patch({ partnerNote })}
             placeholder="Today I will finish…"
           />
-        </Field>
-        <Field label="Shutdown note">
-          <Textarea
+          <NoteField
+            label="Shutdown note"
             value={entry.note}
-            onChange={(e) => patch({ note: e.target.value })}
+            onChange={(note) => patch({ note })}
             placeholder="What finished. What waits until tomorrow."
           />
-        </Field>
+          <NoteField
+            label="Other things I did today"
+            value={entry.otherNote}
+            onChange={(otherNote) => patch({ otherNote })}
+            placeholder="Anything beyond your blocks goes here"
+          />
+        </div>
         <div className="daily-endday flex flex-col gap-1.5">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
             End of day

@@ -1,8 +1,15 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { isDateKey, monthKey, weekKey } from "./utils";
-import { blockDefaults, endForStart, endsNextDay, workdayKey } from "./work-hours";
+import { endForStart, endsNextDay, workdayKey } from "./work-hours";
 import { planSlotsFor } from "./week-blocks";
+import {
+  DAY_BLOCKS_LAYOUT,
+  MAX_DAY_BLOCKS,
+  dayBlockCount,
+  defaultDayTimes,
+  fillBlankTimes,
+} from "./block-plan";
 import type { BlockPrepId, DailyCheckId, ShutdownStepId } from "./content";
 
 export type BlockPrep = Record<BlockPrepId, boolean>;
@@ -46,8 +53,16 @@ function readPrep(raw: unknown): BlockPrep | undefined {
 }
 
 export type DailyEntry = {
-  slots: [DailySlot, DailySlot, DailySlot];
-  slotCount: 1 | 2 | 3;
+  /** Always MAX_DAY_BLOCKS (8) slots; the first `slotCount` are on the page. */
+  slots: DailySlot[];
+  /** Blocks on the page, 1–8 (a new day shows 4). */
+  slotCount: number;
+  /**
+   * DAY_BLOCKS_LAYOUT (2) once saved by the 4–8 block page. Older saves (no
+   * marker, slotCount 1–3) open with at least 4 blocks; after that the
+   * user's own count (Remove down to 1) is kept.
+   */
+  blocksLayout?: number;
   /**
    * Day-level checks. `block` (auto when a start bell rings) and `shutdown`
    * (end of day) are live; surface/phone/signal are legacy — they now live
@@ -58,6 +73,8 @@ export type DailyEntry = {
   shutdownSteps: Record<ShutdownStepId, boolean>;
   note: string;
   partnerNote: string;
+  /** "Other things I did today": anything beyond the blocks. */
+  otherNote: string;
 };
 
 export type SessionState = {
@@ -159,22 +176,11 @@ export const emptySlot = (start = "", end = ""): DailySlot => ({
   outcome: "",
 });
 
-function slotHasContent(slot?: DailySlot) {
-  if (!slot) return false;
-  return Boolean(slot.start || slot.end || slot.task || slot.outcome);
-}
-
-function inferSlotCount(slots: DailyEntry["slots"], stored?: unknown): 1 | 2 | 3 {
-  let n: 1 | 2 | 3 = 1;
-  if (slotHasContent(slots[1])) n = 2;
-  if (slotHasContent(slots[2])) n = 3;
-  if (stored === 2 || stored === 3) n = n > stored ? n : stored;
-  return n;
-}
-
 /**
- * New day: the week plan's blocks for that weekday when there are any (times
- * and tasks), else Block 1 at the start of the work day (9:00 AM if unset).
+ * New day: 4 blocks (more if the week plan has more for that weekday), with
+ * times filled in: the week plan's blocks first (times and tasks), else
+ * Block 1 at the start of the work day (9:00 AM if unset); the rest follow
+ * 15 min after the block before.
  */
 const emptyDaily = (
   hours?: string,
@@ -182,12 +188,16 @@ const emptyDaily = (
   weeks?: Record<string, { blocks: readonly string[] } | undefined>,
 ): DailyEntry => {
   const plan = date && weeks ? planSlotsFor(date, weeks) : [];
-  const first = plan[0] ?? blockDefaults(0, hours);
-  const slot = (p?: { start: string; end: string; task?: string }) =>
-    p ? { ...emptySlot(p.start, p.end), task: p.task ?? "" } : emptySlot();
+  const count = dayBlockCount([], plan.length, true);
+  const times = defaultDayTimes(count, hours, plan);
+  const slots = Array.from({ length: MAX_DAY_BLOCKS }, (_, i) => {
+    const t = times[i];
+    return t ? { ...emptySlot(t.start, t.end), task: plan[i]?.task ?? "" } : emptySlot();
+  });
   return {
-  slots: [slot({ ...first, task: plan[0]?.task ?? "" }), slot(plan[1]), slot(plan[2])],
-  slotCount: Math.min(3, Math.max(1, plan.length)) as 1 | 2 | 3,
+  slots,
+  slotCount: count,
+  blocksLayout: DAY_BLOCKS_LAYOUT,
   checks: {
     surface: false,
     phone: false,
@@ -198,6 +208,7 @@ const emptyDaily = (
   shutdownSteps: emptyShutdownSteps(),
   note: "",
   partnerNote: "",
+  otherNote: "",
   };
 };
 
@@ -234,12 +245,18 @@ const emptyMonth = (): MonthState => ({
   nextPeak: "",
 });
 
-function migrateDaily(raw: Record<string, unknown>, hours?: string): DailyEntry {
+/**
+ * Saved (or imported) day → current shape. Always 8 slots; days saved before
+ * the 4–8 block page open with at least 4 blocks, the new ones prefilled
+ * after the block before. Nothing saved is dropped.
+ */
+export function migrateDaily(raw: Record<string, unknown>, hours?: string): DailyEntry {
   const base = emptyDaily(hours);
+  const legacyLayout = raw.blocksLayout !== DAY_BLOCKS_LAYOUT;
   if (Array.isArray(raw.slots) && raw.slots.length) {
     const legacy = (raw.checks ?? {}) as Partial<Record<DailyCheckId, boolean>>;
-    const slots = [0, 1, 2].map((i) => {
-      const s = (raw.slots as DailySlot[])[i];
+    const slots = Array.from({ length: MAX_DAY_BLOCKS }, (_, i) => {
+      const s = (raw.slots as (DailySlot | null)[])[i];
       // Old saves kept surface/phone/signal once per day: carry them onto Block 1.
       const prep =
         readPrep(s?.prep) ??
@@ -269,15 +286,7 @@ function migrateDaily(raw: Record<string, unknown>, hours?: string): DailyEntry 
         ...(s?.auto ? { auto: true } : {}),
       };
     }) as DailyEntry["slots"];
-    return {
-      ...base,
-      slots,
-      slotCount: inferSlotCount(slots, raw.slotCount),
-      checks: { ...base.checks, ...(raw.checks as DailyEntry["checks"]) },
-      shutdownSteps: readShutdownSteps(raw.shutdownSteps),
-      note: String(raw.note ?? ""),
-      partnerNote: String(raw.partnerNote ?? ""),
-    };
+    return finishDaily(base, slots, raw, legacyLayout, hours);
   }
   const outcomes = Array.isArray(raw.outcomes) ? raw.outcomes : ["", "", ""];
   const start = String(raw.blockStart ?? base.slots[0].start);
@@ -292,16 +301,44 @@ function migrateDaily(raw: Record<string, unknown>, hours?: string): DailyEntry 
     },
     { start: "", end: "", task: "", outcome: String(outcomes[1] ?? "") },
     { start: "", end: "", task: "", outcome: String(outcomes[2] ?? "") },
+    ...Array.from({ length: MAX_DAY_BLOCKS - 3 }, () => emptySlot()),
   ];
+  return finishDaily(base, slots, raw, true, hours);
+}
+
+function finishDaily(
+  base: DailyEntry,
+  slots: DailyEntry["slots"],
+  raw: Record<string, unknown>,
+  legacyLayout: boolean,
+  hours?: string,
+): DailyEntry {
+  const slotCount = dayBlockCount(slots, raw.slotCount, legacyLayout);
+  // Older days now showing 4+: the newly shown blocks get times after the one before.
+  if (legacyLayout) {
+    for (const fill of fillBlankTimes(slots, slotCount, hours)) {
+      slots[fill.index] = { ...slots[fill.index]!, start: fill.start, end: fill.end };
+    }
+  }
   return {
     ...base,
     slots,
-    slotCount: inferSlotCount(slots, raw.slotCount),
+    slotCount,
+    blocksLayout: DAY_BLOCKS_LAYOUT,
     checks: { ...base.checks, ...(raw.checks as DailyEntry["checks"]) },
     shutdownSteps: readShutdownSteps(raw.shutdownSteps),
     note: String(raw.note ?? ""),
     partnerNote: String(raw.partnerNote ?? ""),
+    otherNote: String(raw.otherNote ?? ""),
   };
+}
+
+/** The saved day in the current shape (8 slots, 1–8 visible), or a new day. */
+function currentDaily(s: Pick<FocusState, "dailies" | "household" | "weeks">, date: string) {
+  const raw = s.dailies[date];
+  return raw
+    ? migrateDaily(raw as unknown as Record<string, unknown>, s.household?.hours)
+    : emptyDaily(s.household?.hours, date, s.weeks);
 }
 
 export const useFocusStore = create<FocusState>()(
@@ -325,16 +362,19 @@ export const useFocusStore = create<FocusState>()(
       setStarterNote: (day, note) =>
         set((s) => ({ starterNotes: { ...s.starterNotes, [day]: note } })),
       dailies: {},
+      // Writes go through the current shape, so a day saved with 1–3 blocks is
+      // stored with its 4+ blocks (and marker) on the first edit.
       patchDaily: (date, patch) =>
         set((s) => {
-          const cur = s.dailies[date] ?? emptyDaily(s.household?.hours, date, s.weeks);
+          const cur = currentDaily(s, date);
           return { dailies: { ...s.dailies, [date]: { ...cur, ...patch } } };
         }),
       patchSlot: (date, index, patch) =>
         set((s) => {
-          const cur = s.dailies[date] ?? emptyDaily(s.household?.hours, date, s.weeks);
+          if (index < 0 || index >= MAX_DAY_BLOCKS) return {};
+          const cur = currentDaily(s, date);
           const slots = [...cur.slots] as DailyEntry["slots"];
-          slots[index] = { ...slots[index], ...patch };
+          slots[index] = { ...emptySlot(), ...slots[index], ...patch };
           return { dailies: { ...s.dailies, [date]: { ...cur, slots } } };
         }),
       session: { running: false, slotIndex: 0, endsAt: null, phase: "idle", date: "" },
@@ -369,20 +409,30 @@ export const useFocusStore = create<FocusState>()(
           if (patch.hours === undefined || patch.hours === s.household.hours) {
             return { household };
           }
-          // Work hours changed: move Block 1 of today and later days to the new
-          // start, but only where it is still the untouched old default.
-          const oldDef = blockDefaults(0, s.household.hours);
-          const newDef = blockDefaults(0, household.hours);
+          // Work hours changed: move the blocks of today and later days to the
+          // new work day, but only while they are still the untouched old
+          // defaults (Block 1 at the start, the rest following it), stopping
+          // at the first block the user typed in, edited or rang.
+          const oldDefs = defaultDayTimes(MAX_DAY_BLOCKS, s.household.hours);
+          const newDefs = defaultDayTimes(MAX_DAY_BLOCKS, household.hours);
           const today = workdayKey(new Date(), household.hours);
           let dailies = s.dailies;
-          for (const [date, entry] of Object.entries(s.dailies)) {
-            if (date < today) continue;
-            const slot = entry?.slots?.[0];
-            if (!slot || slot.task || slot.outcome) continue;
+          for (const [date, saved] of Object.entries(s.dailies)) {
+            if (date < today || !saved?.slots?.length) continue;
             if (s.session.running && s.session.date === date) continue;
-            if (slot.start !== oldDef.start || slot.end !== oldDef.end) continue;
+            const entry = migrateDaily(saved as unknown as Record<string, unknown>, s.household.hours);
             const slots = [...entry.slots] as DailyEntry["slots"];
-            slots[0] = { ...slot, start: newDef.start, end: newDef.end };
+            let moved = false;
+            for (let i = 0; i < entry.slotCount; i++) {
+              const slot = slots[i]!;
+              const oldDef = oldDefs[i]!;
+              const newDef = newDefs[i]!;
+              if (slot.task || slot.outcome || slot.started || slot.edited) break;
+              if (slot.start !== oldDef.start || slot.end !== oldDef.end) break;
+              slots[i] = { ...slot, start: newDef.start, end: newDef.end };
+              moved = true;
+            }
+            if (!moved) continue;
             if (dailies === s.dailies) dailies = { ...s.dailies };
             dailies[date] = { ...entry, slots };
           }

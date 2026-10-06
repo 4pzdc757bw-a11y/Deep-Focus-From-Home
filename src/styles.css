@@ -135,8 +135,10 @@ html[data-df-starter] .df-pre-welcome {
     print-color-adjust: exact !important;
   }
 
-  /* Daily OS: one US Letter page with 3 blocks + checks + both notes
-     (Safari-safe, no transforms). Textareas are sized to content via JS. */
+  /* Daily OS: one US Letter page with up to 8 blocks + checks + the three
+     notes (Safari-safe, no transforms). Textareas are sized to content via JS.
+     4+ blocks (the default) print as compact one-line rows, see
+     .daily-os-compact below. */
   .daily-os {
     gap: 0.45rem !important;
     font-size: 10pt !important;
@@ -320,6 +322,137 @@ html[data-df-starter] .df-pre-welcome {
   .daily-print-header h1 {
     font-size: 15pt !important;
     line-height: 1.15 !important;
+  }
+
+  /* Block times print as text ("10:45 AM"), boxed like the inputs */
+  .daily-os .daily-time-text {
+    display: flex !important;
+    align-items: center;
+    height: 1.6rem;
+    border: 0.75pt solid #8b7a3e;
+    border-radius: 0.375rem;
+    background: #fff;
+    padding: 0 0.35rem;
+    font-size: 10.5pt;
+    white-space: nowrap;
+  }
+
+  .daily-os.daily-os-compact .daily-time-text {
+    height: 1.45rem;
+    font-size: 9.5pt;
+    padding: 0 0.3rem;
+  }
+
+  /* Notes print as wrapped text in a box (textarea hidden), so each grows
+     to its own column width. Empty boxes keep room to handwrite. */
+  .daily-os .daily-note-text {
+    display: block !important;
+    min-height: 4rem;
+    border: 0.75pt solid #8b7a3e;
+    border-radius: 0.375rem;
+    background: #fff;
+    padding: 0.15rem 0.35rem;
+    font-size: 10pt;
+    line-height: 1.3;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .daily-os.daily-os-compact .daily-note-text {
+    min-height: 3.2rem;
+    font-size: 9.5pt;
+  }
+
+  /* Notes: partner / shutdown / other things side by side */
+  .daily-os .daily-notes-fields {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: 0.5rem !important;
+    row-gap: 0 !important;
+  }
+
+  /* 4–8 blocks: each block is one row (label | times | task | outcome) with
+     its three bell checks underneath, so 8 blocks + notes fit one Letter page. */
+  .daily-os.daily-os-compact {
+    gap: 0.28rem !important;
+  }
+
+  .daily-os.daily-os-compact .daily-print-header h1 {
+    font-size: 13pt !important;
+  }
+
+  .daily-os.daily-os-compact .daily-block {
+    grid-template-columns: 4.2rem 10.5rem minmax(0, 1.4fr) minmax(0, 1fr);
+    column-gap: 0.45rem !important;
+    row-gap: 0.12rem !important;
+    padding: 0.2rem 0.45rem 0.25rem !important;
+    border-width: 1pt !important;
+  }
+
+  .daily-os.daily-os-compact .daily-block > .daily-block-head {
+    grid-column: 1;
+    grid-row: 1;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: flex-end !important;
+    gap: 0 !important;
+    align-self: end;
+    padding-bottom: 0.15rem;
+  }
+
+  .daily-os.daily-os-compact .daily-block > .daily-block-head > p {
+    font-size: 7.5pt !important;
+  }
+
+  .daily-os.daily-os-compact .daily-block > .daily-block-head span {
+    font-size: 8pt !important;
+    white-space: nowrap;
+  }
+
+  .daily-os.daily-os-compact .daily-block > .daily-times {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .daily-os.daily-os-compact .daily-block > .daily-duration {
+    display: none !important;
+  }
+
+  .daily-os.daily-os-compact .daily-block > label:nth-of-type(1) {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .daily-os.daily-os-compact .daily-block > label:nth-of-type(2) {
+    grid-column: 4;
+    grid-row: 1;
+  }
+
+  .daily-os.daily-os-compact .daily-block > .daily-prep {
+    grid-column: 2 / -1;
+    grid-row: 2;
+  }
+
+  .daily-os.daily-os-compact .daily-block > .daily-prep > p {
+    display: none !important;
+  }
+
+  .daily-os.daily-os-compact .daily-block label.flex.flex-col > span:first-child {
+    font-size: 6.5pt !important;
+  }
+
+  .daily-os.daily-os-compact .daily-block input {
+    height: 1.45rem !important;
+    font-size: 9.5pt !important;
+    padding: 0.05rem 0.3rem !important;
+  }
+
+  .daily-os.daily-os-compact .daily-prep label > span {
+    font-size: 8pt !important;
+  }
+
+  .daily-os.daily-os-compact .daily-notes {
+    gap: 0.25rem !important;
   }
 
   /* Checkbox: ink border + visible check without relying on fill alone */
