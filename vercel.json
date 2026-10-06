@@ -10,6 +10,17 @@
   },
   "redirects": [
     {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "deepfocus.jeffsebiz.com"
+        }
+      ],
+      "destination": "https://deepfocusfromhome.com/",
+      "permanent": true
+    },
+    {
       "source": "/:path*",
       "has": [
         {
