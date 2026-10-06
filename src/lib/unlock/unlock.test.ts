@@ -71,7 +71,7 @@ describe("unlock token", () => {
 });
 
 describe("productFromSession", () => {
-  const site = "https://deepfocus.jeffsebiz.com";
+  const site = "https://deepfocusfromhome.com";
   const s = (success_url: string | null, amount: number | null, currency = "usd") => ({
     success_url,
     amount_subtotal: amount,

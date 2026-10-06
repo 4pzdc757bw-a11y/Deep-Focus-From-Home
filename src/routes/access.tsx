@@ -16,8 +16,8 @@ function keepSessionId(raw: unknown): string | undefined {
 /**
  * Durable post-pay landing for Stripe Payment Link success URL.
  * Prefer:
- *   https://deepfocus.jeffsebiz.com/access?product=handbook&session_id={CHECKOUT_SESSION_ID}
- *   https://deepfocus.jeffsebiz.com/access?product=app&session_id={CHECKOUT_SESSION_ID}
+ *   https://deepfocusfromhome.com/access?product=handbook&session_id={CHECKOUT_SESSION_ID}
+ *   https://deepfocusfromhome.com/access?product=app&session_id={CHECKOUT_SESSION_ID}
  * (or the /thanks equivalents). The session id unlocks signed handbook downloads.
  */
 export const Route = createFileRoute("/access")({

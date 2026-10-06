@@ -18,8 +18,8 @@ export type PurchaseProduct = "handbook" | "app";
  * Set via Vercel env when products exist; empty keeps /buy as a preview stub.
  *
  * Success URLs in Stripe Dashboard (must include {CHECKOUT_SESSION_ID}):
- *   Handbook → https://deepfocus.jeffsebiz.com/thanks?paid=1&product=handbook&session_id={CHECKOUT_SESSION_ID}
- *   App      → https://deepfocus.jeffsebiz.com/thanks?paid=1&product=app&session_id={CHECKOUT_SESSION_ID}
+ *   Handbook → https://deepfocusfromhome.com/thanks?paid=1&product=handbook&session_id={CHECKOUT_SESSION_ID}
+ *   App      → https://deepfocusfromhome.com/thanks?paid=1&product=app&session_id={CHECKOUT_SESSION_ID}
  */
 function sanitizeStripePaymentLink(raw: string | undefined): string {
   const url = (raw ?? "").trim();
