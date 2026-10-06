@@ -1,12 +1,29 @@
 import { Play } from "lucide-react";
-import { lazy, Suspense, useCallback, useRef, useState } from "react";
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useRef,
+  useState,
+  type ComponentType,
+} from "react";
 import { Button } from "@/components/ui/button";
 
 // The carousel (and its slide images) only load when someone clicks
 // "Preview the app", so the offer pages stay as fast as before.
-const AppPreviewCarousel = lazy(
-  () => import("@/components/app-preview-carousel"),
-);
+//
+// Browser-only: the carousel never renders on the server (it starts closed),
+// and keeping this dynamic import out of the SSR bundle avoids a Rolldown
+// chunking bug that left the deployed server entry exporting an undefined
+// `ssr_exports`, so every page answered 500 on Vercel.
+const loadCarousel = (): Promise<{
+  default: ComponentType<{ onClose: () => void }>;
+}> =>
+  import.meta.env.SSR
+    ? Promise.resolve({ default: () => null })
+    : import("@/components/app-preview-carousel");
+
+const AppPreviewCarousel = lazy(loadCarousel);
 
 type Props = {
   className?: string;
@@ -33,8 +50,8 @@ export function PreviewAppButton({ className, variant = "default" }: Props) {
         className={className}
         aria-haspopup="dialog"
         onClick={() => setOpen(true)}
-        onPointerEnter={() => void import("@/components/app-preview-carousel")}
-        onFocus={() => void import("@/components/app-preview-carousel")}
+        onPointerEnter={() => void loadCarousel()}
+        onFocus={() => void loadCarousel()}
       >
         <Play className="size-4" aria-hidden="true" /> Preview the app
       </Button>
