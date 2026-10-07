@@ -118,9 +118,11 @@ export const unlockByEmail = createServerFn({ method: "POST" })
       return { ok: false, error: "Too many tries. Wait 10 minutes and try again." };
     }
 
-    const { stripeClient, isPaidCheckoutSession } = await import(
-      "../downloads/stripe.server"
-    );
+    const {
+      stripeClient,
+      checkoutSessionGrantsAccess,
+      CHECKOUT_SESSION_LIST_REFUND_EXPAND,
+    } = await import("../downloads/stripe.server");
     const { productFromSession } = await import("./product.server");
     const { bestProduct } = await import("./access");
 
@@ -134,11 +136,14 @@ export const unlockByEmail = createServerFn({ method: "POST" })
           customer_details: { email },
           status: "complete",
           limit: 100,
+          expand: [...CHECKOUT_SESSION_LIST_REFUND_EXPAND],
         });
         let seen = 0;
         for await (const session of list) {
           if (++seen > 300) break;
-          if (!isPaidCheckoutSession(session)) continue;
+          // Skip unpaid and fully refunded sessions (Terms §8 REFUND_ENDS_ACCESS).
+          // Fail closed when PaymentIntent/charge was not expanded.
+          if (!checkoutSessionGrantsAccess(session)) continue;
           found = bestProduct(
             found,
             productFromSession(session, { strict: true }),
