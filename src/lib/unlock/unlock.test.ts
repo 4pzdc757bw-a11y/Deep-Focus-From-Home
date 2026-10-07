@@ -1,6 +1,13 @@
 import { describe, it, beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
-import { bestProduct, hasAccess, requiredAccessForPath } from "./access.ts";
+import {
+  bestProduct,
+  CHAPTER_1_SLUG,
+  FREE_CHAPTER_SLUGS,
+  hasAccess,
+  requiredAccessForPath,
+} from "./access.ts";
+import { CHAPTERS } from "../content.ts";
 import { mintUnlockToken, verifyUnlockToken, getUnlockSecret, UnlockConfigError } from "./token.server.ts";
 import { productFromSession } from "./product.server.ts";
 import { rateLimitHit, resetRateLimits } from "./rate-limit.server.ts";
@@ -18,8 +25,23 @@ describe("paywall path rules", () => {
       assert.equal(requiredAccessForPath(p), "app", p);
     }
   });
-  it("locks full guide chapters behind the handbook", () => {
-    assert.equal(requiredAccessForPath("/guide/environment"), "handbook");
+  it("keeps the Introduction and Chapter 1 free (#109 Option B)", () => {
+    assert.equal(requiredAccessForPath("/guide/intro"), "none");
+    assert.equal(requiredAccessForPath("/guide/environment"), "none");
+    assert.equal(requiredAccessForPath(`/guide/${CHAPTER_1_SLUG}`), "none");
+    assert.equal(requiredAccessForPath("/guide/environment/"), "none");
+    assert.deepEqual([...FREE_CHAPTER_SLUGS].sort(), ["environment", "intro"]);
+  });
+  it("Chapter 1 slug is the chapter numbered Chapter 1", () => {
+    const ch1 = CHAPTERS.find((c) => c.number === "Chapter 1");
+    assert.equal(ch1?.slug, CHAPTER_1_SLUG);
+    assert.equal(ch1?.title, "Design your focus environment");
+  });
+  it("locks the other guide chapters behind the handbook", () => {
+    for (const ch of CHAPTERS) {
+      if (ch.slug === "intro" || ch.slug === CHAPTER_1_SLUG) continue;
+      assert.equal(requiredAccessForPath(`/guide/${ch.slug}`), "handbook", ch.slug);
+    }
     assert.equal(requiredAccessForPath("/guide/household"), "handbook");
   });
   it("app includes handbook; handbook does not include app", () => {

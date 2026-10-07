@@ -27,8 +27,15 @@ const FREE_PATHS = new Set([
   "/starter",
 ]);
 
-/** Guide chapters readable without a purchase (free sample). */
-export const FREE_CHAPTER_SLUGS = new Set(["intro"]);
+/** Slug of Chapter 1, "Design your focus environment" (free, #109). */
+export const CHAPTER_1_SLUG = "environment";
+
+/**
+ * Guide chapters readable without a purchase: the Introduction and Chapter 1
+ * (Jeffrey approved Option B, #109: make Chapter 1 free so "Read Chapter 1
+ * free" is true). The $17 handbook still includes every chapter.
+ */
+export const FREE_CHAPTER_SLUGS = new Set(["intro", CHAPTER_1_SLUG]);
 
 function normalizePath(pathname: string): string {
   const p = (pathname || "/").split("?", 1)[0]!.split("#", 1)[0]!;

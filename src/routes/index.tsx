@@ -26,6 +26,7 @@ import {
   weekdayLong,
 } from "@/lib/utils";
 import { useEffect, useState } from "react";
+import { CHAPTER_1_SLUG } from "@/lib/unlock/access";
 
 export const Route = createFileRoute("/")({ component: Home });
 
@@ -306,7 +307,7 @@ function GuideFirstNote() {
         workspace.
       </p>
       <Button variant="outline" size="sm" asChild>
-        <Link to="/guide/$slug" params={{ slug: "intro" }}>
+        <Link to="/guide/$slug" params={{ slug: CHAPTER_1_SLUG }}>
           <BookOpen className="size-4" /> Read chapter 1
         </Link>
       </Button>
