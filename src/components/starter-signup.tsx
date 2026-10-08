@@ -83,7 +83,7 @@ export function StarterSignupForm({
       >
         <p className="font-display text-lg">{STARTER_SIGNUP_SUCCESS}</p>
         <p className="mt-1 text-sm text-muted">
-          Not there in a few minutes? Check spam or promotions.
+          Not there in a few minutes? Check Junk, Spam or Promotions, and move it to your Inbox.
         </p>
       </div>
     );
