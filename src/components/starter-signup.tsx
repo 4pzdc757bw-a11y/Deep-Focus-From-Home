@@ -85,7 +85,7 @@ export function StarterSignupForm({
       >
         <p className="font-display text-lg">{STARTER_SIGNUP_SUCCESS}</p>
         <p className="mt-1 text-sm text-muted">
-          Not there in a few minutes? Check spam or promotions.
+          Not there in a few minutes? Check Junk, Spam or Promotions, and move it to your Inbox.
         </p>
         <div className="mt-3 flex flex-col gap-2 border-t border-yellow pt-3">
           <p className="text-sm font-semibold text-ink">Don’t wait for the email. Start now:</p>

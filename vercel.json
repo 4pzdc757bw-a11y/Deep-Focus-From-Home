@@ -7,5 +7,29 @@
     "VITE_AUTH_ENABLED": "false",
     "VITE_STRIPE_HANDBOOK_PAYMENT_LINK": "https://buy.stripe.com/28E9ALcsN6xx40s5mYgUM00",
     "VITE_STRIPE_APP_PAYMENT_LINK": "https://buy.stripe.com/cNi4grakFbRRgNecPqgUM01"
-  }
+  },
+  "redirects": [
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "deepfocus.jeffsebiz.com"
+        }
+      ],
+      "destination": "https://deepfocusfromhome.com/",
+      "permanent": true
+    },
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "deepfocus.jeffsebiz.com"
+        }
+      ],
+      "destination": "https://deepfocusfromhome.com/:path*",
+      "permanent": true
+    }
+  ]
 }

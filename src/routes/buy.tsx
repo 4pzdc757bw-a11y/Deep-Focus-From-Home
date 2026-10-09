@@ -8,7 +8,7 @@ import {
   PRICE_LABEL,
   STRIPE_HANDBOOK_PAYMENT_LINK,
 } from "@/lib/offer";
-import { STORE_CREDIT_CHECKOUT_LINE } from "@/lib/legal";
+import { NO_SALE_COUNTRIES_LINE, STORE_CREDIT_CHECKOUT_LINE } from "@/lib/legal";
 import { useFocusStore } from "@/lib/store";
 
 export const Route = createFileRoute("/buy")({ component: BuyPage });
@@ -74,6 +74,7 @@ function BuyPage() {
             </p>
           </>
         )}
+        <p className="text-sm text-muted">{NO_SALE_COUNTRIES_LINE}</p>
       </Card>
 
       <NotReadyLinks />

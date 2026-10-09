@@ -9,7 +9,7 @@ export const Route = createFileRoute("/privacy")({
       {
         name: "description",
         content:
-          "Privacy Policy for Deep Focus from Home and related jeffsebiz.com digital products from JEFFSEBIZ LLC.",
+          "Privacy Policy for Deep Focus from Home and related digital products from JEFFSEBIZ LLC on deepfocusfromhome.com, jeffsebiz.com, and our other product sites.",
       },
     ],
   }),
@@ -39,7 +39,7 @@ function PrivacyPage() {
         </li>
         <li>
           Messages you send us (for example, store-credit requests to
-          support@jeffsebiz.com)
+          support@deepfocusfromhome.com)
         </li>
         <li>
           Basic technical data such as browser type, device type, and pages
@@ -122,7 +122,7 @@ function PrivacyPage() {
         occasional notes about our products. We don’t sell or rent the list.
         Our email provider, Kit (kit.com), stores your address and sends these
         messages for us. Every email has an unsubscribe link, or you can email
-        support@jeffsebiz.com to be removed; we’ll stop within 10 business days.
+        support@deepfocusfromhome.com to be removed; we’ll stop within 10 business days.
         Our emails may use standard open and click tracking to help us improve
         them. We don’t add buyers to this list unless they sign up themselves.
       </p>
@@ -133,8 +133,7 @@ function PrivacyPage() {
         and similar entries on your own device or browser (local storage). That
         information stays on your device unless you choose to share it with us
         (for example, by emailing us). We do not pull those local notes onto our
-        servers as part of normal app use. If you clear your browser data or
-        switch devices, those entries may be lost, and we can’t recover them.
+        servers as part of normal app use. If you clear your browser data, use a private or incognito window, or switch devices, those entries may be lost, and we can’t recover them.
       </p>
 
       <h2>7. How long we keep it</h2>

@@ -20,8 +20,8 @@ keeps working.
 
 Use the exact Stripe placeholder `{CHECKOUT_SESSION_ID}`:
 
-- Handbook: `https://deepfocus.jeffsebiz.com/thanks?paid=1&product=handbook&session_id={CHECKOUT_SESSION_ID}`
-- App: `https://deepfocus.jeffsebiz.com/thanks?paid=1&product=app&session_id={CHECKOUT_SESSION_ID}`
+- Handbook: `https://deepfocusfromhome.com/thanks?paid=1&product=handbook&session_id={CHECKOUT_SESSION_ID}`
+- App: `https://deepfocusfromhome.com/thanks?paid=1&product=app&session_id={CHECKOUT_SESSION_ID}`
 
 (`/access?product=…&session_id={CHECKOUT_SESSION_ID}` also forwards the session id to `/thanks`.)
 
