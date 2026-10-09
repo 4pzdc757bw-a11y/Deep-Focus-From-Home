@@ -1,9 +1,10 @@
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { SheetPortal } from "@/components/sheet-portal";
 import { Field, Input } from "@/components/ui/input";
 import { WeekBlocksEditor, hasAnyBlock, suggestedWeekLines } from "@/components/week-blocks-editor";
 import { useFocusStore, type WeekState } from "@/lib/store";
+import { tidyWeekBlocks } from "@/lib/week-blocks";
 import { nextWeekKey, prettyDate } from "@/lib/utils";
 
 type Step = "ask" | "form";
@@ -20,12 +21,7 @@ function emptyDraft(from: WeekState | undefined, key: string): WeekState {
   }
   return {
     theme: from?.theme ?? "",
-    blocks: [
-      from?.blocks[0] ?? "",
-      from?.blocks[1] ?? "",
-      from?.blocks[2] ?? "",
-      from?.blocks[3] ?? "",
-    ],
+    blocks: [...(from?.blocks ?? [])],
     coworking: from?.coworking ?? "",
     fridayNote: from?.fridayNote ?? "",
   };
@@ -41,8 +37,14 @@ export function WeeklyPlannerSheet({ onDone, date }: { onDone: () => void; date?
   const key = nextWeekKey(date ? new Date(`${date}T12:00:00`) : new Date());
   const stored = useFocusStore((s) => s.weeks[key]);
   const patchWeek = useFocusStore((s) => s.patchWeek);
+  const markBlockSetupDone = useFocusStore((s) => s.markBlockSetupDone);
   const [step, setStep] = useState<Step>("ask");
   const [draft, setDraft] = useState<WeekState>(() => emptyDraft(stored, key));
+  const [saved, setSaved] = useState(false);
+  const draftRef = useRef(draft);
+  draftRef.current = draft;
+  const timer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(timer.current), []);
 
   useEffect(() => {
     setStep("ask");
@@ -58,12 +60,19 @@ export function WeeklyPlannerSheet({ onDone, date }: { onDone: () => void; date?
   }, [onDone]);
 
   function save() {
+    if (saved) return;
+    // Blur first so the open box commits its trim; read the latest draft after.
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+    const d = draftRef.current;
     patchWeek(key, {
-      theme: draft.theme,
-      blocks: draft.blocks,
-      coworking: draft.coworking,
+      theme: d.theme.trim(),
+      blocks: tidyWeekBlocks(d.blocks),
+      coworking: d.coworking.trim(),
     });
-    onDone();
+    // Planned their blocks: the Daily OS set-up box has done its job.
+    markBlockSetupDone();
+    setSaved(true);
+    timer.current = window.setTimeout(onDone, 1000);
   }
 
   return (
@@ -110,9 +119,9 @@ export function WeeklyPlannerSheet({ onDone, date }: { onDone: () => void; date?
               Week of {prettyDate(key)}
             </h2>
             <p className="mt-2 text-sm text-ink">
-              Outcome + Mon–Fri blocks (day, time, task). Sat/Sun only if you
-              need overflow — no push to work the weekend. Same fields as Tools →
-              Weekly planner.
+              Outcome + each day’s own blocks (time, length, task). Sat/Sun only
+              if you need overflow — no push to work the weekend. Same fields as
+              Tools → Weekly planner.
             </p>
             <div className="mt-3 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-1">
               <Field label="Next week’s outcome" hint="One sentence for the week.">
@@ -143,13 +152,18 @@ export function WeeklyPlannerSheet({ onDone, date }: { onDone: () => void; date?
               </Field>
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
-              <Button type="button" onClick={save}>
-                Save plan
+              <Button type="button" onClick={save} disabled={saved}>
+                Save week
               </Button>
-              <Button type="button" variant="outline" onClick={onDone}>
+              <Button type="button" variant="outline" onClick={onDone} disabled={saved}>
                 Skip
               </Button>
             </div>
+            {saved ? (
+              <p role="status" className="mt-2 font-semibold text-olive">
+                Week saved.
+              </p>
+            ) : null}
           </>
         )}
       </div>

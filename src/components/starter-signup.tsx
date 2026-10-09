@@ -1,7 +1,9 @@
 import { type FormEvent, useEffect, useId, useState } from "react";
 import { Link } from "@tanstack/react-router";
+import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/app-shell";
+import { STARTER_PDF } from "@/lib/content";
 import { saveLeadEmail } from "@/lib/offer";
 import { cn } from "@/lib/utils";
 import { KIT_FORM_ACTION, KIT_ORIGIN, STARTER_SIGNUP_SUCCESS, submitToKit } from "@/lib/kit";
@@ -85,6 +87,21 @@ export function StarterSignupForm({
         <p className="mt-1 text-sm text-muted">
           Not there in a few minutes? Check Junk, Spam or Promotions, and move it to your Inbox.
         </p>
+        <div className="mt-3 flex flex-col gap-2 border-t border-yellow pt-3">
+          <p className="text-sm font-semibold text-ink">Don’t wait for the email. Start now:</p>
+          <Button asChild className="h-auto min-h-11 py-2.5 sm:self-start">
+            <a href={STARTER_PDF} download>
+              <Download className="size-4 shrink-0" /> Download your fillable 7-day pack (PDF)
+            </a>
+          </Button>
+          <p className="text-sm text-ink">
+            Or fill it in right here, day by day:{" "}
+            <Link to="/starter" className="font-semibold text-olive underline underline-offset-4">
+              open the 7-day starter
+            </Link>
+            .
+          </p>
+        </div>
       </div>
     );
   }

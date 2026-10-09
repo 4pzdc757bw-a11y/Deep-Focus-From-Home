@@ -1,7 +1,8 @@
 import { useFocusStore } from "./store";
 
 import { currentWorkdayKey } from "./workday";
-import { nextWorkdayFrom, starterDayOn } from "./work-hours";
+import { starterDayOn } from "./work-hours";
+import { latestClosedIn, nextDateForward } from "./close-day-forward";
 
 /**
  * Map a work-day date to starter day 1–7, or null if outside week one. Day 1
@@ -29,30 +30,13 @@ export function nextDateAfterClose(
   return nextDateForward(closedDate, today, workDays, latestClosed);
 }
 
-/**
- * Pure: next work day after the closed day, never moving backward — not
- * before today, and not on or before a day already closed later (closing
- * Wednesday after Monday… opens Thursday, never Monday again).
- */
-export function nextDateForward(
-  closedDate: string,
-  today: string,
-  workDays: readonly number[] | null | undefined,
-  latestClosed: string | null,
-) {
-  const base = latestClosed && latestClosed > closedDate ? latestClosed : closedDate;
-  return nextWorkdayFrom(base, today, workDays);
-}
+export { nextDateForward };
 
 /** Latest day whose Close day ran (shutdown checked), or null. */
 export function latestClosedDate(
   dailies: Record<string, { checks?: { shutdown?: boolean } } | undefined> = useFocusStore.getState().dailies,
 ): string | null {
-  let latest: string | null = null;
-  for (const [k, v] of Object.entries(dailies)) {
-    if (v?.checks?.shutdown && (!latest || k > latest)) latest = k;
-  }
-  return latest;
+  return latestClosedIn(dailies);
 }
 
 export type CloseDayResult = {
@@ -63,7 +47,8 @@ export type CloseDayResult = {
 };
 
 /**
- * Close the workday: copy Shutdown note → starter “one line”, mark day done,
+ * Close the workday: copy Shutdown note (and Other things I did today) →
+ * starter “one line”, mark day done,
  * keep the daily entry in local history, return next-day pointers for nav/print.
  */
 export function closeDay(osDate = currentWorkdayKey()): CloseDayResult {
@@ -75,17 +60,18 @@ export function closeDay(osDate = currentWorkdayKey()): CloseDayResult {
   const day = started ? starterDayForDate(started, osDate) : null;
 
   const entry = store.dailies[osDate];
-  const shutdown = (entry?.note ?? "").trim();
+  // Shutdown note, then "Other things I did today", each copied once.
+  const lines = [entry?.note, entry?.otherNote].map((t) => (t ?? "").trim()).filter(Boolean);
   let noteCopied = false;
 
   if (day != null) {
-    if (shutdown) {
-      const existing = (store.starterNotes[day] ?? "").trim();
+    for (const line of lines) {
+      const existing = (useFocusStore.getState().starterNotes[day] ?? "").trim();
       if (!existing) {
-        store.setStarterNote(day, shutdown);
+        store.setStarterNote(day, line);
         noteCopied = true;
-      } else if (!existing.includes(shutdown)) {
-        store.setStarterNote(day, `${existing}\n${shutdown}`);
+      } else if (!existing.includes(line)) {
+        store.setStarterNote(day, `${existing}\n${line}`);
         noteCopied = true;
       }
     }

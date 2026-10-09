@@ -3,11 +3,18 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, CalendarDays, Download } from "lucide-react";
 import { useRef } from "react";
 import { useHasAccess } from "@/components/lock-screen";
+import { HandbookCheckoutLink } from "@/components/handbook-checkout-link";
 import { Card, PageTitle } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { CheckRow } from "@/components/ui/checkbox";
-import { Textarea } from "@/components/ui/input";
-import { STARTER_DAYS } from "@/lib/content";
+import { Input, Textarea } from "@/components/ui/input";
+import {
+  STARTER_DAYS,
+  STARTER_HANDBOOK_ADDS,
+  STARTER_HOW_IT_WORKS,
+  STARTER_PDF,
+  STARTER_WRITE_INS,
+} from "@/lib/content";
 import { useFocusStore } from "@/lib/store";
 import { StarterSignupCard } from "@/components/starter-signup";
 import { prettyDate, todayKey } from "@/lib/utils";
@@ -20,6 +27,8 @@ function StarterPage() {
   const notes = useFocusStore((s) => s.starterNotes);
   const toggle = useFocusStore((s) => s.toggleStarterDay);
   const setNote = useFocusStore((s) => s.setStarterNote);
+  const writeIns = useFocusStore((s) => s.starterWriteIns);
+  const setWriteIn = useFocusStore((s) => s.setStarterWriteIn);
   const start = useFocusStore((s) => s.startStarter);
   const setStart = useFocusStore((s) => s.setStarterStart);
   const started = useFocusStore((s) => s.starterStart);
@@ -29,17 +38,22 @@ function StarterPage() {
   const dayDates = starterDayDates(origin, workDays);
   // The starter week is the free 7-day pack. The Daily OS links are app-only.
   const appUnlocked = useHasAccess("app");
+  // Handbook (or app) buyers already have everything in the "what it adds" box.
+  const handbookUnlocked = useHasAccess("handbook");
 
   return (
     <div className="flex flex-col gap-5">
-      <div role="note" className="rounded-md border border-yellow bg-paper p-3 text-sm text-ink">
-        <p className="font-semibold text-olive">Just signed up?</p>
-        <p className="mt-1">
-          Look for an email from Jeffrey at Deep Focus from Home called “Confirm your free 7-day
-          pack” and tap the button. Not in your inbox? Check Junk, Spam or Promotions, and move it
-          to your Inbox so the daily emails get through.
-        </p>
-      </div>
+      {/* Free sign-ups only: anyone with a handbook or app unlock on this device skips it. */}
+      {handbookUnlocked ? null : (
+        <div role="note" className="rounded-md border border-yellow bg-paper p-3 text-sm text-ink">
+          <p className="font-semibold text-olive">Just signed up?</p>
+          <p className="mt-1">
+            Look for an email from Jeffrey at Deep Focus from Home called “Confirm your free 7-day
+            pack” and tap the button. Not in your inbox? Check Junk, Spam or Promotions, and move
+            it to your Inbox so the daily emails get through.
+          </p>
+        </div>
+      )}
       <PageTitle
         kicker="Week one"
         title="Seven days. One job each day."
@@ -50,16 +64,29 @@ function StarterPage() {
         }
       />
       {appUnlocked ? null : (
-        <p className="-mt-3 text-sm text-muted">
-          Prefer paper?{" "}
-          <a
-            href="/downloads/7-day-starter-pack.pdf"
-            download
-            className="inline-flex items-center gap-1 font-semibold text-olive underline underline-offset-4"
-          >
-            <Download className="size-4" /> Download the 7-day pack (PDF)
-          </a>
-        </p>
+        <Card className="flex flex-col gap-3 border-2 border-olive">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
+            First step
+          </p>
+          <Button asChild size="lg" className="h-auto min-h-12 w-full py-3 text-base sm:w-auto sm:self-start">
+            <a href={STARTER_PDF} download>
+              <Download className="size-5 shrink-0" /> Download your fillable 7-day pack (PDF)
+            </a>
+          </Button>
+          <p className="text-ink">Or fill it in right here on this page, day by day.</p>
+        </Card>
+      )}
+      {appUnlocked ? null : (
+        <Card className="flex flex-col gap-2 border-l-4 border-l-olive">
+          <h2 className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
+            How this week works
+          </h2>
+          {STARTER_HOW_IT_WORKS.map((line) => (
+            <p key={line} className="text-ink">
+              {line}
+            </p>
+          ))}
+        </Card>
       )}
       {appUnlocked ? null : <StarterSignupCard title="Get each day by email, too." />}
       {!started ? (
@@ -84,6 +111,14 @@ function StarterPage() {
                 </li>
               ))}
             </ul>
+            <StarterWriteIns
+              day={d.day}
+              values={writeIns?.[d.day] ?? {}}
+              onChange={(field, value) => {
+                if (!started) start();
+                setWriteIn(d.day, field, value);
+              }}
+            />
             {appUnlocked ? (
               <Button variant="outline" asChild>
                 <Link
@@ -113,8 +148,112 @@ function StarterPage() {
           </Card>
         );
       })}
+      {handbookUnlocked ? null : <HandbookAddsCard />}
       <LegalFooter className="mt-8" />
     </div>
+  );
+}
+
+/**
+ * After Day 7: what the $17 handbook adds beyond the free pack (same copy as
+ * page 8 of the PDF). The button goes straight to the live handbook Stripe
+ * Payment Link, the same one /buy uses (falls back to /buy if it isn't set).
+ */
+function HandbookAddsCard() {
+  const adds = STARTER_HANDBOOK_ADDS;
+  return (
+    <Card className="flex flex-col gap-3 border-2 border-olive">
+      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
+        After week one
+      </p>
+      <h2 className="font-display text-2xl text-olive">{adds.heading}</h2>
+      {adds.lead.map((line) => (
+        <p key={line} className="text-ink">
+          {line}
+        </p>
+      ))}
+      <ul className="flex flex-col gap-1.5 text-ink">
+        {adds.bullets.map((b) => (
+          <li key={b} className="border-l-2 border-yellow pl-3">
+            {b}
+          </li>
+        ))}
+      </ul>
+      <div className="flex flex-col gap-2 sm:items-start">
+        <Button asChild size="lg" className="w-full sm:w-auto">
+          <HandbookCheckoutLink>
+            {adds.button} <ArrowRight className="size-4" />
+          </HandbookCheckoutLink>
+        </Button>
+        <p className="text-sm text-muted">{adds.payNote}</p>
+        <Link
+          to="/buy"
+          className="text-sm font-semibold text-olive underline underline-offset-4"
+        >
+          {adds.bothOptions}
+        </Link>
+      </div>
+    </Card>
+  );
+}
+
+/** Labeled boxes for the steps that ask you to write or choose something. Saved in this browser. */
+function StarterWriteIns({
+  day,
+  values,
+  onChange,
+}: {
+  day: number;
+  values: Record<string, string>;
+  onChange: (field: string, value: string) => void;
+}) {
+  const spec = STARTER_WRITE_INS[day];
+  if (!spec || spec.fields.length === 0) return null;
+  const grid = spec.fields.every((f) => f.kind === "time");
+  return (
+    <fieldset className="flex flex-col gap-3 rounded-md border border-yellow bg-paper/60 p-3">
+      <legend className="px-1 text-xs font-semibold uppercase tracking-[0.14em] text-olive">
+        Write it here
+      </legend>
+      <div className={grid ? "grid grid-cols-2 gap-3" : "flex flex-col gap-3"}>
+        {spec.fields.map((f) => {
+          const id = `starter-${day}-${f.id}`;
+          const value = values[f.id] ?? "";
+          return (
+            <div key={f.id} className="flex flex-col gap-1.5">
+              <label
+                htmlFor={id}
+                className="text-xs font-semibold uppercase tracking-[0.14em] text-gold"
+              >
+                {f.label}
+              </label>
+              {f.kind === "long" ? (
+                <Textarea
+                  id={id}
+                  className="min-h-20"
+                  placeholder={f.placeholder}
+                  value={value}
+                  onChange={(e) => onChange(f.id, e.target.value)}
+                />
+              ) : (
+                <Input
+                  id={id}
+                  type={f.kind === "time" ? "time" : "text"}
+                  placeholder={f.placeholder}
+                  value={value}
+                  onChange={(e) => onChange(f.id, e.target.value)}
+                />
+              )}
+            </div>
+          );
+        })}
+      </div>
+      {spec.note ? (
+        <p className="flex items-center gap-1.5 text-sm font-semibold text-olive">
+          <CalendarDays className="size-4 shrink-0" aria-hidden="true" /> {spec.note}
+        </p>
+      ) : null}
+    </fieldset>
   );
 }
 

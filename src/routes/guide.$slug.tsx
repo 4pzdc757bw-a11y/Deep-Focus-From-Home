@@ -6,6 +6,7 @@ import { LegalFooter } from "@/components/legal-footer";
 import { useHasAccess } from "@/components/lock-screen";
 import { Button } from "@/components/ui/button";
 import { CHAPTERS } from "@/lib/content";
+import { CHAPTER_1_SLUG, FREE_CHAPTER_SLUGS } from "@/lib/unlock/access";
 import { PRICE_LABEL } from "@/lib/offer";
 
 export const Route = createFileRoute("/guide/$slug")({
@@ -19,6 +20,10 @@ function ChapterPage() {
   if (!ch) throw notFound();
   const idx = CHAPTERS.findIndex((c) => c.slug === slug);
   const nextCh = CHAPTERS[idx + 1];
+  // Free readers can keep going while the next chapter is free too
+  // (Introduction → Chapter 1).
+  const nextOpen = Boolean(nextCh && (hasHandbook || FREE_CHAPTER_SLUGS.has(nextCh.slug)));
+  const chapter1Next = !hasHandbook && nextCh?.slug === CHAPTER_1_SLUG;
 
   return (
     <article className="flex flex-col gap-5">
@@ -44,7 +49,7 @@ function ChapterPage() {
       {hasHandbook ? null : (
         <Card className="flex flex-col gap-3">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
-            That was the free chapter
+            That was a free chapter
           </p>
           <p className="font-display text-2xl text-olive">Want the rest of the handbook?</p>
           <p className="text-ink">
@@ -55,6 +60,13 @@ function ChapterPage() {
             <Button asChild>
               <HandbookCheckoutLink>Get the handbook ({PRICE_LABEL})</HandbookCheckoutLink>
             </Button>
+            {chapter1Next ? (
+              <Button variant="outline" asChild>
+                <Link to="/guide/$slug" params={{ slug: CHAPTER_1_SLUG }}>
+                  Read Chapter 1 free <ArrowRight className="size-4" />
+                </Link>
+              </Button>
+            ) : null}
           </div>
         </Card>
       )}
@@ -69,7 +81,7 @@ function ChapterPage() {
           <ArrowLeft className="size-4" />
           Back to all chapters
         </Link>
-        {hasHandbook && nextCh ? (
+        {nextOpen && nextCh ? (
           <Link
             to="/guide/$slug"
             params={{ slug: nextCh.slug }}

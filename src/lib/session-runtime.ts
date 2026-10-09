@@ -14,21 +14,45 @@ function notify(title: string, body: string) {
   }
 }
 
+const NOTIFY_ANSWERED_KEY = "dffh.notifyAnswered";
+
+function notifyAnswered() {
+  try {
+    return typeof localStorage !== "undefined" && localStorage.getItem(NOTIFY_ANSWERED_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+/** Remember that the explainer was answered so it never shows again. */
+export function markNotifyAnswered() {
+  try {
+    if (typeof localStorage !== "undefined") localStorage.setItem(NOTIFY_ANSWERED_KEY, "1");
+  } catch {
+    /* ignore — private mode etc. */
+  }
+}
+
 /**
- * True when the browser has not been asked yet (permission "default"), so the
- * Daily OS should show its one-line explainer before asking. Granted, denied
- * or unsupported → never show it again.
+ * True only when the browser has not been asked yet (permission "default") and
+ * the in-app explainer has never been answered. Granted, denied, unsupported,
+ * or answered once → never show it again, on any block or day.
  */
 export function shouldExplainNotify() {
   try {
+    if (notifyAnswered()) return false;
     return typeof Notification !== "undefined" && Notification.permission === "default";
   } catch {
     return false;
   }
 }
 
-/** Ask the browser. Only call after the user taps OK on the in-app explainer. */
+/**
+ * Ask the browser. Only call after the user taps OK on the in-app explainer.
+ * Records the answer first, so the box never returns whatever the browser says.
+ */
 export async function requestNotify() {
+  markNotifyAnswered();
   try {
     if (typeof Notification === "undefined") return;
     if (Notification.permission === "default") await Notification.requestPermission();
@@ -54,8 +78,11 @@ export function releaseScreen() {
 /**
  * Start a block. State flips to running immediately (one tap), then the bell
  * and wake lock run in the background — they must never hold the UI.
- * Notification permission is NOT requested here: the Daily OS first shows a
- * short in-app explainer and only asks the browser after the user taps OK.
+ * The start bell is kicked synchronously in this call (inside the tap) so it
+ * still rings on the very first Start even if the Daily OS then shows its
+ * notifications explainer. Notification permission is NOT requested here:
+ * the Daily OS shows the explainer after the bell is started and only asks
+ * the browser after the user taps OK.
  */
 export async function beginSession(args: {
   date: string;
@@ -63,6 +90,9 @@ export async function beginSession(args: {
   endsAt: number;
 }) {
   completing = false;
+  // Kick the bell first — unlock + schedule must happen inside the tap gesture
+  // before any later await (wake lock) or UI (notify explainer).
+  const bell = playStartBell().catch(() => undefined);
   const cur = useFocusStore.getState().dailies[args.date];
   useFocusStore.getState().setSession({
     running: true,
@@ -76,8 +106,6 @@ export async function beginSession(args: {
       checks: { ...cur.checks, block: true },
     });
   }
-  // Called synchronously inside the tap so audio is allowed to start.
-  const bell = playStartBell().catch(() => undefined);
   void holdScreen();
   await bell;
 }
@@ -93,13 +121,11 @@ export async function completeSession() {
     useFocusStore.getState().setSession({ running: false, phase: "done" });
     if (cur && date) {
       const stampedEnd = stampClockNow();
-      const slots = [...cur.slots] as typeof cur.slots;
       const idx = s.slotIndex;
-      if (slots[idx]) {
-        slots[idx] = { ...slots[idx], end: stampedEnd };
-      }
+      // patchSlot keeps the day's full set of blocks (a saved day may be an
+      // older 1–3 block save that the store brings up to date on write).
+      if (cur.slots[idx]) useFocusStore.getState().patchSlot(date, idx, { end: stampedEnd, ended: true });
       useFocusStore.getState().patchDaily(date, {
-        slots,
         checks: { ...cur.checks, block: true },
       });
     }

@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { ArrowRight, BookOpen } from "lucide-react";
 import { Card } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
+import { CHAPTER_1_SLUG } from "@/lib/unlock/access";
 
 /** Ways out for visitors who are not buying yet (Buy page, lock screens). */
 export function NotReadyLinks({
@@ -24,7 +25,7 @@ export function NotReadyLinks({
       ) : null}
       {showChapter ? (
         <Button variant="outline" asChild>
-          <Link to="/guide/$slug" params={{ slug: "intro" }}>
+          <Link to="/guide/$slug" params={{ slug: CHAPTER_1_SLUG }}>
             <BookOpen className="size-4" /> Read Chapter 1 free
           </Link>
         </Button>

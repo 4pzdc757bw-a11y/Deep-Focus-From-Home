@@ -145,9 +145,13 @@ export function GettingStartedSheet({ onDone }: { onDone: () => void }) {
       );
     }
     if (step === 1) {
-      const cur = useFocusStore.getState().weeks[wk]?.blocks ?? ["", "", "", ""];
+      const cur = useFocusStore.getState().weeks[wk]?.blocks ?? [];
       patchWeek(wk, {
-        blocks: [formatWeekBlock(blocks[0]), formatWeekBlock(blocks[1]), cur[2] ?? "", cur[3] ?? ""],
+        blocks: [
+          formatWeekBlock({ ...blocks[0], task: blocks[0].task.trim() }),
+          formatWeekBlock({ ...blocks[1], task: blocks[1].task.trim() }),
+          ...cur.slice(2),
+        ],
       });
       // Block 1 goes straight onto Today's page with the same task, start and end
       // (no second "first focus block" step). Block 2's task becomes Today's Block 2.
@@ -285,7 +289,7 @@ export function GettingStartedSheet({ onDone }: { onDone: () => void }) {
 
             {step === 3 ? (
               <>
-                <p>When your work day is over, scroll down Today to the <strong>Shutdown note</strong> and write one line. Tick the shutdown steps under <strong>End of day</strong>, then tap the <strong>Close day</strong> button just below them, beside Send to partner and Print this day.</p>
+                <p>When your work day is over, scroll down Today to the <strong>Shutdown note</strong> and write one line. Tick the two shutdown steps under <strong>End of day</strong>, then tap the <strong>Close day</strong> button just below them, beside Send to partner and Print this day.</p>
                 <p>Close day marks the day done, offers to save a PDF (unless you just printed it), and opens your next work day’s page.</p>
                 <p>That’s it. Tapping the button below starts Day 1 of your 7-day starter.</p>
               </>
