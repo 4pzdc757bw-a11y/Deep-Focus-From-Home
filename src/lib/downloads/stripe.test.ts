@@ -16,11 +16,13 @@ function session(opts: {
   payment_status?: CheckoutAccessSession["payment_status"];
   status?: CheckoutAccessSession["status"];
   payment_intent?: CheckoutAccessSession["payment_intent"];
+  amount_total?: CheckoutAccessSession["amount_total"];
 }): CheckoutAccessSession {
   return {
     payment_status: opts.payment_status ?? "paid",
     status: opts.status ?? "complete",
     payment_intent: opts.payment_intent === undefined ? null : opts.payment_intent,
+    amount_total: opts.amount_total,
   };
 }
 
@@ -151,6 +153,38 @@ describe("checkoutSessionGrantsAccess", () => {
     );
   });
 
+  it("allows a $0 complete session reported as paid with no PaymentIntent (beta helper)", () => {
+    assert.equal(
+      checkoutSessionGrantsAccess(
+        session({ payment_status: "paid", payment_intent: null, amount_total: 0 }),
+      ),
+      true,
+    );
+  });
+
+  it("denies a $0 session that never completed", () => {
+    assert.equal(
+      checkoutSessionGrantsAccess(
+        session({
+          payment_status: "unpaid",
+          status: "open",
+          payment_intent: null,
+          amount_total: 0,
+        }),
+      ),
+      false,
+    );
+  });
+
+  it("fails closed when a non-zero paid session has no PaymentIntent", () => {
+    assert.equal(
+      checkoutSessionGrantsAccess(
+        session({ payment_status: "paid", payment_intent: null, amount_total: 3700 }),
+      ),
+      false,
+    );
+  });
+
   it("fails closed when paid session has no PaymentIntent", () => {
     assert.equal(
       checkoutSessionGrantsAccess(
@@ -251,6 +285,49 @@ describe("assertPaidCheckoutSession refunds (Terms §8)", () => {
       stripe: api,
     });
     assert.equal(result.sessionId, "cs_app");
+  });
+
+  function zeroSession(
+    id: string,
+    payment_status: "paid" | "no_payment_required",
+  ): Stripe.Checkout.Session {
+    return {
+      id,
+      object: "checkout.session",
+      payment_status,
+      status: "complete",
+      amount_subtotal: 0,
+      amount_total: 0,
+      currency: "usd",
+      success_url: `https://deepfocusfromhome.com/thanks?paid=1&product=app&session_id={CHECKOUT_SESSION_ID}`,
+      customer_details: { email: EMAIL },
+      customer_email: null,
+      payment_intent: null,
+    } as unknown as Stripe.Checkout.Session;
+  }
+
+  it("lets a $0 beta-helper checkout (paid, no PaymentIntent) download", async () => {
+    const { api } = fakeStripe([zeroSession("cs_zero_paid", "paid")]);
+    const result = await assertPaidCheckoutSession("cs_zero_paid", { stripe: api });
+    assert.equal(result.sessionId, "cs_zero_paid");
+  });
+
+  it("lets a $0 no_payment_required checkout download", async () => {
+    const { api } = fakeStripe([zeroSession("cs_zero_npr", "no_payment_required")]);
+    const result = await assertPaidCheckoutSession("cs_zero_npr", { stripe: api });
+    assert.equal(result.sessionId, "cs_zero_npr");
+  });
+
+  it("$0 helper access does not rescue a different refunded paid purchase of a non-matching email", async () => {
+    const refunded = stripeSession("cs_paid_refunded", {
+      refunded: 1700,
+      email: "someone@else.com",
+    });
+    const { api } = fakeStripe([refunded, zeroSession("cs_zero_other", "paid")]);
+    await assert.rejects(
+      assertPaidCheckoutSession("cs_paid_refunded", { stripe: api }),
+      { name: "DownloadAuthError", message: REFUNDED_MESSAGE },
+    );
   });
 
   it("ends access for a single fully refunded purchase", async () => {

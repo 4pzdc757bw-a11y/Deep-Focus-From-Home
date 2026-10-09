@@ -105,6 +105,7 @@ export type CheckoutAccessSession = {
   payment_status?: string | null;
   status?: string | null;
   payment_intent?: string | PaymentIntentRefundFields | null;
+  amount_total?: number | null;
 };
 
 /**
@@ -121,7 +122,11 @@ export function checkoutSessionGrantsAccess(
 
   const pi = session.payment_intent;
   if (pi == null) {
-    // Paid/complete with no PI is unexpected; do not unlock.
+    // A $0 checkout in payment mode (beta-helper link, 100% coupon) completes
+    // with payment_status "paid" and no PaymentIntent. Nothing was charged,
+    // so nothing can be refunded: grant access.
+    if (session.amount_total === 0) return true;
+    // Paid/complete with no PI and a non-zero total is unexpected; do not unlock.
     return false;
   }
   return paymentIntentRefundStatus(pi) === "not_refunded";
