@@ -6,6 +6,7 @@ import { SheetPortal } from "@/components/sheet-portal";
 import { WeeklyPlannerSheet } from "@/components/weekly-planner-sheet";
 import { Button } from "@/components/ui/button";
 import { closeDay } from "@/lib/close-day";
+import { saveDailyPdf } from "@/lib/daily-pdf";
 import { useFocusStore } from "@/lib/store";
 import { printDaily, printedRecently } from "@/lib/print";
 import { cn, isDateKey, isFriday } from "@/lib/utils";
@@ -54,6 +55,7 @@ export function CloseDayButton({
   );
   // Printed / saved this day's PDF in the last ~10 min → don't ask again.
   const [alreadySaved, setAlreadySaved] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   function startClose() {
     setAlreadySaved(printedRecently(closingDate()));
@@ -85,14 +87,33 @@ export function CloseDayButton({
     setPhase("offer-pdf");
   }
 
-  /** Close, then print again even though it was saved recently. */
+  /** Close, then offer Save PDF / Print again even though it was saved recently. */
   function runCloseAndSaveAgain() {
     const closedDate = closingDate();
     const result = closeDay(closedDate);
-    savePdfThenAdvance({ closedDate, nextDate: result.nextDate });
+    setNext({ closedDate, nextDate: result.nextDate });
+    setPhase("offer-pdf");
   }
 
-  function savePdfThenAdvance(target = next) {
+  /** "Save PDF": a real PDF straight to Downloads (no print dialog), then next day. */
+  function downloadPdfThenAdvance(target = next) {
+    const closedDate = target?.closedDate ?? closingDate();
+    const nextDate = target?.nextDate;
+    setSaving(true);
+    void saveDailyPdf(closedDate).then((ok) => {
+      setSaving(false);
+      if (!ok) {
+        // Could not build the file here: fall back to the print dialog.
+        printThenAdvance(target);
+        return;
+      }
+      setPhase("idle");
+      if (nextDate) void navigate({ to: "/daily", search: { date: nextDate } });
+    });
+  }
+
+  /** "Print": the browser print dialog for the closed day, then next day. */
+  function printThenAdvance(target = next) {
     setPhase("idle");
     const closedDate = target?.closedDate ?? closingDate();
     const nextDate = target?.nextDate;
@@ -184,12 +205,12 @@ export function CloseDayButton({
                 Close today?
               </h2>
               <p className="mt-2 text-ink">
-                Marks today done (and copies your Shutdown note into the starter
-                day’s “one line” during week one), keeps the Daily OS in local
+                Marks today done (and copies your Shutdown note and Other things
+                I did today into the starter day’s “one line” during week one), keeps the Daily OS in local
                 history, then{" "}
                 {alreadySaved
                   ? "moves you to your next work day."
-                  : "offers Save PDF and moves you to your next work day."}
+                  : "offers Save PDF or Print and moves you to your next work day."}
               </p>
               {alreadySaved ? (
                 <p className="mt-2 text-sm text-olive">
@@ -218,7 +239,7 @@ export function CloseDayButton({
                   className="inline-flex min-h-11 items-center px-1 text-sm font-semibold text-gold underline underline-offset-4"
                   onClick={runCloseAndSaveAgain}
                 >
-                  Close and save PDF again
+                  Close and save or print again
                 </button>
               ) : null}
             </div>
@@ -245,12 +266,13 @@ export function CloseDayButton({
                 Day closed
               </p>
               <h2 id="save-pdf-title" className="mt-1 font-display text-2xl text-olive">
-                Save PDF to Downloads?
+                Keep a copy of today?
               </h2>
               <p className="mt-2 text-ink">
-                Opens print — choose “Save as PDF” to keep a copy of today’s OS.
-                Your notes stay on this device either way.
+                Save PDF puts a copy of today’s OS in your Downloads folder. Print
+                opens your printer.
               </p>
+              <p className="mt-2 text-ink">Your notes stay on this device either way.</p>
               {!starterStart ? (
                 <p className="mt-3 rounded-md border border-yellow bg-paper p-3 text-sm text-ink">
                   Tip: you haven’t set up your 7-day starter week yet.{" "}
@@ -269,9 +291,18 @@ export function CloseDayButton({
               <button
                 type="button"
                 className="inline-flex h-11 items-center justify-center rounded-md bg-olive px-4 text-sm font-semibold text-cream"
-                onClick={() => savePdfThenAdvance()}
+                disabled={saving}
+                onClick={() => downloadPdfThenAdvance()}
               >
-                Save PDF
+                {saving ? "Saving…" : "Save PDF"}
+              </button>
+              <button
+                type="button"
+                className="inline-flex h-11 items-center justify-center rounded-md border border-olive bg-paper px-4 text-sm font-semibold text-olive"
+                disabled={saving}
+                onClick={() => printThenAdvance()}
+              >
+                Print
               </button>
               <button
                 type="button"

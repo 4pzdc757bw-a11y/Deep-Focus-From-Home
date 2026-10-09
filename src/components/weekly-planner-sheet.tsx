@@ -20,12 +20,7 @@ function emptyDraft(from: WeekState | undefined, key: string): WeekState {
   }
   return {
     theme: from?.theme ?? "",
-    blocks: [
-      from?.blocks[0] ?? "",
-      from?.blocks[1] ?? "",
-      from?.blocks[2] ?? "",
-      from?.blocks[3] ?? "",
-    ],
+    blocks: [...(from?.blocks ?? [])],
     coworking: from?.coworking ?? "",
     fridayNote: from?.fridayNote ?? "",
   };
@@ -41,6 +36,7 @@ export function WeeklyPlannerSheet({ onDone, date }: { onDone: () => void; date?
   const key = nextWeekKey(date ? new Date(`${date}T12:00:00`) : new Date());
   const stored = useFocusStore((s) => s.weeks[key]);
   const patchWeek = useFocusStore((s) => s.patchWeek);
+  const markBlockSetupDone = useFocusStore((s) => s.markBlockSetupDone);
   const [step, setStep] = useState<Step>("ask");
   const [draft, setDraft] = useState<WeekState>(() => emptyDraft(stored, key));
 
@@ -63,6 +59,8 @@ export function WeeklyPlannerSheet({ onDone, date }: { onDone: () => void; date?
       blocks: draft.blocks,
       coworking: draft.coworking,
     });
+    // Planned their blocks: the Daily OS set-up box has done its job.
+    markBlockSetupDone();
     onDone();
   }
 
@@ -110,9 +108,9 @@ export function WeeklyPlannerSheet({ onDone, date }: { onDone: () => void; date?
               Week of {prettyDate(key)}
             </h2>
             <p className="mt-2 text-sm text-ink">
-              Outcome + Mon–Fri blocks (day, time, task). Sat/Sun only if you
-              need overflow — no push to work the weekend. Same fields as Tools →
-              Weekly planner.
+              Outcome + each day’s own blocks (time, length, task). Sat/Sun only
+              if you need overflow — no push to work the weekend. Same fields as
+              Tools → Weekly planner.
             </p>
             <div className="mt-3 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-1">
               <Field label="Next week’s outcome" hint="One sentence for the week.">

@@ -121,13 +121,11 @@ export async function completeSession() {
     useFocusStore.getState().setSession({ running: false, phase: "done" });
     if (cur && date) {
       const stampedEnd = stampClockNow();
-      const slots = [...cur.slots] as typeof cur.slots;
       const idx = s.slotIndex;
-      if (slots[idx]) {
-        slots[idx] = { ...slots[idx], end: stampedEnd };
-      }
+      // patchSlot keeps the day's full set of blocks (a saved day may be an
+      // older 1–3 block save that the store brings up to date on write).
+      if (cur.slots[idx]) useFocusStore.getState().patchSlot(date, idx, { end: stampedEnd, ended: true });
       useFocusStore.getState().patchDaily(date, {
-        slots,
         checks: { ...cur.checks, block: true },
       });
     }

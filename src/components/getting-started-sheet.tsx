@@ -145,9 +145,9 @@ export function GettingStartedSheet({ onDone }: { onDone: () => void }) {
       );
     }
     if (step === 1) {
-      const cur = useFocusStore.getState().weeks[wk]?.blocks ?? ["", "", "", ""];
+      const cur = useFocusStore.getState().weeks[wk]?.blocks ?? [];
       patchWeek(wk, {
-        blocks: [formatWeekBlock(blocks[0]), formatWeekBlock(blocks[1]), cur[2] ?? "", cur[3] ?? ""],
+        blocks: [formatWeekBlock(blocks[0]), formatWeekBlock(blocks[1]), ...cur.slice(2)],
       });
       // Block 1 goes straight onto Today's page with the same task, start and end
       // (no second "first focus block" step). Block 2's task becomes Today's Block 2.

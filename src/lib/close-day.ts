@@ -63,7 +63,8 @@ export type CloseDayResult = {
 };
 
 /**
- * Close the workday: copy Shutdown note → starter “one line”, mark day done,
+ * Close the workday: copy Shutdown note (and Other things I did today) →
+ * starter “one line”, mark day done,
  * keep the daily entry in local history, return next-day pointers for nav/print.
  */
 export function closeDay(osDate = currentWorkdayKey()): CloseDayResult {
@@ -75,17 +76,18 @@ export function closeDay(osDate = currentWorkdayKey()): CloseDayResult {
   const day = started ? starterDayForDate(started, osDate) : null;
 
   const entry = store.dailies[osDate];
-  const shutdown = (entry?.note ?? "").trim();
+  // Shutdown note, then "Other things I did today", each copied once.
+  const lines = [entry?.note, entry?.otherNote].map((t) => (t ?? "").trim()).filter(Boolean);
   let noteCopied = false;
 
   if (day != null) {
-    if (shutdown) {
-      const existing = (store.starterNotes[day] ?? "").trim();
+    for (const line of lines) {
+      const existing = (useFocusStore.getState().starterNotes[day] ?? "").trim();
       if (!existing) {
-        store.setStarterNote(day, shutdown);
+        store.setStarterNote(day, line);
         noteCopied = true;
-      } else if (!existing.includes(shutdown)) {
-        store.setStarterNote(day, `${existing}\n${shutdown}`);
+      } else if (!existing.includes(line)) {
+        store.setStarterNote(day, `${existing}\n${line}`);
         noteCopied = true;
       }
     }

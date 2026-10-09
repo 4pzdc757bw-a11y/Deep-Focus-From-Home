@@ -9,6 +9,7 @@ const KEYS = [
   "energy",
   "setup",
   "homeFocusWeekTwoPrompted",
+  "blockSetupDone",
   "household",
   "weeks",
   "months",

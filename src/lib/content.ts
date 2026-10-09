@@ -1,4 +1,6 @@
 export const APP_NAME = "Deep Focus from Home";
+/** Footer on the printed / saved Daily OS and the fillables. */
+export const PRINT_FOOTER = "deepfocusfromhome.com · support@deepfocusfromhome.com";
 export const APP_LINE = "Focus is a design problem, not a character test.";
 
 export const STARTER_DAYS = [

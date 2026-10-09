@@ -2,6 +2,21 @@ import { durationMinutes, stampClockNow } from "./chime.ts";
 import { blockDefaults, parseWorkHours, spanMinutes, toClock, toMinutes, workMinutes } from "./work-hours.ts";
 
 const DEFAULT_BLOCK_MINUTES = 90;
+/** Shortest app-filled block when 90 min would run past the work-day stop. */
+const MIN_FIT_MINUTES = 60;
+
+/** Blocks on a Daily OS page: a new day shows 4; Add goes up to 8, Remove down to 1. */
+export const MIN_DAY_BLOCKS = 1;
+export const DEFAULT_DAY_BLOCKS = 4;
+export const MAX_DAY_BLOCKS = 8;
+/** Saved on each day by the 4–8 block page (older days have no marker). */
+export const DAY_BLOCKS_LAYOUT = 2;
+
+/** A whole number of blocks inside 1–8 (anything unreadable → `fallback`). */
+export function clampBlockCount(n: unknown, fallback = DEFAULT_DAY_BLOCKS): number {
+  const v = typeof n === "number" && Number.isFinite(n) ? Math.round(n) : fallback;
+  return Math.min(MAX_DAY_BLOCKS, Math.max(MIN_DAY_BLOCKS, v));
+}
 const MAX_BLOCK_MINUTES = 4 * 60;
 
 /** Planned length from the block's prefilled/typed times (may cross midnight); 90 min if unusable. */
@@ -142,5 +157,132 @@ export function nextBlockTimes(
     if (since < 12 * 60) base = Math.max(base, prevEnd + since);
   }
   const start = ceilQuarter(base);
-  return { start: toClock(start), end: toClock(start + DEFAULT_BLOCK_MINUTES) };
+  // Keep it inside the work day when there is room for at least an hour
+  // (4:00 PM on a 9–5 day → 4:00–5:00); later blocks stay 90 min.
+  let len = DEFAULT_BLOCK_MINUTES;
+  const stop = parseWorkHours(hours)?.stop ?? null;
+  const onDay = workMinutes(toClock(start), hours);
+  if (stop != null && onDay != null && onDay + len > stop && stop - onDay >= MIN_FIT_MINUTES) {
+    len = stop - onDay;
+  }
+  return { start: toClock(start), end: toClock(start + len) };
+}
+
+/**
+ * Prefilled times for the first `count` blocks of a new day: the given
+ * planned blocks (week plan, or Block 1 at the start of the work day), then
+ * each next block 15 min after the one before, rounded up to the quarter hour
+ * (nextBlockTimes, no clock). Never blank. 9–5: 9:00–10:30, 10:45–12:15,
+ * 12:30–2:00, 2:15–3:45.
+ */
+export function defaultDayTimes(
+  count: number,
+  hours: string | undefined | null,
+  planned: readonly { start: string; end: string }[] = [],
+): { start: string; end: string }[] {
+  const n = clampBlockCount(count);
+  const out: { start: string; end: string }[] = [];
+  for (let i = 0; i < n; i++) {
+    const p = planned[i];
+    if (p?.start) out.push(withLength({ start: p.start, end: p.end || p.start }));
+    else if (i === 0) out.push(withLength(blockDefaults(0, hours)));
+    else out.push(nextBlockTimes(out[i - 1], i, hours, null));
+  }
+  return out;
+}
+
+/**
+ * A new day's times from that weekday's own week plan: the planned blocks in
+ * time order. Days with no plan get the 4 default blocks. A planned day with
+ * fewer than 4 blocks gets more after its last one only while they fit in the
+ * work hours (at least an hour before the stop), so a day planned to the end
+ * (9–11:30 + a 1–5 PM Zoom) stays as planned.
+ */
+export function planDayTimes(
+  planned: readonly { start: string; end: string }[],
+  hours: string | undefined | null,
+): { start: string; end: string }[] {
+  if (!planned.length) return defaultDayTimes(DEFAULT_DAY_BLOCKS, hours);
+  const out = planned
+    .slice(0, MAX_DAY_BLOCKS)
+    .map((p) => withLength({ start: p.start, end: p.end || p.start }));
+  const stop = parseWorkHours(hours)?.stop ?? null;
+  while (out.length < DEFAULT_DAY_BLOCKS) {
+    const next = nextBlockTimes(out[out.length - 1], out.length, hours, null);
+    if (stop != null) {
+      const at = workMinutes(next.start, hours);
+      if (at == null || at + MIN_FIT_MINUTES > stop) break;
+    }
+    out.push(next);
+  }
+  return out;
+}
+
+/**
+ * Times for a block added after `prev` with a given length (Move to
+ * tomorrow keeps the block's length): 15 min after `prev` ends, on the
+ * quarter hour; the work-day start when there is no block before it.
+ */
+export function addedBlockTimes(
+  prev: { start: string; end: string } | undefined,
+  index: number,
+  minutes: number,
+  hours: string | undefined | null,
+): { start: string; end: string } {
+  const base = prev?.end ? nextBlockTimes(prev, index, hours, null) : withLength(blockDefaults(0, hours));
+  const a = toMinutes(base.start) ?? 0;
+  return { start: base.start, end: toClock(a + minutes) };
+}
+
+/** Slots with block `index` taken out (later ones move up, an empty one at the end). */
+export function withoutSlot<T>(slots: readonly T[], index: number, empty: () => T): T[] {
+  if (index < 0 || index >= slots.length) return [...slots];
+  return [...slots.slice(0, index), ...slots.slice(index + 1), empty()];
+}
+
+type CountSlot = { start: string; end: string; task?: string; outcome?: string };
+
+function hasContent(slot: CountSlot | null | undefined) {
+  return Boolean(slot && (slot.start || slot.end || slot.task || slot.outcome));
+}
+
+/**
+ * How many blocks a saved day shows: at least up to the last block with
+ * anything in it, at least what was saved, and, for days saved before the
+ * 4–8 block page (`legacy`, slotCount 1–3), at least 4, so nothing is hidden.
+ */
+export function dayBlockCount(
+  slots: readonly (CountSlot | null | undefined)[],
+  stored: unknown,
+  legacy: boolean,
+): number {
+  let n = MIN_DAY_BLOCKS;
+  for (let i = 0; i < Math.min(slots.length, MAX_DAY_BLOCKS); i++) if (hasContent(slots[i])) n = i + 1;
+  const saved = typeof stored === "number" && Number.isFinite(stored) ? clampBlockCount(stored) : MIN_DAY_BLOCKS;
+  return Math.max(n, saved, legacy ? DEFAULT_DAY_BLOCKS : MIN_DAY_BLOCKS);
+}
+
+/**
+ * Times for visible blocks that have neither a start nor an end (a day saved
+ * with 1–3 blocks now opening with 4): each follows the block before it, as
+ * Add another block would. Returns only the blocks to fill.
+ */
+export function fillBlankTimes(
+  slots: readonly (PlanSlot | null | undefined)[],
+  count: number,
+  hours: string | undefined | null,
+): { index: number; start: string; end: string }[] {
+  const out: { index: number; start: string; end: string }[] = [];
+  let prev: PlanSlot | undefined;
+  for (let i = 0; i < Math.min(clampBlockCount(count), MAX_DAY_BLOCKS); i++) {
+    const slot = slots[i];
+    if (slot && (slot.start || slot.end || slot.started)) {
+      prev = slot;
+      continue;
+    }
+    const t = i === 0 ? withLength(blockDefaults(0, hours)) : nextBlockTimes(prev, i, hours, null);
+    out.push({ index: i, ...t });
+    prev = { start: t.start, end: t.end };
+  }
+  return out;
 }
