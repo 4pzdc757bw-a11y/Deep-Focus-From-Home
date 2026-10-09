@@ -30,8 +30,6 @@ function day(blocks: number, notes = long): PdfDay {
     steps: [
       { id: "outcomes", label: "Review and mark the day’s top outcomes", checked: true },
       { id: "loops", label: "Capture open loops for tomorrow", checked: true },
-      { id: "apps", label: "Close work apps and browser profiles", checked: false },
-      { id: "space", label: "Leave or cover the workspace", checked: false },
     ],
     noteAfterId: "loops",
     shutdownDone: false,

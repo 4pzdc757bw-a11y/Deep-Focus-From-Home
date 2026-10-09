@@ -42,8 +42,6 @@ export const emptyPrep = (): BlockPrep => ({ surface: false, phone: false, signa
 export const emptyShutdownSteps = (): Record<ShutdownStepId, boolean> => ({
   outcomes: false,
   loops: false,
-  apps: false,
-  space: false,
 });
 
 function readShutdownSteps(raw: unknown): Record<ShutdownStepId, boolean> {

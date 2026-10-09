@@ -390,12 +390,21 @@ export type BlockPrepId = (typeof BLOCK_PREP_CHECKS)[number]["id"];
  * End-of-day shutdown, from the handbook's "Daily Focus Checklist → END-OF-DAY
  * SHUTDOWN (5 minutes)" (same routine as Chapter 4.3, End-of-Day Shutdown
  * Ritual). The checklist's optional fifth item is left out.
+ *
+ * Only the two steps done before Close day are checkboxes on the page. The
+ * last two happen after Close day has moved you on, so they are shown as a
+ * "Before you go:" reminder in the Close day pop-up instead
+ * (SHUTDOWN_AFTER_CLOSE). Paper fillables still list all four.
  */
 export const SHUTDOWN_STEPS = [
   { id: "outcomes", label: "Review and mark the day’s top outcomes" },
   { id: "loops", label: "Capture open loops for tomorrow" },
-  { id: "apps", label: "Close work apps and browser profiles" },
-  { id: "space", label: "Leave or cover the workspace" },
+] as const;
+
+/** Handbook shutdown steps 3–4, shown in the Close day pop-up above Save PDF / Print. */
+export const SHUTDOWN_AFTER_CLOSE = [
+  "Close work apps and browser profiles.",
+  "Leave or cover the workspace.",
 ] as const;
 
 export type ShutdownStepId = (typeof SHUTDOWN_STEPS)[number]["id"];

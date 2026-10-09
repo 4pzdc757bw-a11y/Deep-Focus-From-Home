@@ -6,6 +6,7 @@ import { SheetPortal } from "@/components/sheet-portal";
 import { WeeklyPlannerSheet } from "@/components/weekly-planner-sheet";
 import { Button } from "@/components/ui/button";
 import { closeDay } from "@/lib/close-day";
+import { SHUTDOWN_AFTER_CLOSE } from "@/lib/content";
 import { saveDailyPdf } from "@/lib/daily-pdf";
 import { useFocusStore } from "@/lib/store";
 import { printDaily, printedRecently } from "@/lib/print";
@@ -16,6 +17,23 @@ import { currentWorkdayKey } from "@/lib/workday";
 function dayIsFriday(date: string) {
   const [y, m, d] = date.split("-").map(Number);
   return isFriday(new Date(y ?? 1970, (m ?? 1) - 1, d ?? 1));
+}
+
+/**
+ * Handbook shutdown steps 3–4. Close day moves you to the next day, so these
+ * are a reminder in the pop-up rather than checkboxes on the page.
+ */
+function BeforeYouGo() {
+  return (
+    <div className="mt-3 rounded-md border border-yellow bg-paper p-3">
+      <p className="text-sm font-semibold text-olive">Before you go:</p>
+      <ul className="mt-1 list-disc space-y-0.5 pl-5 text-sm text-ink">
+        {SHUTDOWN_AFTER_CLOSE.map((line) => (
+          <li key={line}>{line}</li>
+        ))}
+      </ul>
+    </div>
+  );
 }
 
 type Phase =
@@ -213,9 +231,12 @@ export function CloseDayButton({
                   : "offers Save PDF or Print and moves you to your next work day."}
               </p>
               {alreadySaved ? (
-                <p className="mt-2 text-sm text-olive">
-                  You already saved today’s PDF, so it won’t ask again.
-                </p>
+                <>
+                  <p className="mt-2 text-sm text-olive">
+                    You already saved today’s PDF, so it won’t ask again.
+                  </p>
+                  <BeforeYouGo />
+                </>
               ) : null}
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
@@ -273,6 +294,7 @@ export function CloseDayButton({
                 opens your printer.
               </p>
               <p className="mt-2 text-ink">Your notes stay on this device either way.</p>
+              <BeforeYouGo />
               {!starterStart ? (
                 <p className="mt-3 rounded-md border border-yellow bg-paper p-3 text-sm text-ink">
                   Tip: you haven’t set up your 7-day starter week yet.{" "}

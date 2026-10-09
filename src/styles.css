@@ -302,7 +302,7 @@ html[data-df-starter] .df-pre-welcome {
     margin-top: 0.1rem !important;
   }
 
-  /* Shutdown note sits between "Capture open loops" and "Close work apps" */
+  /* Shutdown note sits under "Capture open loops", above Close day */
   .daily-os .daily-endday > .daily-endday-note {
     flex-basis: 100%;
     margin: 0.1rem 0 !important;
