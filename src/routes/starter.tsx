@@ -43,14 +43,17 @@ function StarterPage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <div role="note" className="rounded-md border border-yellow bg-paper p-3 text-sm text-ink">
-        <p className="font-semibold text-olive">Just signed up?</p>
-        <p className="mt-1">
-          Look for an email from Jeffrey at Deep Focus from Home called “Confirm your free 7-day
-          pack” and tap the button. Not in your inbox? Check Junk, Spam or Promotions, and move it
-          to your Inbox so the daily emails get through.
-        </p>
-      </div>
+      {/* Free sign-ups only: anyone with a handbook or app unlock on this device skips it. */}
+      {handbookUnlocked ? null : (
+        <div role="note" className="rounded-md border border-yellow bg-paper p-3 text-sm text-ink">
+          <p className="font-semibold text-olive">Just signed up?</p>
+          <p className="mt-1">
+            Look for an email from Jeffrey at Deep Focus from Home called “Confirm your free 7-day
+            pack” and tap the button. Not in your inbox? Check Junk, Spam or Promotions, and move
+            it to your Inbox so the daily emails get through.
+          </p>
+        </div>
+      )}
       <PageTitle
         kicker="Week one"
         title="Seven days. One job each day."
