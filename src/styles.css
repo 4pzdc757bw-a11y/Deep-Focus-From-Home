@@ -300,6 +300,33 @@ html[data-df-starter] .df-pre-welcome {
     margin-top: 0.1rem !important;
   }
 
+  /* Shutdown note sits between "Capture open loops" and "Close work apps" */
+  .daily-os .daily-endday > .daily-endday-note {
+    flex-basis: 100%;
+    margin: 0.1rem 0 !important;
+  }
+
+  .daily-os .daily-endday > .daily-endday-note textarea {
+    min-height: 3rem !important;
+  }
+
+  /* Outcome "Done" box: same line as the Outcome input */
+  .daily-os .daily-outcome-row {
+    gap: 0.3rem !important;
+  }
+
+  .daily-os .daily-done {
+    gap: 0.25rem !important;
+    font-size: 9pt !important;
+    padding: 0 !important;
+  }
+
+  .daily-os .daily-done > span[aria-hidden] {
+    width: 11pt !important;
+    height: 11pt !important;
+    border: 1.5pt solid #3a4a32 !important;
+  }
+
   .daily-os .daily-endday > p > span[aria-hidden] {
     width: 11pt !important;
     height: 11pt !important;

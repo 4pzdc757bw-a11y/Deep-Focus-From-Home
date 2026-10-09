@@ -1,5 +1,5 @@
 import { Bell, BellRing, Check, Plus } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { Card } from "@/components/app-shell";
 import { CloseDayButton } from "@/components/close-day-button";
 import { EnergyCheckInSheet, type EnergyCheckInContext } from "@/components/energy-check-in-sheet";
@@ -340,12 +340,20 @@ export function DailyOs({ date }: { date?: string }) {
               />
             </Field>
             <Field label="Outcome">
-              <Input
-                value={slot.outcome}
-                placeholder="What done looks like"
-                aria-label={`${SLOT_LABELS[i]} outcome`}
-                onChange={(e) => patchSlot(i, { outcome: e.target.value })}
-              />
+              <div className="daily-outcome-row flex items-center gap-2">
+                <Input
+                  value={slot.outcome}
+                  placeholder="What done looks like"
+                  aria-label={`${SLOT_LABELS[i]} outcome`}
+                  className="min-w-0 flex-1"
+                  onChange={(e) => patchSlot(i, { outcome: e.target.value })}
+                />
+                <DoneToggle
+                  checked={Boolean(slot.outcomeDone)}
+                  label={`${SLOT_LABELS[i]} outcome done`}
+                  onChange={(v) => patchSlot(i, { outcomeDone: v })}
+                />
+              </div>
             </Field>
             {active && notifyAsk ? (
               <div
@@ -445,13 +453,6 @@ export function DailyOs({ date }: { date?: string }) {
             placeholder="Today I will finish…"
           />
         </Field>
-        <Field label="Shutdown note">
-          <Textarea
-            value={entry.note}
-            onChange={(e) => patch({ note: e.target.value })}
-            placeholder="What finished. What waits until tomorrow."
-          />
-        </Field>
         <div className="daily-endday flex flex-col gap-1.5">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
             End of day
@@ -465,16 +466,38 @@ export function DailyOs({ date }: { date?: string }) {
             Shutdown · 5 minutes
           </p>
           {SHUTDOWN_STEPS.map((step) => (
-            <CheckRow
-              key={step.id}
-              label={step.label}
-              checked={entry.shutdownSteps[step.id]}
-              onCheckedChange={(v) => {
-                const shutdownSteps = { ...entry.shutdownSteps, [step.id]: v };
-                const all = SHUTDOWN_STEPS.every((x) => shutdownSteps[x.id]);
-                patch({ shutdownSteps, checks: { ...entry.checks, shutdown: all } });
-              }}
-            />
+            <Fragment key={step.id}>
+              <CheckRow
+                label={step.label}
+                checked={entry.shutdownSteps[step.id]}
+                onCheckedChange={(v) => {
+                  const shutdownSteps = { ...entry.shutdownSteps, [step.id]: v };
+                  const all = SHUTDOWN_STEPS.every((x) => shutdownSteps[x.id]);
+                  patch({ shutdownSteps, checks: { ...entry.checks, shutdown: all } });
+                }}
+              />
+              {step.id === "outcomes" ? (
+                <p className="daily-step-hint no-print -mt-1 pl-12 text-sm text-muted">
+                  Check Done on each outcome you finished.
+                </p>
+              ) : null}
+              {step.id === "loops" ? (
+                <>
+                  <div className="daily-endday-note">
+                    <Field label="Shutdown note">
+                      <Textarea
+                        value={entry.note}
+                        onChange={(e) => patch({ note: e.target.value })}
+                        placeholder="What finished. What waits until tomorrow."
+                      />
+                    </Field>
+                  </div>
+                  <div className="no-print flex flex-wrap gap-2 py-1">
+                    <CloseDayButton variant="inline" />
+                  </div>
+                </>
+              ) : null}
+            </Fragment>
           ))}
           <StatusLine
             done={entry.checks.shutdown}
@@ -509,7 +532,6 @@ export function DailyOs({ date }: { date?: string }) {
           <Button type="button" variant="outline" onClick={() => printDaily(osDate)}>
             Print this day
           </Button>
-          <CloseDayButton variant="inline" />
         </div>
         {shareState ? <p className="no-print text-sm text-olive">{shareState}</p> : null}
       </Card>
@@ -521,5 +543,44 @@ export function DailyOs({ date }: { date?: string }) {
         />
       ) : null}
     </div>
+  );
+}
+
+/**
+ * "Done" tick beside a block's Outcome. A button (not a nested label) so a tap
+ * on it never focuses the Outcome input; prints as a small box + "Done".
+ */
+function DoneToggle({
+  checked,
+  label,
+  onChange,
+}: {
+  checked: boolean;
+  label: string;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="checkbox"
+      aria-checked={checked}
+      aria-label={label}
+      onClick={(e) => {
+        e.preventDefault();
+        onChange(!checked);
+      }}
+      className="daily-done flex min-h-12 shrink-0 items-center gap-2 rounded-md bg-cream px-3 text-base text-ink print:min-h-0 print:bg-transparent print:px-0"
+    >
+      <span
+        aria-hidden
+        className={cn(
+          "flex size-6 items-center justify-center rounded-sm border border-gold bg-paper text-olive",
+          checked && "bg-olive text-cream",
+        )}
+      >
+        {checked ? <Check className="size-4" strokeWidth={3} /> : null}
+      </span>
+      Done
+    </button>
   );
 }

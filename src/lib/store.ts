@@ -12,6 +12,8 @@ export type DailySlot = {
   end: string;
   task: string;
   outcome: string;
+  /** "Done" ticked beside the Outcome (used by the end-of-day review). */
+  outcomeDone?: boolean;
   /** "Before you ring the bell" ticks for this block. */
   prep?: BlockPrep;
   /** Bell rung for this block (its times are real, never auto-moved). */
@@ -267,6 +269,7 @@ function migrateDaily(raw: Record<string, unknown>, hours?: string): DailyEntry 
         task: s?.task ?? "",
         outcome: s?.outcome ?? "",
         prep,
+        ...(s?.outcomeDone ? { outcomeDone: true } : {}),
         ...(s?.started ? { started: true } : {}),
         ...(s?.edited ? { edited: true } : {}),
         ...(s?.auto ? { auto: true } : {}),
