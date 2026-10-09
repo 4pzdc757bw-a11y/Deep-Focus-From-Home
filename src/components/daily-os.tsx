@@ -15,6 +15,7 @@ import {
   stampClockNow,
   unlockAudio,
 } from "@/lib/chime";
+import { prepHint, prepReady } from "@/lib/block-prep";
 import { catchUpBlocks, nextBlockTimes, startPlan, withLength } from "@/lib/block-plan";
 import { installPrintTextareaFit, printDaily, setActivePrintDate } from "@/lib/print";
 import { blockDefaults, endForStart, endsNextDay } from "@/lib/work-hours";
@@ -31,6 +32,7 @@ import { emptyPrep, emptySlot, useDaily, useFocusStore } from "@/lib/store";
 import { cn, prettyDate } from "@/lib/utils";
 
 const SLOT_LABELS = ["Block 1", "Block 2", "Block 3"] as const;
+const PREP_IDS = BLOCK_PREP_CHECKS.map((c) => c.id);
 
 function TimeField({
   label,
@@ -200,6 +202,8 @@ export function DailyOs({ date }: { date?: string }) {
 
   async function startSlot(index: number) {
     const slot = entry.slots[index];
+    // Owner rule: no bell until every "Before you ring the bell" box is ticked.
+    if (!prepReady(slot?.prep, PREP_IDS)) return;
     // Stamp actual start; end follows the planned length (Done stamps the real end).
     const plan = startPlan(slot);
     // Unlock audio inside this tap before any notify UI — first Start used to
@@ -392,6 +396,10 @@ export function DailyOs({ date }: { date?: string }) {
                 <Button
                   type="button"
                   variant={i === 0 ? "default" : "outline"}
+                  disabled={!prepReady(slot.prep, PREP_IDS)}
+                  aria-describedby={
+                    prepReady(slot.prep, PREP_IDS) ? undefined : `daily-prep-hint-${i}`
+                  }
                   onClick={() => void startSlot(i)}
                 >
                   <Bell
@@ -401,6 +409,11 @@ export function DailyOs({ date }: { date?: string }) {
                 </Button>
               )}
             </div>
+            {!active && !prepReady(slot.prep, PREP_IDS) ? (
+              <p id={`daily-prep-hint-${i}`} className="no-print -mt-1 text-sm text-muted">
+                {prepHint(PREP_IDS.length)}
+              </p>
+            ) : null}
           </Card>
         );
       })}
