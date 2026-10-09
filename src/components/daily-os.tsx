@@ -16,6 +16,7 @@ import {
   unlockAudio,
 } from "@/lib/chime";
 import { prepBlockedMessage, prepHeading, prepReady } from "@/lib/block-prep";
+import { claimEnergyPrompt } from "@/lib/energy-prompt";
 import { catchUpBlocks, nextBlockTimes, startPlan, withLength } from "@/lib/block-plan";
 import { installPrintTextareaFit, printDaily, setActivePrintDate } from "@/lib/print";
 import { blockDefaults, endForStart, endsNextDay } from "@/lib/work-hours";
@@ -182,13 +183,16 @@ export function DailyOs({ date }: { date?: string }) {
   }, [activeHere, left]);
 
   // After Stop (manual or timer): offer optional energy log — never blocks Stop.
+  // Only after the first block ending before noon and the first ending at/after noon.
   useEffect(() => {
     const runningHere = session.running && session.date === osDate;
     if (
       wasRunningHere.current &&
       !runningHere &&
       session.phase === "done" &&
-      session.date === osDate
+      session.date === osDate &&
+      // Owner rule: at most twice a workday — first morning block, first afternoon block.
+      claimEnergyPrompt(osDate, new Date())
     ) {
       const idx = session.slotIndex;
       const daily = useFocusStore.getState().dailies[osDate];
