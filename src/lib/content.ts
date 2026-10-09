@@ -55,7 +55,7 @@ export const STARTER_DAYS = [
   {
     day: 5,
     title: "Blocks",
-    job: "Protect two deep-work sessions on the calendar.",
+    job: "Protect two focus blocks on the calendar.",
     why: "A block that is not on the calendar is a wish. Treat it as immovable.",
     actions: [
       "Choose two 60–90 minute windows for the next five workdays.",
@@ -72,7 +72,7 @@ export const STARTER_DAYS = [
     actions: [
       "Name one accountability partner.",
       "Send them today’s 1–3 outcomes before you start.",
-      "Schedule one body-doubling or coworking session.",
+      "Set up one body-doubling or coworking appointment.",
       "Keep the message short. Do not wait for the perfect person.",
     ],
   },
@@ -183,7 +183,7 @@ export const STARTER_WRITE_INS: Record<
       { id: "partner", label: "My accountability partner’s name" },
       {
         id: "coworking",
-        label: "My coworking session time",
+        label: "My coworking time",
         placeholder: "e.g. Thursday 10:00, video call with Sam",
       },
     ],
@@ -323,14 +323,14 @@ export const CHAPTERS = [
     summary:
       "Deep work is the work that actually moves a project. It needs a named block, not leftover minutes between meetings.",
     body: [
-      "Block two 60–90 minute sessions. Put them on the calendar with start and end times.",
+      "Block two 60–90 minute focus blocks. Put them on the calendar with start and end times.",
       "One outcome per block is better than a heroic list.",
       "At the end, write one sentence about what you completed.",
       "Meetings do not get to eat the first block unless you chose that on purpose.",
       "On a wrecked day, keep a 15–20 minute minimum. Do not treat a sick-child day as a failed streak.",
     ],
     action:
-      "Block two sessions for the next five workdays. Treat them as immovable. Review the sentences on Friday.",
+      "Block two focus blocks for the next five workdays. Treat them as immovable. Review the sentences on Friday.",
   },
   {
     slug: "people",
@@ -341,12 +341,12 @@ export const CHAPTERS = [
       "Home has no hallway. Body doubling, a short daily note, and one partner restore the social pressure the office used to supply.",
     body: [
       "Name one accountability partner. Send today’s 1–3 outcomes before you start.",
-      "Schedule two body-doubling or virtual coworking sessions this week.",
+      "Schedule two body-doubling or virtual coworking appointments this week.",
       "Keep the message one sentence. Do not wait for a perfect system.",
       "Motivation follows completed blocks more reliably than it precedes them.",
     ],
     action:
-      "Send the first daily priority note today. Book one coworking session before the week ends.",
+      "Send the first daily priority note today. Book one coworking appointment before the week ends.",
   },
   {
     slug: "energy",
