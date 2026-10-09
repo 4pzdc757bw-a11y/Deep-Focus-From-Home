@@ -3,8 +3,12 @@ import {
   DownloadAuthError,
   DownloadConfigError,
 } from "./errors.ts";
-import { bestProduct, hasAccess } from "../unlock/access.ts";
-import { productFromSession } from "../unlock/product.server.ts";
+import { hasAccess } from "../unlock/access.ts";
+import {
+  combineSessionKinds,
+  sessionKind,
+  type SessionKind,
+} from "../unlock/product.server.ts";
 
 /**
  * Restricted Stripe secret key with Checkout Sessions: Read is enough for
@@ -150,6 +154,69 @@ export type CheckoutSessionsApi = {
   };
 };
 
+/** Shown when someone pays the $20 upgrade without a valid handbook purchase. */
+export const UPGRADE_NOT_ELIGIBLE_MESSAGE =
+  "The $20 app upgrade is only for the email that bought the handbook, and the handbook purchase can't be refunded. We couldn't find one for this payment. Email support@deepfocusfromhome.com with your receipt and we'll sort it out.";
+
+function sessionEmail(session: Stripe.Checkout.Session): string {
+  return (
+    session.customer_details?.email ??
+    session.customer_email ??
+    ""
+  ).trim();
+}
+
+/**
+ * Every paid, unrefunded checkout of this site's products for one email
+ * (tried lowercased and as stored, because Stripe matches exactly).
+ * Same rules as "Already bought? Unlock this device" (unlockByEmail).
+ */
+export async function grantingSessionsForEmail(
+  stripe: CheckoutSessionsApi,
+  rawEmail: string,
+  { excludeId }: { excludeId?: string } = {},
+): Promise<{ session: Stripe.Checkout.Session; kind: SessionKind }[]> {
+  const raw = rawEmail.trim();
+  if (!raw) return [];
+  const out: { session: Stripe.Checkout.Session; kind: SessionKind }[] = [];
+  const seenIds = new Set<string>();
+  for (const email of [...new Set([raw.toLowerCase(), raw])]) {
+    const list = stripe.checkout.sessions.list({
+      customer_details: { email },
+      status: "complete",
+      limit: 100,
+      expand: [...CHECKOUT_SESSION_LIST_REFUND_EXPAND],
+    });
+    let seen = 0;
+    for await (const other of list) {
+      if (++seen > 300) break;
+      if (other.id === excludeId || seenIds.has(other.id)) continue;
+      seenIds.add(other.id);
+      // Skip unpaid and fully refunded sessions (Terms §8 REFUND_ENDS_ACCESS).
+      if (!checkoutSessionGrantsAccess(other)) continue;
+      const kind = sessionKind(other, { strict: true });
+      if (kind) out.push({ session: other, kind });
+    }
+  }
+  return out;
+}
+
+/**
+ * #108: the $20 upgrade only counts as the app when the same email has a
+ * paid, unrefunded $17 handbook purchase (Terms §3).
+ */
+export async function upgradeHasHandbook(
+  stripe: CheckoutSessionsApi,
+  upgrade: Stripe.Checkout.Session,
+): Promise<boolean> {
+  const email = sessionEmail(upgrade);
+  if (!email) return false;
+  const others = await grantingSessionsForEmail(stripe, email, {
+    excludeId: upgrade.id,
+  });
+  return others.some((o) => o.kind === "handbook");
+}
+
 /**
  * Terms §8: "Refunding a duplicate charge doesn't affect your access."
  * When a session was fully refunded, look for another completed checkout by
@@ -162,41 +229,26 @@ export async function findOtherSessionStillGrantingAccess(
   stripe: CheckoutSessionsApi,
   refunded: Stripe.Checkout.Session,
 ): Promise<Stripe.Checkout.Session | null> {
-  const needed = productFromSession(refunded, { strict: false });
-  if (!needed) return null;
-  const raw = (
-    refunded.customer_details?.email ??
-    refunded.customer_email ??
-    ""
-  ).trim();
-  if (!raw) return null;
+  const refundedKind = sessionKind(refunded, { strict: false });
+  if (!refundedKind) return null;
+  const needed = refundedKind === "upgrade" ? "app" : refundedKind;
+  const email = sessionEmail(refunded);
+  if (!email) return null;
 
-  let best: Stripe.Checkout.Session | null = null;
-  let bestProd: ReturnType<typeof bestProduct> = null;
-  // Stripe matches the email exactly, so try it lowercased and as stored.
-  for (const email of [...new Set([raw.toLowerCase(), raw])]) {
-    const list = stripe.checkout.sessions.list({
-      customer_details: { email },
-      status: "complete",
-      limit: 100,
-      expand: [...CHECKOUT_SESSION_LIST_REFUND_EXPAND],
-    });
-    let seen = 0;
-    for await (const other of list) {
-      if (++seen > 300) break;
-      if (other.id === refunded.id) continue;
-      if (!checkoutSessionGrantsAccess(other)) continue;
-      const prod = productFromSession(other, { strict: true });
-      if (!prod) continue;
-      if (bestProduct(bestProd, prod) !== bestProd) {
-        bestProd = prod;
-        best = other;
-      }
-      if (bestProd === "app") break;
-    }
-    if (bestProd === "app") break;
+  const others = await grantingSessionsForEmail(stripe, email, {
+    excludeId: refunded.id,
+  });
+  const best = combineSessionKinds(others.map((o) => o.kind));
+  if (!best || !hasAccess(best, needed)) return null;
+  if (best === "app") {
+    // A full-price app purchase first, else the upgrade (its handbook is valid).
+    return (
+      others.find((o) => o.kind === "app")?.session ??
+      others.find((o) => o.kind === "upgrade")?.session ??
+      null
+    );
   }
-  return best && hasAccess(bestProd, needed) ? best : null;
+  return others.find((o) => o.kind === "handbook")?.session ?? null;
 }
 
 /**
@@ -275,6 +327,23 @@ export async function assertPaidCheckoutSession(
     throw new DownloadAuthError(
       "We could not confirm this payment is still valid. Email support@deepfocusfromhome.com with your receipt.",
     );
+  }
+
+  // #108: the $20 upgrade needs a paid, unrefunded handbook on the same email.
+  if (sessionKind(session, { strict: false }) === "upgrade") {
+    let eligible = false;
+    try {
+      eligible = await upgradeHasHandbook(stripe, session);
+    } catch (err) {
+      console.error(
+        "[downloads] Stripe upgrade eligibility lookup failed:",
+        err instanceof Error ? err.message : err,
+      );
+      throw new DownloadAuthError(
+        "We could not confirm this payment right now. Try again in a minute, or email support@deepfocusfromhome.com with your receipt.",
+      );
+    }
+    if (!eligible) throw new DownloadAuthError(UPGRADE_NOT_ELIGIBLE_MESSAGE);
   }
 
   return { sessionId: session.id, paymentStatus, session };

@@ -9,6 +9,8 @@ import {
   paymentIntentRefundStatus,
   type ChargeRefundFields,
   type CheckoutAccessSession,
+  grantingSessionsForEmail,
+  UPGRADE_NOT_ELIGIBLE_MESSAGE,
   type PaymentIntentRefundFields,
 } from "./stripe.server.ts";
 
@@ -221,7 +223,7 @@ describe("assertPaidCheckoutSession refunds (Terms §8)", () => {
       amount?: number;
       refunded?: number;
       email?: string;
-      product?: "handbook" | "app";
+      product?: "handbook" | "app" | "upgrade";
     } = {},
   ): Stripe.Checkout.Session {
     const amount = opts.amount ?? 1700;
@@ -395,5 +397,82 @@ describe("assertPaidCheckoutSession refunds (Terms §8)", () => {
     await assert.rejects(assertPaidCheckoutSession("cs_err", { stripe: api }), {
       message: REFUNDED_MESSAGE,
     });
+  });
+  // #108: $20 app upgrade for handbook buyers.
+  const upgrade = (id: string, opts: { refunded?: number; email?: string } = {}) =>
+    stripeSession(id, { amount: 2000, product: "upgrade", ...opts });
+
+  it("upgrade with a paid handbook on the same email unlocks (downloads too)", async () => {
+    const { api } = fakeStripe([stripeSession("cs_hb"), upgrade("cs_up")]);
+    const result = await assertPaidCheckoutSession("cs_up", { stripe: api });
+    assert.equal(result.sessionId, "cs_up");
+  });
+
+  it("upgrade without any handbook purchase is refused (someone used the link)", async () => {
+    const { api } = fakeStripe([upgrade("cs_up_alone")]);
+    await assert.rejects(assertPaidCheckoutSession("cs_up_alone", { stripe: api }), {
+      name: "DownloadAuthError",
+      message: UPGRADE_NOT_ELIGIBLE_MESSAGE,
+    });
+  });
+
+  it("upgrade is refused when the handbook was refunded", async () => {
+    const { api } = fakeStripe([
+      stripeSession("cs_hb_ref", { refunded: 1700 }),
+      upgrade("cs_up2"),
+    ]);
+    await assert.rejects(assertPaidCheckoutSession("cs_up2", { stripe: api }), {
+      message: UPGRADE_NOT_ELIGIBLE_MESSAGE,
+    });
+  });
+
+  it("upgrade is refused when the handbook was bought with a different email", async () => {
+    const { api } = fakeStripe([
+      stripeSession("cs_hb_other", { email: "someone@else.com" }),
+      upgrade("cs_up3"),
+    ]);
+    await assert.rejects(assertPaidCheckoutSession("cs_up3", { stripe: api }), {
+      message: UPGRADE_NOT_ELIGIBLE_MESSAGE,
+    });
+  });
+
+  it("refunding the upgrade ends app access", async () => {
+    const { api } = fakeStripe([stripeSession("cs_hb"), upgrade("cs_up_ref", { refunded: 2000 })]);
+    await assert.rejects(assertPaidCheckoutSession("cs_up_ref", { stripe: api }), {
+      message: REFUNDED_MESSAGE,
+    });
+  });
+
+  it("a refunded handbook is not kept alive by an upgrade alone", async () => {
+    const { api } = fakeStripe([stripeSession("cs_hb_r", { refunded: 1700 }), upgrade("cs_up4")]);
+    await assert.rejects(assertPaidCheckoutSession("cs_hb_r", { stripe: api }), {
+      message: REFUNDED_MESSAGE,
+    });
+  });
+
+  it("a refunded duplicate handbook keeps access via handbook + upgrade", async () => {
+    const { api } = fakeStripe([
+      stripeSession("cs_hb_dup", { refunded: 1700 }),
+      stripeSession("cs_hb_ok"),
+      upgrade("cs_up5"),
+    ]);
+    const result = await assertPaidCheckoutSession("cs_hb_dup", { stripe: api });
+    assert.equal(result.sessionId, "cs_up5");
+  });
+
+  it("grantingSessionsForEmail lists each paid, unrefunded checkout once with its kind", async () => {
+    const { api } = fakeStripe([
+      stripeSession("cs_hb"),
+      upgrade("cs_up"),
+      stripeSession("cs_hb_ref", { refunded: 1700 }),
+    ]);
+    const found = await grantingSessionsForEmail(api, EMAIL);
+    assert.deepEqual(
+      found.map((f) => [f.session.id, f.kind]),
+      [
+        ["cs_hb", "handbook"],
+        ["cs_up", "upgrade"],
+      ],
+    );
   });
 });

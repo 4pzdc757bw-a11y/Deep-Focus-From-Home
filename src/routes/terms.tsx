@@ -8,6 +8,7 @@ import {
   PAYMENT_DISPUTE_LINE,
   REFUND_ENDS_ACCESS,
   STORE_CREDIT_LIMITS,
+  TERMS_UPGRADE_LINE,
 } from "@/lib/legal";
 
 export const Route = createFileRoute("/terms")({
@@ -71,6 +72,7 @@ function TermsPage() {
         Daily OS, focus bells, and energy log, plus any handbook downloads listed
         on the checkout and thank-you pages for your purchase.
       </p>
+      <p>{TERMS_UPGRADE_LINE}</p>
       <p>
         You receive a personal license to use the app for yourself. You do not
         own the app’s code, design, or brand. You may not redistribute, resell,

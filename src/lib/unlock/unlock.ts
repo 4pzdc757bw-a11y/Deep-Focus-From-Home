@@ -1,6 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
+import type { CheckoutSessionsApi } from "../downloads/stripe.server";
 import type { UnlockProduct } from "./access";
-import { NO_PURCHASE_MESSAGE, type UnlockByEmailResult } from "./unlock-result";
+import {
+  NO_PURCHASE_MESSAGE,
+  type StartUpgradeResult,
+  type UnlockByEmailResult,
+  UPGRADE_NO_HANDBOOK_MESSAGE,
+} from "./unlock-result";
 
 /**
  * Device unlock server functions. Server-only modules are imported inside the
@@ -74,9 +80,12 @@ export const unlockFromCheckoutSession = createServerFn({ method: "POST" })
     const { assertPaidCheckoutSession } = await import(
       "../downloads/stripe.server"
     );
-    const { productFromSession } = await import("./product.server");
+    const { sessionKind } = await import("./product.server");
+    // assertPaidCheckoutSession already checked that a $20 upgrade has a
+    // paid, unrefunded handbook on the same email (#108).
     const { session } = await assertPaidCheckoutSession(data.sessionId);
-    const product = productFromSession(session, { strict: false });
+    const kind = sessionKind(session, { strict: false });
+    const product = kind === "upgrade" ? "app" : kind;
     if (!product) {
       throw new Error(
         "We could not match this payment to a Deep Focus product. Email support@deepfocusfromhome.com with the receipt email you got when you paid.",
@@ -118,40 +127,20 @@ export const unlockByEmail = createServerFn({ method: "POST" })
       return { ok: false, error: "Too many tries. Wait 10 minutes and try again." };
     }
 
-    const {
-      stripeClient,
-      checkoutSessionGrantsAccess,
-      CHECKOUT_SESSION_LIST_REFUND_EXPAND,
-    } = await import("../downloads/stripe.server");
-    const { productFromSession } = await import("./product.server");
-    const { bestProduct } = await import("./access");
+    const { stripeClient, grantingSessionsForEmail } = await import(
+      "../downloads/stripe.server"
+    );
+    const { combineSessionKinds } = await import("./product.server");
 
     let found: UnlockProduct | null = null;
     try {
-      const stripe = stripeClient();
-      // Stripe matches the email exactly, so try it lowercased and as typed.
-      const variants = [...new Set([data.email, data.typed])];
-      for (const email of variants) {
-        const list = stripe.checkout.sessions.list({
-          customer_details: { email },
-          status: "complete",
-          limit: 100,
-          expand: [...CHECKOUT_SESSION_LIST_REFUND_EXPAND],
-        });
-        let seen = 0;
-        for await (const session of list) {
-          if (++seen > 300) break;
-          // Skip unpaid and fully refunded sessions (Terms §8 REFUND_ENDS_ACCESS).
-          // Fail closed when PaymentIntent/charge was not expanded.
-          if (!checkoutSessionGrantsAccess(session)) continue;
-          found = bestProduct(
-            found,
-            productFromSession(session, { strict: true }),
-          );
-          if (found === "app") break;
-        }
-        if (found === "app") break;
-      }
+      // Paid, unrefunded checkouts for this email (lowercased and as typed).
+      // The $20 upgrade counts as the app only next to a valid handbook (#108).
+      const sessions = await grantingSessionsForEmail(
+        stripeClient() as unknown as CheckoutSessionsApi,
+        data.typed,
+      );
+      found = combineSessionKinds(sessions.map((s) => s.kind));
     } catch (err) {
       console.error(
         "[unlock] Stripe email lookup failed:",
@@ -175,4 +164,102 @@ export const unlockByEmail = createServerFn({ method: "POST" })
           "We found your purchase but could not open it on this device. Email support@deepfocusfromhome.com with the receipt email you got when you paid.",
       };
     }
+  });
+
+/**
+ * #108: start the $20 app upgrade for handbook buyers.
+ *
+ * Only a device with the handbook unlocked can ask, and only for an email
+ * with a paid, unrefunded $17 handbook purchase. The upgrade Payment Link
+ * lives on the server and is handed out with that buyer's email locked in
+ * checkout. After payment the upgrade is checked again (same email, handbook
+ * still not refunded) before the app opens.
+ */
+export const startAppUpgrade = createServerFn({ method: "POST" })
+  .validator((input: unknown) => {
+    const raw = (input ?? {}) as { email?: unknown };
+    const typed = typeof raw.email === "string" ? raw.email.trim().slice(0, 300) : "";
+    return { email: typed.toLowerCase(), typed };
+  })
+  .handler(async ({ data }): Promise<StartUpgradeResult> => {
+    if (
+      !data.email ||
+      data.email.length > 254 ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)
+    ) {
+      return { ok: false, error: "Enter the email you used to buy the handbook." };
+    }
+    const current = await readCookieProduct().catch(() => null);
+    if (current === "app") {
+      return { ok: true, action: "unlocked", product: "app" };
+    }
+    if (current !== "handbook") {
+      return {
+        ok: false,
+        error: "Unlock your handbook on this device first, then try the upgrade again.",
+      };
+    }
+
+    const { getRequestHeader } = await import("@tanstack/react-start/server");
+    const { rateLimitHit } = await import("./rate-limit.server");
+    const ip =
+      (getRequestHeader("x-forwarded-for") ?? "").split(",")[0]?.trim() ||
+      getRequestHeader("x-real-ip") ||
+      "unknown";
+    const tenMinutes = 10 * 60 * 1000;
+    if (
+      rateLimitHit(`upgrade-ip:${ip}`, 8, tenMinutes) ||
+      rateLimitHit(`upgrade-email:${data.email}`, 5, tenMinutes)
+    ) {
+      return { ok: false, error: "Too many tries. Wait 10 minutes and try again." };
+    }
+
+    const { stripeClient, grantingSessionsForEmail } = await import(
+      "../downloads/stripe.server"
+    );
+    const { combineSessionKinds } = await import("./product.server");
+    const { appUpgradeCheckoutUrl } = await import("./upgrade.server");
+
+    let sessions: Awaited<ReturnType<typeof grantingSessionsForEmail>>;
+    try {
+      sessions = await grantingSessionsForEmail(
+        stripeClient() as unknown as CheckoutSessionsApi,
+        data.typed,
+      );
+    } catch (err) {
+      console.error(
+        "[upgrade] Stripe lookup failed:",
+        err instanceof Error ? err.message : err,
+      );
+      return {
+        ok: false,
+        error:
+          "We could not check your handbook purchase right now. Try again in a minute, or email support@deepfocusfromhome.com.",
+      };
+    }
+
+    // Already owns the app (full price, or an earlier upgrade): just open it.
+    if (combineSessionKinds(sessions.map((s) => s.kind)) === "app") {
+      return { ok: true, action: "unlocked", product: await saveUnlock("app") };
+    }
+    const handbook = sessions.find((s) => s.kind === "handbook")?.session;
+    if (!handbook) return { ok: false, error: UPGRADE_NO_HANDBOOK_MESSAGE };
+
+    const buyerEmail = (
+      handbook.customer_details?.email ??
+      handbook.customer_email ??
+      data.typed
+    ).trim();
+    const url = appUpgradeCheckoutUrl({
+      email: buyerEmail,
+      handbookSessionId: handbook.id,
+    });
+    if (!url) {
+      return {
+        ok: false,
+        error:
+          "The upgrade isn't available right now. Email support@deepfocusfromhome.com and we'll help.",
+      };
+    }
+    return { ok: true, action: "checkout", url };
   });

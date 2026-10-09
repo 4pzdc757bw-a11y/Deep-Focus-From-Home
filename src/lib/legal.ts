@@ -63,3 +63,10 @@ export const LEGAL_LINKS = [
   { to: "/privacy" as const, label: "Privacy Policy" },
   { to: "/store-credit" as const, label: "Store Credit Policy" },
 ];
+
+/**
+ * #108 Terms §3 upgrade line. Exact wording approved by Jeffrey, Vera and
+ * Penny on Oct 8 2026. Keep "(currently $20)" in step with APP_PRICE - PRICE.
+ */
+export const TERMS_UPGRADE_LINE =
+  "If you bought the handbook, you can upgrade to the app for the app price minus what you paid for the handbook (currently $20). The upgrade is only for the account or email that bought the handbook. If the handbook purchase is refunded, the upgrade price no longer applies. Refunding the upgrade refunds only the upgrade price.";

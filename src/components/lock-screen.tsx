@@ -1,11 +1,12 @@
 import { getRouteApi, Link, useRouter, useRouterState } from "@tanstack/react-router";
-import { AppCheckoutLink, HandbookCheckoutLink } from "@/components/handbook-checkout-link";
+import { HandbookCheckoutLink } from "@/components/handbook-checkout-link";
+import { AppUpgradeOffer } from "@/components/app-upgrade";
 import { ArrowLeft, Lock } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 import { Card } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { APP_ACCESS_LINE, APP_PRICE_LABEL, PRICE_LABEL } from "@/lib/offer";
+import { PRICE_LABEL } from "@/lib/offer";
 import { CHAPTER_1_SLUG, hasAccess, type AccessNeed, type UnlockProduct } from "@/lib/unlock/access";
 import { unlockByEmail } from "@/lib/unlock/unlock";
 import { NotReadyLinks } from "@/components/not-ready";
@@ -206,19 +207,14 @@ export function LockScreen({
           {!isApp
             ? `The Introduction and Chapter 1 are free to read. The rest of the guide is in the handbook: ${PRICE_LABEL}, pay once.`
             : handbookBuyer
-              ? `Your handbook is unlocked, and everything in it works on paper. The Deep Focus app is an optional add-on to the handbook: a daily planner, focus bell, energy log and weekly planner in your browser, nothing to install. ${APP_PRICE_LABEL}. ${APP_ACCESS_LINE}`
+              ? "Your handbook is unlocked, and everything in it works on paper. The Deep Focus app is an optional add-on to the handbook: a daily planner, focus bell, energy log and weekly planner in your browser, nothing to install."
               : `Seven short chapters on working from home: your workspace, household, phone, daily rituals, deep work, people and energy. One action per chapter. Online guide plus the PDF, ${PRICE_LABEL}, pay once.`}
         </p>
         <div className="flex flex-col gap-2 sm:flex-row">
           {handbookBuyer ? (
-            <>
-              <Button asChild>
-                <Link to="/guide">Read the handbook</Link>
-              </Button>
-              <Button variant="outline" asChild>
-                <AppCheckoutLink>Add the app ({APP_PRICE_LABEL})</AppCheckoutLink>
-              </Button>
-            </>
+            <Button variant="outline" asChild>
+              <Link to="/guide">Read the handbook</Link>
+            </Button>
           ) : (
             <>
               <Button asChild>
@@ -238,6 +234,8 @@ export function LockScreen({
             </>
           )}
         </div>
+        {/* #108: handbook buyers get the $20 upgrade instead of the $37 checkout. */}
+        {handbookBuyer ? <AppUpgradeOffer /> : null}
         <div className="border-t border-yellow pt-4">
           <UnlockDeviceForm />
         </div>
