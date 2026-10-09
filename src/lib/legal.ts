@@ -1,6 +1,6 @@
 /** Vera-approved locked legal copy (Desktop JEFFSEBIZ/Legal + Offer-and-Policies). Do not invent. */
 
-export const LEGAL_EFFECTIVE_DATE = "October 6, 2026";
+export const LEGAL_EFFECTIVE_DATE = "October 8, 2026";
 
 /** Official business mailing address (MailPro mailbox #210). Never the home address. */
 export const BUSINESS_NAME = "JEFFSEBIZ LLC";
