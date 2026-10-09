@@ -14,21 +14,45 @@ function notify(title: string, body: string) {
   }
 }
 
+const NOTIFY_ANSWERED_KEY = "dffh.notifyAnswered";
+
+function notifyAnswered() {
+  try {
+    return typeof localStorage !== "undefined" && localStorage.getItem(NOTIFY_ANSWERED_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+/** Remember that the explainer was answered so it never shows again. */
+export function markNotifyAnswered() {
+  try {
+    if (typeof localStorage !== "undefined") localStorage.setItem(NOTIFY_ANSWERED_KEY, "1");
+  } catch {
+    /* ignore — private mode etc. */
+  }
+}
+
 /**
- * True when the browser has not been asked yet (permission "default"), so the
- * Daily OS should show its one-line explainer before asking. Granted, denied
- * or unsupported → never show it again.
+ * True only when the browser has not been asked yet (permission "default") and
+ * the in-app explainer has never been answered. Granted, denied, unsupported,
+ * or answered once → never show it again, on any block or day.
  */
 export function shouldExplainNotify() {
   try {
+    if (notifyAnswered()) return false;
     return typeof Notification !== "undefined" && Notification.permission === "default";
   } catch {
     return false;
   }
 }
 
-/** Ask the browser. Only call after the user taps OK on the in-app explainer. */
+/**
+ * Ask the browser. Only call after the user taps OK on the in-app explainer.
+ * Records the answer first, so the box never returns whatever the browser says.
+ */
 export async function requestNotify() {
+  markNotifyAnswered();
   try {
     if (typeof Notification === "undefined") return;
     if (Notification.permission === "default") await Notification.requestPermission();

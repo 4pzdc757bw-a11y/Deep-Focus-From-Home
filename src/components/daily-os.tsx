@@ -364,9 +364,6 @@ export function DailyOs({ date }: { date?: string }) {
                   >
                     OK
                   </Button>
-                  <Button type="button" size="sm" variant="ghost" onClick={() => setNotifyAsk(false)}>
-                    Not now
-                  </Button>
                 </div>
               </div>
             ) : null}
