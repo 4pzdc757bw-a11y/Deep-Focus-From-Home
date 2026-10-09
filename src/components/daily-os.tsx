@@ -15,7 +15,7 @@ import {
   stampClockNow,
   unlockAudio,
 } from "@/lib/chime";
-import { prepHint, prepReady } from "@/lib/block-prep";
+import { prepBlockedMessage, prepHeading, prepReady } from "@/lib/block-prep";
 import { catchUpBlocks, nextBlockTimes, startPlan, withLength } from "@/lib/block-plan";
 import { installPrintTextareaFit, printDaily, setActivePrintDate } from "@/lib/print";
 import { blockDefaults, endForStart, endsNextDay } from "@/lib/work-hours";
@@ -129,6 +129,8 @@ export function DailyOs({ date }: { date?: string }) {
   // One-time "allow notifications" explainer, shown after Start while the
   // browser has not been asked yet. The browser prompt only follows OK.
   const [notifyAsk, setNotifyAsk] = useState(false);
+  // Block whose Start was tapped before all prep boxes were ticked.
+  const [prepNudge, setPrepNudge] = useState<number | null>(null);
 
   // Cmd+P / Ctrl+P too: fit notes to their content while printing.
   useEffect(() => {
@@ -203,7 +205,11 @@ export function DailyOs({ date }: { date?: string }) {
   async function startSlot(index: number) {
     const slot = entry.slots[index];
     // Owner rule: no bell until every "Before you ring the bell" box is ticked.
-    if (!prepReady(slot?.prep, PREP_IDS)) return;
+    if (!prepReady(slot?.prep, PREP_IDS)) {
+      setPrepNudge(index);
+      return;
+    }
+    setPrepNudge(null);
     // Stamp actual start; end follows the planned length (Done stamps the real end).
     const plan = startPlan(slot);
     // Unlock audio inside this tap before any notify UI — first Start used to
@@ -372,7 +378,7 @@ export function DailyOs({ date }: { date?: string }) {
             ) : null}
             <div className="daily-prep flex flex-col gap-1.5">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
-                Before you ring the bell
+                {prepHeading(PREP_IDS.length)}
               </p>
               {BLOCK_PREP_CHECKS.map((c) => {
                 const prep = slot.prep ?? emptyPrep();
@@ -381,7 +387,11 @@ export function DailyOs({ date }: { date?: string }) {
                     key={c.id}
                     label={c.label}
                     checked={prep[c.id]}
-                    onCheckedChange={(v) => patchSlot(i, { prep: { ...prep, [c.id]: v } })}
+                    onCheckedChange={(v) => {
+                      const nextPrep = { ...prep, [c.id]: v };
+                      patchSlot(i, { prep: nextPrep });
+                      if (prepNudge === i && prepReady(nextPrep, PREP_IDS)) setPrepNudge(null);
+                    }}
                   />
                 );
               })}
@@ -396,10 +406,7 @@ export function DailyOs({ date }: { date?: string }) {
                 <Button
                   type="button"
                   variant={i === 0 ? "default" : "outline"}
-                  disabled={!prepReady(slot.prep, PREP_IDS)}
-                  aria-describedby={
-                    prepReady(slot.prep, PREP_IDS) ? undefined : `daily-prep-hint-${i}`
-                  }
+                  aria-describedby={prepNudge === i ? `daily-prep-nudge-${i}` : undefined}
                   onClick={() => void startSlot(i)}
                 >
                   <Bell
@@ -409,9 +416,13 @@ export function DailyOs({ date }: { date?: string }) {
                 </Button>
               )}
             </div>
-            {!active && !prepReady(slot.prep, PREP_IDS) ? (
-              <p id={`daily-prep-hint-${i}`} className="no-print -mt-1 text-sm text-muted">
-                {prepHint(PREP_IDS.length)}
+            {!active && prepNudge === i && !prepReady(slot.prep, PREP_IDS) ? (
+              <p
+                id={`daily-prep-nudge-${i}`}
+                role="alert"
+                className="no-print -mt-1 rounded-md border border-gold bg-paper px-3 py-2 text-sm font-semibold text-ink"
+              >
+                {prepBlockedMessage(PREP_IDS.length)}
               </p>
             ) : null}
           </Card>
