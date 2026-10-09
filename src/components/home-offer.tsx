@@ -4,7 +4,12 @@ import { useEffect, useState } from "react";
 import { Card } from "@/components/app-shell";
 import { useAppPitchAllowed } from "@/components/lock-screen";
 import { Button } from "@/components/ui/button";
-import { APP_ACCESS_LINE, APP_PRICE_LABEL, PRICE_LABEL } from "@/lib/offer";
+import {
+  APP_ACCESS_LINE,
+  PRICE_LABEL,
+  UPGRADE_LINE,
+  UPGRADE_PRICE_LABEL,
+} from "@/lib/offer";
 import { CHAPTER_1_SLUG } from "@/lib/unlock/access";
 
 /** Home for visitors who have not bought anything: lead with the handbook. */
@@ -78,7 +83,8 @@ export function HandbookUnlockedCard() {
         <div className="flex items-start gap-2 rounded-md border border-yellow bg-paper p-3 text-sm text-ink">
           <p className="flex-1">
             Optional add-on: the Deep Focus app is a daily planner, focus bell, energy log and
-            weekly planner in your browser, nothing to install. {APP_PRICE_LABEL}. {APP_ACCESS_LINE}{" "}
+            weekly planner in your browser, nothing to install. {UPGRADE_LINE} Upgrade for{" "}
+            {UPGRADE_PRICE_LABEL}. {APP_ACCESS_LINE}{" "}
             <Link to="/app" className="font-semibold text-olive underline underline-offset-4">
               Have a look
             </Link>

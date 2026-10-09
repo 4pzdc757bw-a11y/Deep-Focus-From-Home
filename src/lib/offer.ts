@@ -5,6 +5,18 @@ export const PRICE_LABEL = "$17";
 export const APP_PRICE = 37;
 export const APP_PRICE_LABEL = "$37";
 
+/**
+ * #108: $20 app upgrade for verified $17 handbook buyers. A plain $20 sale
+ * (its own Stripe product), not a credit, coupon or discount. Vera's rule:
+ * handbook price + upgrade price must equal the app price.
+ */
+export const UPGRADE_PRICE = APP_PRICE - PRICE;
+export const UPGRADE_PRICE_LABEL = `$${UPGRADE_PRICE}`;
+/** Approved page wording (Jeffrey, Vera, Penny, Oct 8 2026). */
+export const UPGRADE_LINE = "Your $17 handbook purchase counts toward the $37 app.";
+/** Stripe product name / receipt line. */
+export const UPGRADE_PRODUCT_NAME = "App upgrade for handbook buyers";
+
 /** Vera-approved app access line (replaces any "lifetime access" wording). Matches the Stripe product description. */
 export const APP_ACCESS_LINE =
   "Pay once, no subscription. Use the app for as long as we offer it.";
