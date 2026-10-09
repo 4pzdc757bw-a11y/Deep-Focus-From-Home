@@ -6,12 +6,13 @@ export function LegalFooter({ className = "" }: { className?: string }) {
     <footer
       className={`border-t border-yellow/80 pt-4 text-sm text-muted ${className}`}
     >
+      {/* Each link has an invisible 44px-tall tap area (before:); looks unchanged. */}
       <nav className="flex flex-wrap gap-x-4 gap-y-2" aria-label="Legal">
         {LEGAL_LINKS.map((link) => (
           <Link
             key={link.to}
             to={link.to}
-            className="font-semibold text-olive hover:underline"
+            className="relative font-semibold text-olive hover:underline before:absolute before:inset-x-0 before:top-1/2 before:h-11 before:-translate-y-1/2 before:content-['']"
           >
             {link.label}
           </Link>

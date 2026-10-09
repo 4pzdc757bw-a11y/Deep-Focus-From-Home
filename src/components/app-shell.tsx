@@ -89,7 +89,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   to={l.to}
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "inline-flex min-h-11 items-center text-xs font-semibold uppercase tracking-wide text-olive underline-offset-4",
+                    // before: widens the tap area to 44px for short labels like "FAQ"; looks unchanged.
+                    "relative inline-flex min-h-11 items-center text-xs font-semibold uppercase tracking-wide text-olive underline-offset-4 before:absolute before:inset-y-0 before:left-1/2 before:w-full before:min-w-11 before:-translate-x-1/2 before:content-['']",
                     active && "underline decoration-gold decoration-2",
                   )}
                 >

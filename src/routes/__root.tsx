@@ -92,6 +92,8 @@ export const Route = createRootRoute({
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
       { rel: "stylesheet", href: appCss },
       { rel: "apple-touch-icon", href: "/__grok/icon-180.png" },
+      // Home-screen install (name, icons, opens /daily). No service worker.
+      { rel: "manifest", href: "/manifest.webmanifest" },
     ],
   }),
   component: () => (
