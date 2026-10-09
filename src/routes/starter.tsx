@@ -34,6 +34,10 @@ function StarterPage() {
   const started = useFocusStore((s) => s.starterStart);
   const origin = started ?? todayKey();
   const workDays = useFocusStore((s) => s.household?.workDays);
+  // Dates depend on the visitor's clock and time zone, which the server can't
+  // know. Show them only after the client takes over, so the server HTML and
+  // the first client render match (React hydration error #418 otherwise).
+  const hydrated = useFocusStore((s) => s.hydrated);
   // Day 1 on the start date, Days 2–7 on the next picked work days.
   const dayDates = starterDayDates(origin, workDays);
   // The starter week is the free 7-day pack. The Daily OS links are app-only.
@@ -100,7 +104,8 @@ function StarterPage() {
         return (
           <Card key={d.day} className="flex flex-col gap-3">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
-              Day {d.day} — {d.title} · {prettyDate(date)}
+              Day {d.day} — {d.title}
+              {hydrated ? ` · ${prettyDate(date)}` : null}
             </p>
             <h2 className="font-display text-2xl text-olive">{d.job}</h2>
             <p className="text-ink">{d.why}</p>

@@ -129,7 +129,8 @@ export function UnlockDeviceForm() {
       <p className="text-sm text-muted">
         Type the email you used when you paid, and we’ll open your handbook (or app) right here.
       </p>
-      <div className="flex flex-col gap-2 sm:flex-row">
+      {/* One row on phones too, so the button clears the bottom tab bar on first view. */}
+      <div className="flex flex-row gap-2">
         <Input
           id="unlock-email"
           type="email"
@@ -139,9 +140,14 @@ export function UnlockDeviceForm() {
           placeholder="you@example.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="sm:flex-1"
+          className="min-w-0 flex-1"
         />
-        <Button type="submit" variant="outline" disabled={busy || !email.trim()}>
+        <Button
+          type="submit"
+          variant="outline"
+          className="shrink-0"
+          disabled={busy || !email.trim()}
+        >
           {busy ? "Checking…" : "Get my copy"}
         </Button>
       </div>

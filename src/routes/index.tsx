@@ -184,12 +184,22 @@ function Home() {
           ) : null}
 
           <div className="overflow-hidden rounded-lg border border-yellow">
-            <img
-              src="/images/cover.jpg"
-              width={800} height={1189} fetchPriority="high" decoding="async"
-              alt="A remote worker at a clean desk, looking at a computer, no phone in view"
-              className="hero-photo h-64 w-full sm:h-80"
-            />
+            {/* Phones get a 480/640px WebP; wider or sharper screens the 800px one. JPEG fallback. */}
+            <picture>
+              <source
+                type="image/webp"
+                srcSet="/images/cover-480.webp 480w, /images/cover-640.webp 640w, /images/cover-800.webp 800w"
+                sizes="(min-width: 768px) 736px, calc(100vw - 32px)"
+              />
+              <img
+                src="/images/cover.jpg"
+                srcSet="/images/cover-480.jpg 480w, /images/cover.jpg 800w"
+                sizes="(min-width: 768px) 736px, calc(100vw - 32px)"
+                width={800} height={1189} fetchPriority="high" decoding="async"
+                alt="A remote worker at a clean desk, looking at a computer, no phone in view"
+                className="hero-photo h-64 w-full sm:h-80"
+              />
+            </picture>
           </div>
 
           <Card>
