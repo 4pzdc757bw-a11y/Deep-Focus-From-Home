@@ -54,8 +54,11 @@ export function releaseScreen() {
 /**
  * Start a block. State flips to running immediately (one tap), then the bell
  * and wake lock run in the background — they must never hold the UI.
- * Notification permission is NOT requested here: the Daily OS first shows a
- * short in-app explainer and only asks the browser after the user taps OK.
+ * The start bell is kicked synchronously in this call (inside the tap) so it
+ * still rings on the very first Start even if the Daily OS then shows its
+ * notifications explainer. Notification permission is NOT requested here:
+ * the Daily OS shows the explainer after the bell is started and only asks
+ * the browser after the user taps OK.
  */
 export async function beginSession(args: {
   date: string;
@@ -63,6 +66,9 @@ export async function beginSession(args: {
   endsAt: number;
 }) {
   completing = false;
+  // Kick the bell first — unlock + schedule must happen inside the tap gesture
+  // before any later await (wake lock) or UI (notify explainer).
+  const bell = playStartBell().catch(() => undefined);
   const cur = useFocusStore.getState().dailies[args.date];
   useFocusStore.getState().setSession({
     running: true,
@@ -76,8 +82,6 @@ export async function beginSession(args: {
       checks: { ...cur.checks, block: true },
     });
   }
-  // Called synchronously inside the tap so audio is allowed to start.
-  const bell = playStartBell().catch(() => undefined);
   void holdScreen();
   await bell;
 }

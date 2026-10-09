@@ -13,6 +13,7 @@ import {
   durationMinutes,
   remainingLabel,
   stampClockNow,
+  unlockAudio,
 } from "@/lib/chime";
 import { catchUpBlocks, nextBlockTimes, startPlan, withLength } from "@/lib/block-plan";
 import { installPrintTextareaFit, printDaily, setActivePrintDate } from "@/lib/print";
@@ -201,15 +202,20 @@ export function DailyOs({ date }: { date?: string }) {
     const slot = entry.slots[index];
     // Stamp actual start; end follows the planned length (Done stamps the real end).
     const plan = startPlan(slot);
+    // Unlock audio inside this tap before any notify UI — first Start used to
+    // lose the bell when the allow-notifications box appeared on the same click.
+    unlockAudio();
     patchSlot(index, { start: plan.start, end: plan.end, started: true, auto: false });
     setRinging(true);
     window.setTimeout(() => setRinging(false), 1400);
-    if (shouldExplainNotify()) setNotifyAsk(true);
-    await beginSession({
+    const starting = beginSession({
       date: osDate,
       slotIndex: index,
       endsAt: plan.endsAt,
     });
+    // Explainer only after the start bell has been kicked off in this gesture.
+    if (shouldExplainNotify()) setNotifyAsk(true);
+    await starting;
   }
 
   async function finishNow() {
