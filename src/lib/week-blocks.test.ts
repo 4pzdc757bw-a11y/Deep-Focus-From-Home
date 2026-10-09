@@ -431,7 +431,7 @@ describe("new day from the week plan", () => {
 
 describe("Close day never moves backward", () => {
   it("closing Wed Oct 7 opens Thu Oct 8, not Mon Oct 5", async () => {
-    const { nextDateForward, latestClosedDate } = await import("./close-day.ts");
+    const { nextDateForward, latestClosedIn: latestClosedDate } = await import("./close-day-forward.ts");
     const wd = [1, 2, 3, 4, 5];
     assert.equal(nextDateForward("2026-10-07", "2026-10-02", wd, "2026-10-07"), "2026-10-08");
     // Closing an older day after later ones were closed still goes forward.

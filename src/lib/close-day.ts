@@ -1,7 +1,8 @@
 import { useFocusStore } from "./store";
 
 import { currentWorkdayKey } from "./workday";
-import { nextWorkdayFrom, starterDayOn } from "./work-hours";
+import { starterDayOn } from "./work-hours";
+import { latestClosedIn, nextDateForward } from "./close-day-forward";
 
 /**
  * Map a work-day date to starter day 1–7, or null if outside week one. Day 1
@@ -29,30 +30,13 @@ export function nextDateAfterClose(
   return nextDateForward(closedDate, today, workDays, latestClosed);
 }
 
-/**
- * Pure: next work day after the closed day, never moving backward — not
- * before today, and not on or before a day already closed later (closing
- * Wednesday after Monday… opens Thursday, never Monday again).
- */
-export function nextDateForward(
-  closedDate: string,
-  today: string,
-  workDays: readonly number[] | null | undefined,
-  latestClosed: string | null,
-) {
-  const base = latestClosed && latestClosed > closedDate ? latestClosed : closedDate;
-  return nextWorkdayFrom(base, today, workDays);
-}
+export { nextDateForward };
 
 /** Latest day whose Close day ran (shutdown checked), or null. */
 export function latestClosedDate(
   dailies: Record<string, { checks?: { shutdown?: boolean } } | undefined> = useFocusStore.getState().dailies,
 ): string | null {
-  let latest: string | null = null;
-  for (const [k, v] of Object.entries(dailies)) {
-    if (v?.checks?.shutdown && (!latest || k > latest)) latest = k;
-  }
-  return latest;
+  return latestClosedIn(dailies);
 }
 
 export type CloseDayResult = {
