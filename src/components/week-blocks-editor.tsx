@@ -241,6 +241,10 @@ export function WeekBlocksEditor({
                 value={b.task}
                 placeholder="Client reports / Zoom with corporate"
                 onChange={(e) => update(i, { task: e.target.value })}
+                onBlur={(e) => {
+                  const tidy = e.target.value.trim();
+                  if (tidy !== b.task) update(i, { task: tidy });
+                }}
               />
             </label>
             <button

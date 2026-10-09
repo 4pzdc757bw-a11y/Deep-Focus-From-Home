@@ -33,15 +33,19 @@ export function formatWeekBlock(b: WeekBlockDraft): string {
   // Night shift: "Mon 11:00 PM–12:30 AM (next day)" — the day is the shift's start day.
   const times = b.start && b.end ? `${clock12(b.start)}–${endLabel(b.start, b.end)}` : "";
   const head = [day, times].filter(Boolean).join(" ");
-  const task = b.task.trim();
-  return task ? `${head} · ${task}` : head;
+  // Only the front is trimmed while typing: a trailing space must survive the
+  // save → read-back on each keystroke, or "reports for" types as "reportsfor".
+  // The editor trims the end on blur.
+  const task = b.task.replace(/[\r\n]+/g, " ").trimStart();
+  return task.trim() ? `${head} · ${task}` : head;
 }
 
 const DAY_RE = /^\s*(sun|mon|tue|wed|thu|fri|sat)[a-z]*\.?\s*/i;
 
 /** Best-effort read of a saved line; null when it has no day we recognise. */
 export function parseWeekBlock(text: string | undefined | null): WeekBlockDraft | null {
-  const raw = (text ?? "").trim();
+  // trimStart, not trim: keep a trailing space in the task while it is being typed.
+  const raw = (text ?? "").trimStart();
   const dm = DAY_RE.exec(raw);
   if (!dm) return null;
   const day = WEEKDAY_SHORT.findIndex((d) => d.toLowerCase() === dm[1]!.toLowerCase());
@@ -49,7 +53,8 @@ export function parseWeekBlock(text: string | undefined | null): WeekBlockDraft 
   let task = "";
   const sep = rest.search(/\s[·|-]\s|\s·|·/);
   if (sep >= 0) {
-    task = rest.slice(sep).replace(/^\s*[·|-]\s*/, "").trim();
+    task = rest.slice(sep).replace(/^\s*[·|-]\s*/, "");
+    if (!task.trim()) task = "";
     rest = rest.slice(0, sep);
   }
   const hours = parseWorkHours(rest.replace(/\(next day\)/gi, " "));
