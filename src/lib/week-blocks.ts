@@ -236,3 +236,15 @@ export function copyDayBlocks(lines: readonly string[], from: number, to: readon
   for (const d of to) if (d !== from) out = setDayBlocks(out, d, source);
   return out;
 }
+
+/**
+ * "Save week": commit every line as it will be read later — task trimmed at
+ * both ends, free-text notes trimmed. Line positions are kept.
+ */
+export function tidyWeekBlocks(lines: readonly string[]): string[] {
+  return lines.map((line) => {
+    if (!line.trim()) return "";
+    const b = parseWeekBlock(line);
+    return b ? formatWeekBlock({ ...b, task: b.task.trim() }) : line.trim();
+  });
+}

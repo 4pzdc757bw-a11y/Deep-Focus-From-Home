@@ -475,3 +475,17 @@ describe("Task or meeting box keeps spaces while typing (save → read-back each
     assert.equal(b.start, "09:00");
   });
 });
+
+describe("Save week tidy", () => {
+  it("trims tasks and notes, keeps line positions and spaces inside", async () => {
+    const { tidyWeekBlocks } = await import("./week-blocks.ts");
+    const typing = formatWeekBlock({ day: 1, start: "09:00", end: "10:30", task: "reports for final test " });
+    const out = tidyWeekBlocks([typing, "   ", "  older note  "]);
+    assert.equal(out.length, 3);
+    assert.equal(parseWeekBlock(out[0])?.task, "reports for final test");
+    assert.ok(!out[0]!.endsWith(" "));
+    assert.equal(out[1], "");
+    assert.equal(out[2], "older note");
+    assert.deepEqual(tidyWeekBlocks(out), out);
+  });
+});
