@@ -18,7 +18,7 @@ const SLIDES: { n: string; label: string; alt: string }[] = [
   {
     n: "02",
     label: "Today's planner and focus bell",
-    alt: "Today's planner, Daily OS: Plan today. Ring the bell. Pick 1–3 outcomes and one focus block. The bell rings when the block ends. If you lock the phone, it rings when you open the app again. Screenshot of the app's Today screen.",
+    alt: "Today's planner, Daily OS: Plan today. Ring the bell. Pick 1–3 outcomes and plan your focus blocks. You get a bell at Start and at the end. Screenshot of the app's Today screen with a live focus block.",
   },
   {
     n: "03",
