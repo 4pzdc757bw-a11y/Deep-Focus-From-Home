@@ -183,7 +183,7 @@ function HandbookDownloadButtons({
         </Button>
       ))}
       <p className="text-xs text-muted">
-        Links expire in about 30 minutes. Refresh this page to get new ones, or
+        Links expire in about 2 hours. Refresh this page to get new ones, or
         email {DOWNLOAD_SUPPORT_EMAIL} with your receipt if you need help.
       </p>
     </div>

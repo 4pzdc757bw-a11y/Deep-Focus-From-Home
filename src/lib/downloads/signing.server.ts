@@ -4,8 +4,8 @@ import { DownloadAuthError, DownloadConfigError } from "./errors.ts";
 
 export { DownloadAuthError, DownloadConfigError } from "./errors.ts";
 
-/** Signed download links expire after 30 minutes (within 15–60 launch window). */
-export const DOWNLOAD_LINK_TTL_SECONDS = 30 * 60;
+/** Signed download links expire after 2 hours (Jeffrey, Oct 10, 2026; was 30 minutes). */
+export const DOWNLOAD_LINK_TTL_SECONDS = 2 * 60 * 60;
 
 /**
  * HMAC secret for signed download URLs.
