@@ -11,6 +11,7 @@ import {
 import { STORE_CREDIT_CHECKOUT_LINE } from "@/lib/legal";
 import { useFocusStore } from "@/lib/store";
 import { AppUpgradeOffer } from "@/components/app-upgrade";
+import { PreviewAppButton } from "@/components/app-preview-button";
 import { useUnlockedProduct } from "@/components/lock-screen";
 
 /**
@@ -86,7 +87,10 @@ function AppOfferPage() {
           </p>
         </div>
         {handbookBuyer ? (
-          <AppUpgradeOffer />
+          <>
+            <PreviewAppButton />
+            <AppUpgradeOffer />
+          </>
         ) : product === "app" ? (
           <Button asChild>
             <Link to="/">The app is open on this device. Go to Today</Link>
@@ -97,6 +101,7 @@ function AppOfferPage() {
               {APP_PRICE_LABEL}
             </p>
             <p className="text-sm text-muted">{APP_ACCESS_LINE}</p>
+            <PreviewAppButton />
             {appCheckout ? (
               <Button variant="outline" asChild>
                 <a href={appCheckout} rel="noopener noreferrer">

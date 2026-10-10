@@ -1,4 +1,5 @@
 import { getRouteApi, Link, useRouter, useRouterState } from "@tanstack/react-router";
+import { PreviewAppButton } from "@/components/app-preview-button";
 import { HandbookCheckoutLink } from "@/components/handbook-checkout-link";
 import { AppUpgradeOffer } from "@/components/app-upgrade";
 import { ArrowLeft, Lock } from "lucide-react";
@@ -218,9 +219,12 @@ export function LockScreen({
         </p>
         <div className="flex flex-col gap-2 sm:flex-row">
           {handbookBuyer ? (
-            <Button variant="outline" asChild>
-              <Link to="/guide">Read the handbook</Link>
-            </Button>
+            <>
+              <Button variant="outline" asChild>
+                <Link to="/guide">Read the handbook</Link>
+              </Button>
+              <PreviewAppButton variant="outline" />
+            </>
           ) : (
             <>
               <Button asChild>
