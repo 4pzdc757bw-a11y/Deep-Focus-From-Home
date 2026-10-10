@@ -1,16 +1,20 @@
 /** Vera-approved locked legal copy (Desktop JEFFSEBIZ/Legal + Offer-and-Policies). Do not invent. */
 
-export const LEGAL_EFFECTIVE_DATE = "October 3, 2026";
+export const LEGAL_EFFECTIVE_DATE = "October 8, 2026";
 
 /** Official business mailing address (MailPro mailbox #210). Never the home address. */
 export const BUSINESS_NAME = "JEFFSEBIZ LLC";
 export const BUSINESS_ADDRESS_LINES = ["333 W Bethalto Dr, Ste C #210", "Bethalto, IL 62010"] as const;
 export const BUSINESS_ADDRESS = BUSINESS_ADDRESS_LINES.join(", ");
-export const BUSINESS_EMAIL = "support@jeffsebiz.com";
+export const BUSINESS_EMAIL = "support@deepfocusfromhome.com";
+
+/** Vera-confirmed (#65): no-sale countries. Same line on /buy and Terms. */
+export const NO_SALE_COUNTRIES_LINE =
+  "We currently don’t sell to customers in the European Union, the United Kingdom, Norway, Iceland, Liechtenstein, Switzerland, or the Isle of Man.";
 
 /** Locked checkout / footer line from Store Credit policy. */
 export const STORE_CREDIT_CHECKOUT_LINE =
-  "Digital products, no automatic refunds. If something’s wrong, email support@jeffsebiz.com. We aim to reply within 3 business days, fix delivery problems, and refund duplicate charges. Other requests are reviewed case by case.";
+  "Digital products, no automatic refunds. If something’s wrong, email support@deepfocusfromhome.com. We aim to reply within 3 business days, fix delivery problems, and refund duplicate charges. Other requests are reviewed case by case.";
 
 /**
  * Fix-it rule (Vera): identical wording in the Store Credit Policy and Terms
@@ -18,7 +22,7 @@ export const STORE_CREDIT_CHECKOUT_LINE =
  */
 export const FIX_IT_HEADING = "Didn’t get your files, or charged twice?";
 export const FIX_IT_INTRO =
-  "Email support@jeffsebiz.com with the email you used to buy and your Stripe receipt (or the date and amount).";
+  "Email support@deepfocusfromhome.com with the email you used to buy and your Stripe receipt (or the date and amount).";
 export const FIX_IT_ITEMS = [
   "Files never arrived or won’t open: we’ll resend them or send a working download link.",
   "Charged more than once for the same order: we’ll refund the extra charge to your original payment method.",
@@ -44,7 +48,7 @@ export const REFUND_ENDS_ACCESS =
 
 /** Payment problems (Terms section 7). Neutral; internal refund rules stay internal. */
 export const PAYMENT_DISPUTE_LINE =
-  "If there’s a problem with a charge, please email us first at support@jeffsebiz.com so we can fix it quickly. Access to the purchase may be paused while a payment dispute is open.";
+  "If there’s a problem with a charge, please email us first at support@deepfocusfromhome.com so we can fix it quickly. Access to the purchase may be paused while a payment dispute is open.";
 
 /** Consumer rights the law doesn't let us waive (Terms section 11). */
 export const CONSUMER_RIGHTS_LINE =
@@ -59,3 +63,10 @@ export const LEGAL_LINKS = [
   { to: "/privacy" as const, label: "Privacy Policy" },
   { to: "/store-credit" as const, label: "Store Credit Policy" },
 ];
+
+/**
+ * #108 Terms §3 upgrade line. Exact wording approved by Jeffrey, Vera and
+ * Penny on Oct 8 2026. Keep "(currently $20)" in step with APP_PRICE - PRICE.
+ */
+export const TERMS_UPGRADE_LINE =
+  "If you bought the handbook, you can upgrade to the app for the app price minus what you paid for the handbook (currently $20). The upgrade is only for the account or email that bought the handbook. If the handbook purchase is refunded, the upgrade price no longer applies. Refunding the upgrade refunds only the upgrade price.";

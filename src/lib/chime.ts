@@ -1,8 +1,16 @@
 let ctx: AudioContext | null = null;
 
-async function audio() {
+/**
+ * Create the AudioContext (and kick resume) inside a user gesture.
+ * Call this synchronously from click/tap handlers — do not await first.
+ */
+export function unlockAudio() {
   ctx ??= new AudioContext();
-  if (ctx.state === "suspended") await ctx.resume();
+  if (ctx.state === "suspended") {
+    // Fire-and-forget: awaiting resume before scheduling is what lost the
+    // first Start bell when the notify explainer appeared on the same tap.
+    void ctx.resume();
+  }
   return ctx;
 }
 
@@ -25,21 +33,46 @@ function partial(
   osc.stop(when + dur + 0.05);
 }
 
-export async function playStartBell() {
-  const ac = await audio();
+function ringStart(ac: AudioContext) {
   const t = ac.currentTime + 0.02;
   partial(ac, 784, t, 1.5, 0.12);
   partial(ac, 1175, t, 1.8, 0.07);
   partial(ac, 1568, t + 0.04, 1.2, 0.04);
 }
 
-export async function playDoneBell() {
-  const ac = await audio();
+function ringDone(ac: AudioContext) {
   const t = ac.currentTime + 0.02;
   partial(ac, 659, t, 1.3, 0.12);
   partial(ac, 988, t, 1.6, 0.07);
   partial(ac, 523, t + 0.42, 1.6, 0.11);
   partial(ac, 784, t + 0.42, 1.8, 0.06);
+}
+
+/**
+ * Ring the start bell. Unlocks audio synchronously in the caller's turn so a
+ * first-tap Start still sounds even if a notify prompt follows on the same click.
+ */
+export function playStartBell(): Promise<void> {
+  const ac = unlockAudio();
+  if (ac.state === "running") {
+    ringStart(ac);
+    return Promise.resolve();
+  }
+  // Still suspended: resume was already kicked in unlockAudio within the gesture.
+  return ac.resume().then(() => {
+    ringStart(ac);
+  });
+}
+
+export function playDoneBell(): Promise<void> {
+  const ac = unlockAudio();
+  if (ac.state === "running") {
+    ringDone(ac);
+    return Promise.resolve();
+  }
+  return ac.resume().then(() => {
+    ringDone(ac);
+  });
 }
 
 export function parseClock(hhmm: string, from = new Date()) {

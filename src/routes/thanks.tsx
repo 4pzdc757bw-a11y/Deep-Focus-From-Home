@@ -64,7 +64,10 @@ function isPaidUnlock(paid: ThanksSearch["paid"]): boolean {
 export const Route = createFileRoute("/thanks")({
   validateSearch: (search: Record<string, unknown>): ThanksSearch => {
     const paid = keepPaidParam(search.paid);
-    const product = parsePurchaseProduct(search.product);
+    // #108: the $20 upgrade lands as ?product=upgrade; the server decides
+    // whether it opens the app (handbook still paid on the same email).
+    const product =
+      search.product === "upgrade" ? "app" : parsePurchaseProduct(search.product);
     const session_id = keepSessionId(search.session_id);
     const out: ThanksSearch = {};
     if (paid !== undefined) out.paid = paid;

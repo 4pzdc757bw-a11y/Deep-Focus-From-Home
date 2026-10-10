@@ -5,4 +5,4 @@ Allow: /
 Disallow: /thanks
 Disallow: /access
 
-Sitemap: https://deepfocus.jeffsebiz.com/sitemap.xml
+Sitemap: https://deepfocusfromhome.com/sitemap.xml

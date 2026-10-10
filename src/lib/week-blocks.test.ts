@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { formatWeekBlock, parseWeekBlock } from "./week-blocks.ts";
+import { dayBlocks, formatWeekBlock, parseWeekBlock, setDayBlocks } from "./week-blocks.ts";
 import { blockDefaults, nextWorkday, nextWorkdayFrom, parseWorkHours } from "./work-hours.ts";
 
 describe("work hours", () => {
@@ -416,7 +416,7 @@ describe("new day from the week plan", () => {
     const weeks = {
       "2026-10-05": { blocks: ["Mon 11:00 PM–12:30 AM (next day) · A", "Wed 11:00 PM–12:30 AM (next day) · Reports", "Wed 1:00 AM–1:00 AM · zero", ""] },
     };
-    assert.deepEqual(planSlotsFor("2026-10-07", weeks), [
+    assert.deepEqual(planSlotsFor("2026-10-07", weeks, "11 PM - 7 AM"), [
       { start: "23:00", end: "00:30", task: "Reports" },
       { start: "01:00", end: "02:30", task: "zero" },
     ]);
@@ -431,7 +431,7 @@ describe("new day from the week plan", () => {
 
 describe("Close day never moves backward", () => {
   it("closing Wed Oct 7 opens Thu Oct 8, not Mon Oct 5", async () => {
-    const { nextDateForward, latestClosedDate } = await import("./close-day.ts");
+    const { nextDateForward, latestClosedIn: latestClosedDate } = await import("./close-day-forward.ts");
     const wd = [1, 2, 3, 4, 5];
     assert.equal(nextDateForward("2026-10-07", "2026-10-02", wd, "2026-10-07"), "2026-10-08");
     // Closing an older day after later ones were closed still goes forward.
@@ -443,5 +443,49 @@ describe("Close day never moves backward", () => {
       latestClosedDate({ "2026-10-02": { checks: { shutdown: true } }, "2026-10-07": { checks: { shutdown: true } }, "2026-10-08": { checks: { shutdown: false } } }),
       "2026-10-07",
     );
+  });
+});
+
+describe("Task or meeting box keeps spaces while typing (save → read-back each keystroke)", () => {
+  it("types 'reports for final test' one key at a time without losing spaces", () => {
+    const typed = "reports for final test";
+    let lines: string[] = setDayBlocks([], 1, [{ start: "09:00", end: "10:30", task: "" }]);
+    for (let n = 1; n <= typed.length; n++) {
+      // What the input shows is what was read back after the last keystroke.
+      const shown = dayBlocks(lines, 1)[0]!.block.task;
+      const next = shown + typed[n - 1];
+      assert.equal(next, typed.slice(0, n));
+      lines = setDayBlocks(lines, 1, [{ start: "09:00", end: "10:30", task: next }]);
+    }
+    assert.equal(dayBlocks(lines, 1)[0]!.block.task, typed);
+  });
+
+  it("keeps a trailing space and a mid-text edit through the round trip", () => {
+    const back = (task: string) =>
+      parseWeekBlock(formatWeekBlock({ day: 2, start: "13:00", end: "14:30", task }))!.task;
+    assert.equal(back("reports "), "reports ");
+    assert.equal(back("reports  for"), "reports  for");
+    assert.equal(back("   "), "");
+    assert.equal(back(" lead"), "lead");
+  });
+
+  it("a block with no task still reads back with its times", () => {
+    const b = parseWeekBlock(formatWeekBlock({ day: 1, start: "09:00", end: "10:30", task: "" }))!;
+    assert.equal(b.task, "");
+    assert.equal(b.start, "09:00");
+  });
+});
+
+describe("Save week tidy", () => {
+  it("trims tasks and notes, keeps line positions and spaces inside", async () => {
+    const { tidyWeekBlocks } = await import("./week-blocks.ts");
+    const typing = formatWeekBlock({ day: 1, start: "09:00", end: "10:30", task: "reports for final test " });
+    const out = tidyWeekBlocks([typing, "   ", "  older note  "]);
+    assert.equal(out.length, 3);
+    assert.equal(parseWeekBlock(out[0])?.task, "reports for final test");
+    assert.ok(!out[0]!.endsWith(" "));
+    assert.equal(out[1], "");
+    assert.equal(out[2], "older note");
+    assert.deepEqual(tidyWeekBlocks(out), out);
   });
 });

@@ -1,13 +1,15 @@
-import { useFocusStore } from "./store";
+import { readStarterWriteIns, useFocusStore } from "./store";
 
 const KEYS = [
   "starterStart",
   "starterDone",
   "starterNotes",
+  "starterWriteIns",
   "dailies",
   "energy",
   "setup",
   "homeFocusWeekTwoPrompted",
+  "blockSetupDone",
   "household",
   "weeks",
   "months",
@@ -45,6 +47,8 @@ export function importBackup(raw: unknown) {
   for (const key of KEYS) {
     if (key in data) patch[key] = data[key];
   }
+  // Starter write-ins: keep only well-formed text (older backups simply don't have them).
+  if ("starterWriteIns" in patch) patch.starterWriteIns = readStarterWriteIns(patch.starterWriteIns);
   useFocusStore.setState(patch);
 }
 

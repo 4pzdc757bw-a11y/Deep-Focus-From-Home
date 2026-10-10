@@ -8,6 +8,7 @@ import {
   PAYMENT_DISPUTE_LINE,
   REFUND_ENDS_ACCESS,
   STORE_CREDIT_LIMITS,
+  TERMS_UPGRADE_LINE,
 } from "@/lib/legal";
 
 export const Route = createFileRoute("/terms")({
@@ -17,7 +18,7 @@ export const Route = createFileRoute("/terms")({
       {
         name: "description",
         content:
-          "Terms of Service / Terms of Sale for jeffsebiz.com digital products from JEFFSEBIZ LLC.",
+          "Terms of Service / Terms of Sale for digital products from JEFFSEBIZ LLC on deepfocusfromhome.com, jeffsebiz.com, and our other product sites.",
       },
     ],
   }),
@@ -28,7 +29,7 @@ function TermsPage() {
   return (
     <LegalDoc kicker="Legal" title="Terms of Service / Terms of Sale">
       <p>
-        These Terms cover your use of jeffsebiz.com and purchases of digital
+        These Terms cover your use of deepfocusfromhome.com, jeffsebiz.com, and our other product sites, and purchases of digital
         products from JEFFSEBIZ LLC (“we,” “us,” “Jeffsebiz”), including Deep
         Focus from Home and related offers. By buying or using our products, you
         agree to these Terms.
@@ -42,7 +43,7 @@ function TermsPage() {
 
       <h2>2. What we sell</h2>
       <p>
-        We sell digital products through jeffsebiz.com. That may include
+        We sell digital products through deepfocusfromhome.com, jeffsebiz.com, and our other product sites. That may include
         handbooks and other PDFs, fillable worksheets, web apps and related
         tools, email newsletters people opt into, and other digital downloads we
         offer from time to time.
@@ -59,8 +60,9 @@ function TermsPage() {
         before that sale goes live.
       </p>
       <p>
-        We currently don’t sell to customers in the European Union or the
-        United Kingdom.
+        We currently don’t sell to customers in the European Union, the United
+        Kingdom, Norway, Iceland, Liechtenstein, Switzerland, or the Isle of
+        Man.
       </p>
 
       <h2>3. Deep Focus from Home app</h2>
@@ -70,6 +72,7 @@ function TermsPage() {
         Daily OS, focus bells, and energy log, plus any handbook downloads listed
         on the checkout and thank-you pages for your purchase.
       </p>
+      <p>{TERMS_UPGRADE_LINE}</p>
       <p>
         You receive a personal license to use the app for yourself. You do not
         own the app’s code, design, or brand. You may not redistribute, resell,
@@ -95,9 +98,7 @@ function TermsPage() {
         the app, not for the life of the buyer. The app runs on our website, so
         it isn’t available while the site is down for maintenance or outages,
         and it depends on third-party hosting. We work to keep it running but
-        don’t guarantee uninterrupted access. Your entries are saved in your own
-        browser, so clearing browser data or switching devices may remove them,
-        and we can’t recover them. {DISCONTINUE_NOTICE}
+        don’t guarantee uninterrupted access. Your entries are saved in your own browser, so clearing browser data, using a private or incognito window, or switching devices may remove them, and we can’t recover them. {DISCONTINUE_NOTICE}
       </p>
       <p>
         Use the export or print option to keep your own copy of your entries.
@@ -158,7 +159,7 @@ function TermsPage() {
         We do not offer automatic cash refunds on digital downloads or digital
         access. Delivery problems and duplicate charges are always fixed (see
         below). If something else went wrong with your order, email
-        support@jeffsebiz.com and explain the problem. We review each of those
+        support@deepfocusfromhome.com and explain the problem. We review each of those
         requests case by case and may offer store credit, replace or fix a
         file, or in rare cases a refund. When we grant store credit, it equals the
         purchase price you paid (unless we say otherwise in writing), can be used toward any
@@ -214,7 +215,7 @@ function TermsPage() {
       </p>
 
       <h2>15. Contact</h2>
-      <p>Questions about these Terms: support@jeffsebiz.com</p>
+      <p>Questions about these Terms: support@deepfocusfromhome.com</p>
     </LegalDoc>
   );
 }

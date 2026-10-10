@@ -13,8 +13,11 @@ import {
   parseWorkHours,
   snapClock,
   toClock as clock,
+  toMinutes,
   weekdayOf,
+  workMinutes,
 } from "./work-hours.ts";
+import { MAX_DAY_BLOCKS } from "./block-plan.ts";
 
 export type WeekBlockDraft = {
   /** 0 = Sunday … 6 = Saturday. */
@@ -30,15 +33,19 @@ export function formatWeekBlock(b: WeekBlockDraft): string {
   // Night shift: "Mon 11:00 PM–12:30 AM (next day)" — the day is the shift's start day.
   const times = b.start && b.end ? `${clock12(b.start)}–${endLabel(b.start, b.end)}` : "";
   const head = [day, times].filter(Boolean).join(" ");
-  const task = b.task.trim();
-  return task ? `${head} · ${task}` : head;
+  // Only the front is trimmed while typing: a trailing space must survive the
+  // save → read-back on each keystroke, or "reports for" types as "reportsfor".
+  // The editor trims the end on blur.
+  const task = b.task.replace(/[\r\n]+/g, " ").trimStart();
+  return task.trim() ? `${head} · ${task}` : head;
 }
 
 const DAY_RE = /^\s*(sun|mon|tue|wed|thu|fri|sat)[a-z]*\.?\s*/i;
 
 /** Best-effort read of a saved line; null when it has no day we recognise. */
 export function parseWeekBlock(text: string | undefined | null): WeekBlockDraft | null {
-  const raw = (text ?? "").trim();
+  // trimStart, not trim: keep a trailing space in the task while it is being typed.
+  const raw = (text ?? "").trimStart();
   const dm = DAY_RE.exec(raw);
   if (!dm) return null;
   const day = WEEKDAY_SHORT.findIndex((d) => d.toLowerCase() === dm[1]!.toLowerCase());
@@ -46,7 +53,8 @@ export function parseWeekBlock(text: string | undefined | null): WeekBlockDraft 
   let task = "";
   const sep = rest.search(/\s[·|-]\s|\s·|·/);
   if (sep >= 0) {
-    task = rest.slice(sep).replace(/^\s*[·|-]\s*/, "").trim();
+    task = rest.slice(sep).replace(/^\s*[·|-]\s*/, "");
+    if (!task.trim()) task = "";
     rest = rest.slice(0, sep);
   }
   const hours = parseWorkHours(rest.replace(/\(next day\)/gi, " "));
@@ -94,7 +102,7 @@ export function suggestWeekBlocks(opts: {
     .reverse();
   for (const k of weekKeys) {
     const parsed = (weeks[k]?.blocks ?? []).map(parseWeekBlockTimes).filter(Boolean) as WeekBlockDraft[];
-    if (parsed.length) return parsed.slice(0, 4).map((b) => ({ ...b, ...fixLength(b), task: "" }));
+    if (parsed.length) return parsed.map((b) => ({ ...b, ...fixLength(b), task: "" }));
   }
   // 2. Recent Today pages: Block 1 per work day. Planned times as typed; a
   // block that ran or that the app moved to "now" uses the work-day default
@@ -152,18 +160,91 @@ export function mondayOf(dateKey: string) {
 
 /**
  * Blocks the week plan puts on work day `date` (its weekday; for a night shift
- * the shift's start day), in time order, at most 3. App-filled, so a block
- * that would end when it starts gets 90 min.
+ * the shift's start day): only that day's own blocks, in time order (night
+ * shifts: 1 AM after 11 PM), at most 8 (the Daily OS limit). App-filled, so a
+ * block that would end when it starts gets 90 min.
  */
 export function planSlotsFor(
   date: string,
   weeks: Record<string, { blocks: readonly string[] } | undefined>,
+  hours?: string | null,
 ): { start: string; end: string; task: string }[] {
   const day = weekdayOf(date);
   const lines = weeks[mondayOf(date)]?.blocks ?? [];
-  return lines
-    .map(parseWeekBlockTimes)
-    .filter((b): b is WeekBlockDraft => Boolean(b && b.day === day))
-    .slice(0, 3)
+  const at = (b: WeekBlockDraft) => workMinutes(b.start, hours) ?? 0;
+  return dayBlocks(lines, day)
+    .map((x) => x.block)
+    .sort((a, b) => at(a) - at(b))
+    .slice(0, MAX_DAY_BLOCKS)
     .map((b) => ({ ...fixLength(b), task: b.task }));
+}
+
+/* ---------- Per-day week plan (each weekday set up on its own) ---------- */
+
+/** Length choices for a planned block: 15 min to 4 h in 15-min steps. */
+export const BLOCK_LENGTHS = Array.from({ length: 16 }, (_, i) => (i + 1) * 15);
+
+/** Minutes from start to end (past midnight wraps); 90 if unreadable. */
+export function blockLength(b: { start: string; end: string }) {
+  const a = toMinutes(b.start);
+  const z = toMinutes(b.end);
+  if (a == null || z == null || a === z) return 90;
+  return z > a ? z - a : z + 24 * 60 - a;
+}
+
+/** End for a start and a length in minutes ("23:00" + 90 → "00:30"). */
+export function endAfter(start: string, minutes: number) {
+  const a = toMinutes(start);
+  return a == null ? "" : clock(a + minutes);
+}
+
+/** Weekday `day`'s own blocks (lines with times for that day), in saved order. */
+export function dayBlocks(
+  lines: readonly string[],
+  day: number,
+): { index: number; block: WeekBlockDraft }[] {
+  const out: { index: number; block: WeekBlockDraft }[] = [];
+  lines.forEach((line, index) => {
+    const block = parseWeekBlockTimes(line);
+    if (block && block.day === day) out.push({ index, block });
+  });
+  return out;
+}
+
+/**
+ * Week plan lines with weekday `day`'s blocks replaced by `blocks` (at most
+ * 8). Every other day, and any free-text line, is left exactly as it was.
+ */
+export function setDayBlocks(
+  lines: readonly string[],
+  day: number,
+  blocks: readonly Omit<WeekBlockDraft, "day">[],
+): string[] {
+  const mine = new Set(dayBlocks(lines, day).map((x) => x.index));
+  const kept = lines.filter((line, i) => !mine.has(i) && line.trim());
+  const added = blocks.slice(0, MAX_DAY_BLOCKS).map((b) => formatWeekBlock({ ...b, day }));
+  return [...kept, ...added];
+}
+
+/**
+ * The "Copy this day to…" helper: `from`'s blocks replace each `to` day's
+ * blocks. Only runs when the user asks; nothing copies on its own.
+ */
+export function copyDayBlocks(lines: readonly string[], from: number, to: readonly number[]): string[] {
+  const source = dayBlocks(lines, from).map(({ block }) => ({ start: block.start, end: block.end, task: block.task }));
+  let out = [...lines];
+  for (const d of to) if (d !== from) out = setDayBlocks(out, d, source);
+  return out;
+}
+
+/**
+ * "Save week": commit every line as it will be read later — task trimmed at
+ * both ends, free-text notes trimmed. Line positions are kept.
+ */
+export function tidyWeekBlocks(lines: readonly string[]): string[] {
+  return lines.map((line) => {
+    if (!line.trim()) return "";
+    const b = parseWeekBlock(line);
+    return b ? formatWeekBlock({ ...b, task: b.task.trim() }) : line.trim();
+  });
 }

@@ -1,13 +1,14 @@
 import { getRouteApi, Link, useRouter, useRouterState } from "@tanstack/react-router";
 import { PreviewAppButton } from "@/components/app-preview-button";
-import { AppCheckoutLink, HandbookCheckoutLink } from "@/components/handbook-checkout-link";
+import { HandbookCheckoutLink } from "@/components/handbook-checkout-link";
+import { AppUpgradeOffer } from "@/components/app-upgrade";
 import { ArrowLeft, Lock } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 import { Card } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { APP_ACCESS_LINE, APP_PRICE_LABEL, PRICE_LABEL } from "@/lib/offer";
-import { hasAccess, type AccessNeed, type UnlockProduct } from "@/lib/unlock/access";
+import { PRICE_LABEL } from "@/lib/offer";
+import { CHAPTER_1_SLUG, hasAccess, type AccessNeed, type UnlockProduct } from "@/lib/unlock/access";
 import { unlockByEmail } from "@/lib/unlock/unlock";
 import { NotReadyLinks } from "@/components/not-ready";
 import { readUnlockResult, unlockErrorText } from "@/lib/unlock/unlock-result";
@@ -129,7 +130,8 @@ export function UnlockDeviceForm() {
       <p className="text-sm text-muted">
         Type the email you used when you paid, and we’ll open your handbook (or app) right here.
       </p>
-      <div className="flex flex-col gap-2 sm:flex-row">
+      {/* One row on phones too, so the button clears the bottom tab bar on first view. */}
+      <div className="flex flex-row gap-2">
         <Input
           id="unlock-email"
           type="email"
@@ -139,9 +141,14 @@ export function UnlockDeviceForm() {
           placeholder="you@example.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="sm:flex-1"
+          className="min-w-0 flex-1"
         />
-        <Button type="submit" variant="outline" disabled={busy || !email.trim()}>
+        <Button
+          type="submit"
+          variant="outline"
+          className="shrink-0"
+          disabled={busy || !email.trim()}
+        >
           {busy ? "Checking…" : "Get my copy"}
         </Button>
       </div>
@@ -205,19 +212,16 @@ export function LockScreen({
         </Heading>
         <p className="max-w-prose text-pretty text-ink">
           {!isApp
-            ? `Chapter 1 is free to read. The rest of the guide is in the handbook: ${PRICE_LABEL}, pay once.`
+            ? `The Introduction and Chapter 1 are free to read. The rest of the guide is in the handbook: ${PRICE_LABEL}, pay once.`
             : handbookBuyer
-              ? `Your handbook is unlocked, and everything in it works on paper. The Deep Focus app is an optional add-on to the handbook: a daily planner, focus bell, energy log and weekly planner in your browser, nothing to install. ${APP_PRICE_LABEL}. ${APP_ACCESS_LINE}`
+              ? "Your handbook is unlocked, and everything in it works on paper. The Deep Focus app is an optional add-on to the handbook: a daily planner, focus bell, energy log and weekly planner in your browser, nothing to install."
               : `Seven short chapters on working from home: your workspace, household, phone, daily rituals, deep work, people and energy. One action per chapter. Online guide plus the PDF, ${PRICE_LABEL}, pay once.`}
         </p>
         <div className="flex flex-col gap-2 sm:flex-row">
           {handbookBuyer ? (
             <>
-              <Button asChild>
-                <Link to="/guide">Read the handbook</Link>
-              </Button>
               <Button variant="outline" asChild>
-                <AppCheckoutLink>Add the app ({APP_PRICE_LABEL})</AppCheckoutLink>
+                <Link to="/guide">Read the handbook</Link>
               </Button>
               <PreviewAppButton variant="outline" />
             </>
@@ -232,7 +236,7 @@ export function LockScreen({
                 </Button>
               ) : (
                 <Button variant="outline" asChild>
-                  <Link to="/guide/$slug" params={{ slug: "intro" }}>
+                  <Link to="/guide/$slug" params={{ slug: CHAPTER_1_SLUG }}>
                     Read Chapter 1 free
                   </Link>
                 </Button>
@@ -240,6 +244,8 @@ export function LockScreen({
             </>
           )}
         </div>
+        {/* #108: handbook buyers get the $20 upgrade instead of the $37 checkout. */}
+        {handbookBuyer ? <AppUpgradeOffer /> : null}
         <div className="border-t border-yellow pt-4">
           <UnlockDeviceForm />
         </div>

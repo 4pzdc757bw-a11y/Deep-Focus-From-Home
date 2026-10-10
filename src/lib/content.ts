@@ -1,4 +1,6 @@
 export const APP_NAME = "Deep Focus from Home";
+/** Footer on the printed / saved Daily OS and the fillables. */
+export const PRINT_FOOTER = "deepfocusfromhome.com · support@deepfocusfromhome.com";
 export const APP_LINE = "Focus is a design problem, not a character test.";
 
 export const STARTER_DAYS = [
@@ -53,7 +55,7 @@ export const STARTER_DAYS = [
   {
     day: 5,
     title: "Blocks",
-    job: "Protect two deep-work sessions on the calendar.",
+    job: "Protect two focus blocks on the calendar.",
     why: "A block that is not on the calendar is a wish. Treat it as immovable.",
     actions: [
       "Choose two 60–90 minute windows for the next five workdays.",
@@ -70,7 +72,7 @@ export const STARTER_DAYS = [
     actions: [
       "Name one accountability partner.",
       "Send them today’s 1–3 outcomes before you start.",
-      "Schedule one body-doubling or coworking session.",
+      "Set up one body-doubling or coworking appointment.",
       "Keep the message short. Do not wait for the perfect person.",
     ],
   },
@@ -87,6 +89,147 @@ export const STARTER_DAYS = [
     ],
   },
 ] as const;
+
+/** The free fillable 7-day pack (same file the site and the Kit emails link to). */
+export const STARTER_PDF = "/downloads/7-day-starter-pack.pdf";
+
+/** Plain-words note at the top of the starter (page and PDF): where each day's steps get done. */
+export const STARTER_HOW_IT_WORKS = [
+  "Each day has one job. Do the steps in your real workday, not on this page.",
+  "Anything a step asks you to write goes in the boxes under that day (saved in this browser on this device) or on the printed PDF.",
+  "Calendar steps go on whatever calendar you already use: phone, Google or paper.",
+] as const;
+
+export type StarterWriteIn = {
+  id: string;
+  label: string;
+  /** "time" shows a time picker and "long" a taller box on the page; the PDF prints blank lines. */
+  kind?: "text" | "time" | "long";
+  placeholder?: string;
+};
+
+/**
+ * Write-in boxes under each starter day, only where a step asks the reader to
+ * write or choose something. Same labels on /starter and in the PDF.
+ */
+export const STARTER_WRITE_INS: Record<
+  number,
+  { fields: StarterWriteIn[]; note?: string }
+> = {
+  1: {
+    fields: [
+      {
+        id: "surface",
+        label: "My work surface",
+        placeholder: "e.g. the desk in the spare room",
+      },
+    ],
+  },
+  2: {
+    fields: [
+      {
+        id: "coreHours",
+        label: "My core hours",
+        placeholder: "e.g. 9:00–12:00",
+      },
+      {
+        id: "signal",
+        label: "My signal",
+        placeholder: "e.g. door closed, headphones on",
+      },
+      {
+        id: "emergency",
+        label: "What counts as an emergency",
+        placeholder: "e.g. someone is hurt or the school calls",
+      },
+      {
+        id: "choresRule",
+        label: "My chores rule",
+        placeholder: "e.g. chores wait for a break",
+      },
+    ],
+  },
+  3: {
+    fields: [
+      { id: "outcomes", label: "Today’s 1–3 outcomes", kind: "long" },
+      {
+        id: "checkWindows",
+        label: "My two message-check windows",
+        placeholder: "e.g. 11:30 and 3:00",
+      },
+    ],
+  },
+  4: {
+    fields: [
+      {
+        id: "morningStart",
+        label: "My morning start (5–7 minutes)",
+        kind: "long",
+      },
+      { id: "shutdown", label: "My shutdown (5 minutes)", kind: "long" },
+    ],
+  },
+  5: {
+    fields: [
+      { id: "block1Start", label: "Block 1 start", kind: "time" },
+      { id: "block1End", label: "Block 1 end", kind: "time" },
+      { id: "block2Start", label: "Block 2 start", kind: "time" },
+      { id: "block2End", label: "Block 2 end", kind: "time" },
+    ],
+    note: "Also put these on your calendar.",
+  },
+  6: {
+    fields: [
+      { id: "partner", label: "My accountability partner’s name" },
+      {
+        id: "coworking",
+        label: "My coworking time",
+        placeholder: "e.g. Thursday 10:00, video call with Sam",
+      },
+    ],
+  },
+  7: {
+    fields: [
+      {
+        id: "peakWindow",
+        label: "My strongest two-hour window",
+        placeholder: "e.g. 9:00–11:00",
+      },
+    ],
+  },
+};
+
+/**
+ * "What the full handbook adds": last box on /starter (after Day 7) and page 8
+ * of the free PDF. Every bullet is something the $17 handbook purchase really
+ * delivers (handbook PDF chapters + Fillables.zip in private/downloads/handbook).
+ * The button goes straight to the live $17 handbook Stripe Payment Link (the
+ * same VITE_STRIPE_HANDBOOK_PAYMENT_LINK /buy uses; vercel.json), with /buy as
+ * the "Or read the details first" link. "$17" must match PRICE_LABEL in offer.ts
+ * (offer.ts reads import.meta.env, so the PDF builder can't import it).
+ */
+export const STARTER_HANDBOOK_ADDS = {
+  heading: "What the full handbook adds",
+  lead: [
+    "This free pack is week one: one small job a day.",
+    "The Deep Focus from Home handbook by Jeffsebiz is the full system behind it, with much more detail and the forms already set up for you, as phone and desktop PDFs.",
+  ],
+  bullets: [
+    "All seven chapters in full, plus the introduction. Each goes deeper than its day here: lighting and posture, browser profiles, focus sprints, and what to do on a low-energy day.",
+    "Daily Focus Operating System: one page for each workday, with morning setup, up to three deep-work blocks, a note to your accountability partner and a 5-minute shutdown.",
+    "Energy & Focus Log: rate your energy and focus morning, afternoon and evening for three to five days, then name your peak window from real numbers, not memory.",
+    "Weekly Deep Work Planner and Monthly Focus Review: plan next week’s blocks on Friday, and once a month keep one or two changes and drop the rest.",
+    "Household Focus Agreement: core hours, the do-not-disturb signal and what counts as an emergency, plus a kid version to read out loud and put on the fridge.",
+    "Home Focus Setup Worksheet: your workspace, household rules, phone and app rules, and your morning and shutdown routines, written down once.",
+    "Meetings and messages: how to cluster meetings so mornings stay free, and how to check email and chat at two or three set times a day.",
+  ],
+  button: "Get the handbook, $17",
+  payNote: "Pay once. No subscription.",
+  bothOptions: "Or read the details first",
+} as const;
+
+/** One line at the end of Day 7 in the PDF, pointing at the page above. */
+export const STARTER_PDF_DAY7_MORE = "Ready for more? See page 8.";
 
 export const CHAPTERS = [
   {
@@ -180,14 +323,14 @@ export const CHAPTERS = [
     summary:
       "Deep work is the work that actually moves a project. It needs a named block, not leftover minutes between meetings.",
     body: [
-      "Block two 60–90 minute sessions. Put them on the calendar with start and end times.",
+      "Block two 60–90 minute focus blocks. Put them on the calendar with start and end times.",
       "One outcome per block is better than a heroic list.",
       "At the end, write one sentence about what you completed.",
       "Meetings do not get to eat the first block unless you chose that on purpose.",
       "On a wrecked day, keep a 15–20 minute minimum. Do not treat a sick-child day as a failed streak.",
     ],
     action:
-      "Block two sessions for the next five workdays. Treat them as immovable. Review the sentences on Friday.",
+      "Block two focus blocks for the next five workdays. Treat them as immovable. Review the sentences on Friday.",
   },
   {
     slug: "people",
@@ -198,12 +341,12 @@ export const CHAPTERS = [
       "Home has no hallway. Body doubling, a short daily note, and one partner restore the social pressure the office used to supply.",
     body: [
       "Name one accountability partner. Send today’s 1–3 outcomes before you start.",
-      "Schedule two body-doubling or virtual coworking sessions this week.",
+      "Schedule two body-doubling or virtual coworking appointments this week.",
       "Keep the message one sentence. Do not wait for a perfect system.",
       "Motivation follows completed blocks more reliably than it precedes them.",
     ],
     action:
-      "Send the first daily priority note today. Book one coworking session before the week ends.",
+      "Send the first daily priority note today. Book one coworking appointment before the week ends.",
   },
   {
     slug: "energy",
@@ -247,12 +390,21 @@ export type BlockPrepId = (typeof BLOCK_PREP_CHECKS)[number]["id"];
  * End-of-day shutdown, from the handbook's "Daily Focus Checklist → END-OF-DAY
  * SHUTDOWN (5 minutes)" (same routine as Chapter 4.3, End-of-Day Shutdown
  * Ritual). The checklist's optional fifth item is left out.
+ *
+ * Only the two steps done before Close day are checkboxes on the page. The
+ * last two happen after Close day has moved you on, so they are shown as a
+ * "Before you go:" reminder in the Close day pop-up instead
+ * (SHUTDOWN_AFTER_CLOSE). Paper fillables still list all four.
  */
 export const SHUTDOWN_STEPS = [
   { id: "outcomes", label: "Review and mark the day’s top outcomes" },
   { id: "loops", label: "Capture open loops for tomorrow" },
-  { id: "apps", label: "Close work apps and browser profiles" },
-  { id: "space", label: "Leave or cover the workspace" },
+] as const;
+
+/** Handbook shutdown steps 3–4, shown in the Close day pop-up above Save PDF / Print. */
+export const SHUTDOWN_AFTER_CLOSE = [
+  "Close work apps and browser profiles.",
+  "Leave or cover the workspace.",
 ] as const;
 
 export type ShutdownStepId = (typeof SHUTDOWN_STEPS)[number]["id"];

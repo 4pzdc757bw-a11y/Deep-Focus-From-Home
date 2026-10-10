@@ -45,7 +45,7 @@ export const Route = createFileRoute("/api/download")({
             await assertPaidCheckoutSession(sessionId);
           } else {
             throw new DownloadAuthError(
-              "Missing download authorization. Open the thanks page from your Stripe payment confirmation (it includes a session id), or email support@jeffsebiz.com with your receipt.",
+              "Missing download authorization. Open the thanks page from your Stripe payment confirmation (it includes a session id), or email support@deepfocusfromhome.com with your receipt.",
             );
           }
 

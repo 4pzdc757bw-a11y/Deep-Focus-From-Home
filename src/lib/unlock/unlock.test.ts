@@ -1,8 +1,18 @@
 import { describe, it, beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
-import { bestProduct, hasAccess, requiredAccessForPath } from "./access.ts";
+import {
+  bestProduct,
+  CHAPTER_1_SLUG,
+  FREE_CHAPTER_SLUGS,
+  hasAccess,
+  requiredAccessForPath,
+} from "./access.ts";
+import { CHAPTERS } from "../content.ts";
 import { mintUnlockToken, verifyUnlockToken, getUnlockSecret, UnlockConfigError } from "./token.server.ts";
-import { productFromSession } from "./product.server.ts";
+import { combineSessionKinds, productFromSession, sessionKind } from "./product.server.ts";
+import { appUpgradeCheckoutUrl } from "./upgrade.server.ts";
+import { TERMS_UPGRADE_LINE } from "../legal.ts";
+import { readUpgradeResult } from "./unlock-result.ts";
 import { rateLimitHit, resetRateLimits } from "./rate-limit.server.ts";
 
 const ORIGINAL_ENV = { ...process.env };
@@ -18,8 +28,23 @@ describe("paywall path rules", () => {
       assert.equal(requiredAccessForPath(p), "app", p);
     }
   });
-  it("locks full guide chapters behind the handbook", () => {
-    assert.equal(requiredAccessForPath("/guide/environment"), "handbook");
+  it("keeps the Introduction and Chapter 1 free (#109 Option B)", () => {
+    assert.equal(requiredAccessForPath("/guide/intro"), "none");
+    assert.equal(requiredAccessForPath("/guide/environment"), "none");
+    assert.equal(requiredAccessForPath(`/guide/${CHAPTER_1_SLUG}`), "none");
+    assert.equal(requiredAccessForPath("/guide/environment/"), "none");
+    assert.deepEqual([...FREE_CHAPTER_SLUGS].sort(), ["environment", "intro"]);
+  });
+  it("Chapter 1 slug is the chapter numbered Chapter 1", () => {
+    const ch1 = CHAPTERS.find((c) => c.number === "Chapter 1");
+    assert.equal(ch1?.slug, CHAPTER_1_SLUG);
+    assert.equal(ch1?.title, "Design your focus environment");
+  });
+  it("locks the other guide chapters behind the handbook", () => {
+    for (const ch of CHAPTERS) {
+      if (ch.slug === "intro" || ch.slug === CHAPTER_1_SLUG) continue;
+      assert.equal(requiredAccessForPath(`/guide/${ch.slug}`), "handbook", ch.slug);
+    }
     assert.equal(requiredAccessForPath("/guide/household"), "handbook");
   });
   it("app includes handbook; handbook does not include app", () => {
@@ -71,7 +96,7 @@ describe("unlock token", () => {
 });
 
 describe("productFromSession", () => {
-  const site = "https://deepfocus.jeffsebiz.com";
+  const site = "https://deepfocusfromhome.com";
   const s = (success_url: string | null, amount: number | null, currency = "usd") => ({
     success_url,
     amount_subtotal: amount,
@@ -134,5 +159,56 @@ describe("unlock form result handling", async () => {
     assert.equal(unlockErrorText({ message: "obj msg" }), "obj msg");
     assert.equal(unlockErrorText(undefined), UNLOCK_FALLBACK_MESSAGE);
     assert.equal(unlockErrorText(new Error("<html><body>504</body></html>")), UNLOCK_FALLBACK_MESSAGE);
+  });
+});
+
+describe("#108 app upgrade for handbook buyers", () => {
+  const site = "https://deepfocusfromhome.com";
+  const up = {
+    success_url: `${site}/thanks?paid=1&product=upgrade&session_id={CHECKOUT_SESSION_ID}`,
+    amount_subtotal: 2000,
+    amount_total: 2000,
+    currency: "usd",
+  };
+  it("the upgrade checkout is its own kind and never the app on its own", () => {
+    assert.equal(sessionKind(up, { strict: true }), "upgrade");
+    assert.equal(productFromSession(up, { strict: true }), null);
+    assert.equal(productFromSession(up, { strict: false }), null);
+  });
+  it("upgrade counts as the app only next to a paid handbook", () => {
+    assert.equal(combineSessionKinds(["upgrade"]), null);
+    assert.equal(combineSessionKinds(["upgrade", "handbook"]), "app");
+    assert.equal(combineSessionKinds(["handbook"]), "handbook");
+    assert.equal(combineSessionKinds(["app"]), "app");
+    assert.equal(combineSessionKinds([]), null);
+  });
+  it("$17 + $20 = $37 (Vera's condition 1) and Terms line is the approved text", () => {
+    assert.equal(17 + 20, 37);
+    assert.ok(TERMS_UPGRADE_LINE.includes("(currently $20)"));
+    assert.ok(!/credit/i.test(TERMS_UPGRADE_LINE));
+    assert.equal(
+      TERMS_UPGRADE_LINE,
+      "If you bought the handbook, you can upgrade to the app for the app price minus what you paid for the handbook (currently $20). The upgrade is only for the account or email that bought the handbook. If the handbook purchase is refunded, the upgrade price no longer applies. Refunding the upgrade refunds only the upgrade price.",
+    );
+  });
+  it("checkout URL locks the buyer's email and carries the handbook session", () => {
+    const url = new URL(
+      appUpgradeCheckoutUrl(
+        { email: "Buyer+1@Example.com", handbookSessionId: "cs_live_abc123" },
+        "https://buy.stripe.com/abc",
+      ),
+    );
+    assert.equal(url.origin + url.pathname, "https://buy.stripe.com/abc");
+    assert.equal(url.searchParams.get("locked_prefilled_email"), "Buyer+1@Example.com");
+    assert.equal(url.searchParams.get("client_reference_id"), "cs_live_abc123");
+    assert.equal(appUpgradeCheckoutUrl({ email: "a@b.co", handbookSessionId: "x" }, ""), "");
+  });
+  it("only accepts a buy.stripe.com checkout URL from the server", () => {
+    assert.deepEqual(readUpgradeResult({ ok: true, action: "checkout", url: "https://evil.example/x" }).ok, false);
+    assert.deepEqual(readUpgradeResult({ ok: true, action: "checkout", url: "https://buy.stripe.com/x" }), {
+      ok: true,
+      action: "checkout",
+      url: "https://buy.stripe.com/x",
+    });
   });
 });

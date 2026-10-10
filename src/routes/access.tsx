@@ -16,13 +16,16 @@ function keepSessionId(raw: unknown): string | undefined {
 /**
  * Durable post-pay landing for Stripe Payment Link success URL.
  * Prefer:
- *   https://deepfocus.jeffsebiz.com/access?product=handbook&session_id={CHECKOUT_SESSION_ID}
- *   https://deepfocus.jeffsebiz.com/access?product=app&session_id={CHECKOUT_SESSION_ID}
+ *   https://deepfocusfromhome.com/access?product=handbook&session_id={CHECKOUT_SESSION_ID}
+ *   https://deepfocusfromhome.com/access?product=app&session_id={CHECKOUT_SESSION_ID}
  * (or the /thanks equivalents). The session id unlocks signed handbook downloads.
  */
 export const Route = createFileRoute("/access")({
   validateSearch: (search: Record<string, unknown>): AccessSearch => {
-    const product = parsePurchaseProduct(search.product);
+    // #108: the $20 upgrade lands as ?product=upgrade; the server decides
+    // whether it opens the app (handbook still paid on the same email).
+    const product =
+      search.product === "upgrade" ? "app" : parsePurchaseProduct(search.product);
     const session_id = keepSessionId(search.session_id);
     const out: AccessSearch = {};
     if (product) out.product = product;
