@@ -3,6 +3,7 @@ import { useFocusStore } from "./store";
 import { currentWorkdayKey } from "./workday";
 import { starterDayOn } from "./work-hours";
 import { latestClosedIn, nextDateForward } from "./close-day-forward";
+import { isDayClosed } from "./close-day-rules";
 
 /**
  * Map a work-day date to starter day 1–7, or null if outside week one. Day 1
@@ -55,6 +56,14 @@ export function closeDay(osDate = currentWorkdayKey()): CloseDayResult {
   const store = useFocusStore.getState();
   const started = store.starterStart;
 
+  // A day closes once. Closing it again changes nothing and just points to the next day.
+  if (isDayClosed(store.dailies[osDate])) {
+    const nextDate = nextDateAfterClose(osDate, currentWorkdayKey());
+    const day = started ? starterDayForDate(started, osDate) : null;
+    const nextDay = started ? starterDayForDate(started, nextDate) : null;
+    return { starterDay: day, nextDay, nextDate, noteCopied: false };
+  }
+
   // Only touch the starter week when this date is one of its seven days.
   // No starter week set (or a stale one) → just close the Daily OS.
   const day = started ? starterDayForDate(started, osDate) : null;
@@ -80,10 +89,13 @@ export function closeDay(osDate = currentWorkdayKey()): CloseDayResult {
     }
   }
 
-  // Ensure shutdown check is marked on the daily OS for history.
-  if (entry) {
+  // Mark the day closed (so it can't be closed twice) and the shutdown check
+  // done on the daily OS for history.
+  store.patchDaily(osDate, { closed: true });
+  const closedEntry = useFocusStore.getState().dailies[osDate];
+  if (closedEntry) {
     store.patchDaily(osDate, {
-      checks: { ...entry.checks, shutdown: true },
+      checks: { ...closedEntry.checks, shutdown: true },
     });
   }
 

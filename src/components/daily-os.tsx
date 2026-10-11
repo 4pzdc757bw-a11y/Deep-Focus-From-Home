@@ -37,7 +37,15 @@ import {
   withLength,
 } from "@/lib/block-plan";
 import { installPrintTextareaFit, printDaily, setActivePrintDate } from "@/lib/print";
-import { blockDefaults, clock12, endForStart, endsNextDay } from "@/lib/work-hours";
+import { blocksNeedingDone, needsDoneMessage } from "@/lib/close-day-rules";
+import {
+  blockDefaults,
+  clock12,
+  endForStart,
+  endsNextDay,
+  isWorkday,
+  nextWorkdayFrom,
+} from "@/lib/work-hours";
 import { useWorkdayKey } from "@/lib/workday";
 import { BLOCK_LENGTHS, blockLength, endAfter } from "@/lib/week-blocks";
 import {
@@ -280,6 +288,13 @@ export function DailyOs({ date }: { date?: string }) {
   const isToday = hydrated && osDate === workday;
   const dayWhen = !hydrated || isToday ? null : osDate > workday ? "future" : "past";
   const activeHere = session.running && session.date === osDate;
+  // A day that isn't one of the user's work days can't be started or closed.
+  const workDays = useFocusStore((s) => s.household?.workDays);
+  const offDay = hydrated && !isWorkday(osDate, workDays);
+  const nextWorkDate = nextWorkdayFrom(osDate, osDate, workDays);
+  // Started blocks that still need Done before "Review and mark the day's top outcomes".
+  const needDone = blocksNeedingDone(entry.slots, visible);
+  const [outcomesNudge, setOutcomesNudge] = useState(false);
 
   useEffect(() => {
     if (!activeHere || !session.endsAt) return;
@@ -418,7 +433,22 @@ export function DailyOs({ date }: { date?: string }) {
     >
       <BlockSetupPrompt />
 
-      {dayWhen ? (
+      {offDay ? (
+        <p
+          role="status"
+          className="daily-plan-only no-print rounded-md border border-gold bg-paper px-4 py-3 text-sm font-semibold text-ink"
+        >
+          {weekdayDate(osDate)} isn’t one of your work days, so Start and Close day are off.
+          Your next work day is {weekdayDate(nextWorkDate)}.{" "}
+          <Link
+            to="/daily"
+            search={{ date: nextWorkDate }}
+            className="font-semibold text-olive underline underline-offset-2"
+          >
+            Open that day
+          </Link>
+        </p>
+      ) : dayWhen ? (
         <p
           role="status"
           className="daily-plan-only no-print rounded-md border border-gold bg-paper px-4 py-3 text-sm font-semibold text-ink"
@@ -643,7 +673,7 @@ export function DailyOs({ date }: { date?: string }) {
                   <Check className="size-4" strokeWidth={3} />
                   Block finished
                 </p>
-              ) : dayWhen ? null : (
+              ) : dayWhen || offDay ? null : (
                 <Button
                   type="button"
                   variant={i === 0 ? "default" : "outline"}
@@ -766,15 +796,31 @@ export function DailyOs({ date }: { date?: string }) {
                 label={step.label}
                 checked={entry.shutdownSteps[step.id]}
                 onCheckedChange={(v) => {
+                  // Done must be clicked on every block that was started before this can be checked.
+                  if (step.id === "outcomes" && v && needDone.length) {
+                    setOutcomesNudge(true);
+                    return;
+                  }
+                  setOutcomesNudge(false);
                   const shutdownSteps = { ...entry.shutdownSteps, [step.id]: v };
                   const all = SHUTDOWN_STEPS.every((x) => shutdownSteps[x.id]);
                   patch({ shutdownSteps, checks: { ...entry.checks, shutdown: all } });
                 }}
               />
               {step.id === "outcomes" ? (
-                <p className="daily-step-hint no-print -mt-1 pl-12 text-sm text-muted">
-                  Check Done on each outcome you finished.
-                </p>
+                <>
+                  <p className="daily-step-hint no-print -mt-1 pl-12 text-sm text-muted">
+                    Click Done on each outcome you finished.
+                  </p>
+                  {outcomesNudge && needDone.length ? (
+                    <p
+                      role="alert"
+                      className="no-print -mt-1 rounded-md border border-gold bg-paper px-3 py-2 text-sm font-semibold text-ink"
+                    >
+                      {needsDoneMessage(needDone.map(blockLabel))}
+                    </p>
+                  ) : null}
+                </>
               ) : null}
               {step.id === "loops" ? (
                 <>

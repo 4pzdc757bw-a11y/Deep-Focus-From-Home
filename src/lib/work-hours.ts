@@ -260,6 +260,16 @@ function addDays(dateKey: string, days: number) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
+/** True when `dateKey` (YYYY-MM-DD) falls on one of the picked work days (Mon–Fri if none picked). */
+export function isWorkday(dateKey: string, workDays?: readonly number[] | null) {
+  return normalizeWorkDays(workDays).includes(weekdayOf(dateKey));
+}
+
+/** `dateKey` itself if it is a work day, else the next work day after it. */
+export function workdayOnOrAfter(dateKey: string, workDays?: readonly number[] | null) {
+  return isWorkday(dateKey, workDays) ? dateKey : nextWorkday(dateKey, workDays);
+}
+
 /** First work day strictly after `dateKey` (YYYY-MM-DD). */
 export function nextWorkday(dateKey: string, workDays?: readonly number[] | null) {
   const days = normalizeWorkDays(workDays);
@@ -272,7 +282,8 @@ export function nextWorkday(dateKey: string, workDays?: readonly number[] | null
 
 /**
  * Daily OS date to open after closing (or skipping) `dateKey`: the next work
- * day, but never earlier than `today`, so it never jumps backward.
+ * day, but never earlier than `today`, so it never jumps backward. If `today`
+ * is not a work day (a Sunday, Mon–Fri week), it moves on to the next work day.
  */
 export function nextWorkdayFrom(
   dateKey: string,
@@ -280,7 +291,7 @@ export function nextWorkdayFrom(
   workDays?: readonly number[] | null,
 ) {
   const next = nextWorkday(dateKey, workDays);
-  return next > today ? next : today;
+  return next > today ? next : workdayOnOrAfter(today, workDays);
 }
 
 /* ---------- Starter week dates ---------- */

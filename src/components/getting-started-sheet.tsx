@@ -24,7 +24,7 @@ import { formatWeekBlock, parseWeekBlock, type WeekBlockDraft } from "@/lib/week
 import { DayButton, WeekSlotPicker } from "@/components/week-slot-picker";
 
 const STEPS = [
-  "Your work hours",
+  "Your work days and hours",
   "This week’s focus blocks",
   "The start and end bell",
   "Close out the day",
@@ -212,20 +212,7 @@ export function GettingStartedSheet({ onDone }: { onDone: () => void }) {
           <div className="mt-3 flex min-h-0 flex-col gap-4 overflow-y-auto text-ink">
             {step === 0 ? (
               <>
-                <p>When does your work day start and stop? This sets the edges. Outside these hours, you’re off.</p>
-                <div className="grid grid-cols-2 gap-3">
-                  <Field label="Start">
-                    <Input type="time" value={hours[0]} onChange={(e) => setHours([e.target.value, hours[1]])} />
-                  </Field>
-                  <Field label="Stop">
-                    <Input type="time" value={hours[1]} onChange={(e) => setHours([hours[0], e.target.value])} />
-                  </Field>
-                </div>
-                {endsNextDay(hours[0], hours[1]) ? (
-                  <p className="-mt-2 text-sm text-muted">
-                    Night shift: you stop the next morning. Each shift counts as the day it starts.
-                  </p>
-                ) : null}
+                <p>Which days do you work? Start here.</p>
                 <div className="flex flex-col gap-1.5">
                   <p className="text-xs font-semibold uppercase tracking-[0.14em] text-gold">Work days</p>
                   <div className="flex flex-wrap gap-1.5" role="group" aria-label="Work days">
@@ -246,8 +233,24 @@ export function GettingStartedSheet({ onDone }: { onDone: () => void }) {
                       />
                     ))}
                   </div>
-                  <p className="text-sm text-muted">Close day skips to your next work day.</p>
+                  <p className="text-sm text-muted">
+                    Monday to Friday is already picked. Click a day to add or remove it, or just click Next. Close day skips to your next work day.
+                  </p>
                 </div>
+                <p>When does your work day start and stop? This sets the edges. Outside these hours, you’re off.</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <Field label="Start">
+                    <Input type="time" value={hours[0]} onChange={(e) => setHours([e.target.value, hours[1]])} />
+                  </Field>
+                  <Field label="Stop">
+                    <Input type="time" value={hours[1]} onChange={(e) => setHours([hours[0], e.target.value])} />
+                  </Field>
+                </div>
+                {endsNextDay(hours[0], hours[1]) ? (
+                  <p className="-mt-2 text-sm text-muted">
+                    Night shift: you stop the next morning. Each shift counts as the day it starts.
+                  </p>
+                ) : null}
               </>
             ) : null}
 

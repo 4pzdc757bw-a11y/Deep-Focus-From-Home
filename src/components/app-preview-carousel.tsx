@@ -23,7 +23,7 @@ const SLIDES: { n: string; label: string; alt: string }[] = [
   {
     n: "03",
     label: "Weekly planner",
-    alt: "Weekly planner: Park the week's blocks. Name the week's outcome and set your Mon–Fri deep-work blocks: day, time, task. Screenshot of the app's weekly planner.",
+    alt: "Weekly planner: Set the week's blocks. Name the week's outcome, choose your work days and set your deep-work blocks: day, time, task. Screenshot of the app's weekly planner.",
   },
   {
     n: "04",
@@ -154,7 +154,7 @@ export default function AppPreviewCarousel({
   return (
     <SheetPortal>
       <div
-        className="fixed inset-0 z-[100] flex items-center justify-center bg-ink/80 p-3 sm:p-6"
+        className="fixed inset-0 z-[100] flex h-dvh items-center justify-center bg-ink/80 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-6"
         onClick={(e) => {
           if (e.target === e.currentTarget) onClose();
         }}
@@ -166,7 +166,7 @@ export default function AppPreviewCarousel({
           aria-labelledby="app-preview-title"
           aria-roledescription="carousel"
           onKeyDown={onKeyDown}
-          className="flex max-h-full w-full max-w-[min(100%,calc(100dvh-14rem))] flex-col gap-3 overflow-y-auto rounded-lg bg-paper p-3 shadow-2xl sm:max-w-[min(64rem,calc((100dvh-12rem)*1.78))] sm:p-4"
+          className="flex max-h-full w-full max-w-[min(100%,calc(100dvh-19rem))] flex-col gap-3 overflow-y-auto rounded-lg bg-paper p-3 shadow-2xl sm:max-w-[min(64rem,calc((100dvh-17rem)*1.78))] sm:p-4"
         >
           <div className="flex items-start justify-between gap-3">
             <div>

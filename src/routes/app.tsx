@@ -88,7 +88,7 @@ function AppOfferPage() {
         </div>
         {handbookBuyer ? (
           <>
-            <PreviewAppButton />
+            <PreviewAppButton variant="outline" />
             <AppUpgradeOffer />
           </>
         ) : product === "app" ? (
@@ -101,9 +101,9 @@ function AppOfferPage() {
               {APP_PRICE_LABEL}
             </p>
             <p className="text-sm text-muted">{APP_ACCESS_LINE}</p>
-            <PreviewAppButton />
+            <PreviewAppButton variant="outline" />
             {appCheckout ? (
-              <Button variant="outline" asChild>
+              <Button asChild>
                 <a href={appCheckout} rel="noopener noreferrer">
                   Get the app — {APP_PRICE_LABEL}
                 </a>
@@ -112,7 +112,6 @@ function AppOfferPage() {
               <>
                 <Button
                   type="button"
-                  variant="outline"
                   onClick={() => {
                     markPurchased("app");
                     start();
