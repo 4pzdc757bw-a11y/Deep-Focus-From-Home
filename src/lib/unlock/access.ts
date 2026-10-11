@@ -20,6 +20,8 @@ const FREE_PATHS = new Set([
   "/privacy",
   "/thanks",
   "/access",
+  // Email form that hands buyers fresh download links (server checks payment).
+  "/my-downloads",
   "/store-credit",
   "/guide",
   // The free 7-day pack (from /start) is the starter week: readable without

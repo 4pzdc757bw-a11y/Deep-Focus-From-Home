@@ -19,7 +19,7 @@ const ORIGINAL_ENV = { ...process.env };
 
 describe("paywall path rules", () => {
   it("keeps marketing, legal, checkout and guide index free", () => {
-    for (const p of ["/", "/intro", "/buy", "/app", "/start", "/more", "/terms", "/privacy", "/thanks", "/access", "/store-credit", "/guide", "/guide/", "/guide/intro", "/starter"]) {
+    for (const p of ["/", "/intro", "/buy", "/app", "/start", "/more", "/terms", "/privacy", "/thanks", "/access", "/store-credit", "/my-downloads", "/guide", "/guide/", "/guide/intro", "/starter"]) {
       assert.equal(requiredAccessForPath(p), "none", p);
     }
   });
