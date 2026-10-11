@@ -32,7 +32,7 @@ export const Route = createFileRoute("/app")({
 const APP_INCLUDED = [
   "The browser-based web app — Daily OS, focus bell, energy peak, weekly planner, household fridge copy",
   "Same system as the book, in your phone or computer browser — nothing to download or install",
-  "Includes handbook PDFs and fillables",
+  "Includes the handbook: every chapter, the PDFs and the fillables",
 ];
 
 function AppOfferPage() {
@@ -46,7 +46,7 @@ function AppOfferPage() {
   return (
     <div className="flex flex-col gap-6">
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold">
-        Optional add-on · pay once
+        The app · includes the handbook · pay once
       </p>
       <h1 className="font-display text-4xl leading-tight text-olive">
         The Deep Focus app
@@ -64,9 +64,9 @@ function AppOfferPage() {
           Run it in your browser
         </p>
         <p className="text-ink">
-          The Deep Focus app: an optional add-on to the handbook — a daily
-          planner, focus bell, energy log and weekly planner that runs in your
-          web browser. There is nothing to download or install.
+          The Deep Focus app: a daily planner, focus bell, energy log and weekly
+          planner that runs in your phone or computer browser, and it includes
+          the handbook. There is nothing to download or install.
         </p>
         <ul className="flex flex-col gap-2 text-ink">
           {APP_INCLUDED.map((item) => (

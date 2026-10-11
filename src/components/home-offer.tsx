@@ -41,7 +41,7 @@ const ADDON_DISMISSED_KEY = "df-app-addon-dismissed";
 
 /**
  * Home for handbook buyers (no app). No app pitch for the first 7 days after
- * the unlock; after that, one small dismissible add-on line.
+ * the unlock; after that, one small dismissible app line.
  */
 export function HandbookUnlockedCard() {
   const pitchAllowed = useAppPitchAllowed();
@@ -84,8 +84,8 @@ export function HandbookUnlockedCard() {
       {pitchAllowed && !dismissed ? (
         <div className="flex items-start gap-2 rounded-md border border-yellow bg-paper p-3 text-sm text-ink">
           <p className="flex-1">
-            Optional add-on: the Deep Focus app is a daily planner, focus bell, energy log and
-            weekly planner in your browser, nothing to install. {UPGRADE_LINE} Upgrade for{" "}
+            The Deep Focus app is a daily planner, focus bell, energy log and weekly planner in
+            your browser, nothing to install, and it includes the handbook. {UPGRADE_LINE} Upgrade for{" "}
             {UPGRADE_PRICE_LABEL}. {APP_ACCESS_LINE}{" "}
             <Link to="/app" className="font-semibold text-olive underline underline-offset-4">
               Have a look

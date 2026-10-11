@@ -81,7 +81,7 @@ function BuyPage() {
 
       <Card className="flex flex-col gap-3">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
-          Optional add-on · The app
+          The app · includes the handbook
         </p>
         <p className="text-ink">{APP_SHORT_LINE}</p>
         <div>

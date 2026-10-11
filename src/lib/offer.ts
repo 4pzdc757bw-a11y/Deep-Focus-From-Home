@@ -1,7 +1,7 @@
 export const PRICE = 17;
 export const PRICE_LABEL = "$17";
 
-/** App offer (one-time). Separate from handbook $17. */
+/** App offer (one-time). The $37 app includes the handbook (Jeffrey, Oct 11 2026). */
 export const APP_PRICE = 37;
 export const APP_PRICE_LABEL = "$37";
 
@@ -23,9 +23,9 @@ export const APP_ACCESS_LINE =
 
 /** /buy link to the $37 app. The label is fixed: the Day 7 email uses the same words. */
 export const SEE_APP_LABEL = `See the app, ${APP_PRICE_LABEL}`;
-/** Approved app description (same wording as the home add-on line). */
+/** Approved app description (the home line and /buy use it). */
 export const APP_SHORT_LINE =
-  "The Deep Focus app is a daily planner, focus bell, energy log and weekly planner in your browser, nothing to install.";
+  "The Deep Focus app is a daily planner, focus bell, energy log and weekly planner in your browser, nothing to install. It includes the handbook.";
 
 export const OFFER_NAME = "Deep Focus from Home";
 
