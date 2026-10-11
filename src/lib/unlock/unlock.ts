@@ -32,14 +32,32 @@ async function readCookieProduct(): Promise<UnlockProduct | null> {
   return (await readCookieToken())?.p ?? null;
 }
 
-/** Save the signed unlock cookie (never downgrades app → handbook). */
-async function saveUnlock(product: UnlockProduct): Promise<UnlockProduct> {
+/**
+ * Save the signed unlock cookie (never downgrades app → handbook).
+ * `sessionId` is the Stripe checkout that backs this unlock; it goes in the
+ * cookie (no email) so the server can recheck for a refund later.
+ */
+async function saveUnlock(
+  product: UnlockProduct,
+  sessionId?: string,
+): Promise<UnlockProduct> {
   const { setCookie } = await import("@tanstack/react-start/server");
   const { UNLOCK_COOKIE_NAME, UNLOCK_TTL_SECONDS, mintUnlockToken } =
     await import("./token.server");
+  const { RECHECK_INTERVAL_SECONDS } = await import("./recheck.server");
   const { bestProduct } = await import("./access");
-  const final = bestProduct(await readCookieProduct(), product) ?? product;
-  setCookie(UNLOCK_COOKIE_NAME, mintUnlockToken(final), {
+  const existing = await readCookieToken().catch(() => null);
+  const final = bestProduct(existing?.p ?? null, product) ?? product;
+  const now = Math.floor(Date.now() / 1000);
+  let extra: { s?: string; n?: number } = sessionId
+    ? { s: sessionId, n: now + RECHECK_INTERVAL_SECONDS }
+    : {};
+  if (existing && final === existing.p && product !== final) {
+    // Keeping a higher unlock (e.g. app over handbook): it stays backed by
+    // the purchase that earned it, with its recheck schedule.
+    extra = { s: existing.s, n: existing.n };
+  }
+  setCookie(UNLOCK_COOKIE_NAME, mintUnlockToken(final, now, UNLOCK_TTL_SECONDS, extra), {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
@@ -49,11 +67,68 @@ async function saveUnlock(product: UnlockProduct): Promise<UnlockProduct> {
   return final;
 }
 
+/**
+ * Terms §8: a refund ends access. Once a day per browser, recheck the
+ * purchase behind this device's unlock; clear the cookie if it was fully
+ * refunded and the buyer has nothing else valid. Fails open on any Stripe
+ * problem. Old cookies with no purchase info are left alone.
+ */
+async function applyRefundRecheck(
+  token: NonNullable<Awaited<ReturnType<typeof readCookieToken>>>,
+) {
+  const { recheckDue, recheckUnlock } = await import("./recheck.server");
+  // Cheap exit first: most page loads stop here without touching Stripe.
+  if (!recheckDue(token, Math.floor(Date.now() / 1000))) return token;
+
+  const { setCookie, deleteCookie } = await import(
+    "@tanstack/react-start/server"
+  );
+  const { UNLOCK_COOKIE_NAME, mintUnlockToken } = await import("./token.server");
+  const { stripeClient } = await import("../downloads/stripe.server");
+  const outcome = await recheckUnlock(token, {
+    stripe: () => stripeClient() as unknown as CheckoutSessionsApi,
+  });
+  if (outcome.action === "skip") return token;
+  if (outcome.action === "revoke") {
+    deleteCookie(UNLOCK_COOKIE_NAME, { path: "/" });
+    return null;
+  }
+  const next =
+    outcome.action === "keep"
+      ? { ...token, n: outcome.nextCheck }
+      : { ...token, p: outcome.product, s: outcome.sessionId, n: outcome.nextCheck };
+  // Same issue and expiry dates; only the product / backing purchase / next check change.
+  const now = Math.floor(Date.now() / 1000);
+  setCookie(
+    UNLOCK_COOKIE_NAME,
+    mintUnlockToken(next.p, token.iat, Math.max(60, token.exp - token.iat), {
+      s: next.s,
+      n: next.n,
+    }),
+    {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: Math.max(60, token.exp - now),
+    },
+  );
+  return next;
+}
+
 /** What this device has unlocked, read from the signed httpOnly cookie. */
 export const getUnlockStatus = createServerFn({ method: "GET" }).handler(
   async (): Promise<UnlockStatus> => {
     try {
-      const token = await readCookieToken();
+      let token = await readCookieToken();
+      if (token) {
+        try {
+          token = await applyRefundRecheck(token);
+        } catch (err) {
+          // Never lock out a paying customer because the recheck broke.
+          console.error("[unlock] refund recheck error, keeping access:", err);
+        }
+      }
       return {
         product: token?.p ?? null,
         unlockedAt: token?.iat ? token.iat * 1000 : null,
@@ -91,7 +166,7 @@ export const unlockFromCheckoutSession = createServerFn({ method: "POST" })
         "We could not match this payment to a Deep Focus product. Email support@deepfocusfromhome.com with the receipt email you got when you paid.",
       );
     }
-    return { product: await saveUnlock(product) };
+    return { product: await saveUnlock(product, session.id) };
   });
 
 /**
@@ -130,9 +205,12 @@ export const unlockByEmail = createServerFn({ method: "POST" })
     const { stripeClient, grantingSessionsForEmail } = await import(
       "../downloads/stripe.server"
     );
-    const { combineSessionKinds } = await import("./product.server");
+    const { combineSessionKinds, pickBackingSession } = await import(
+      "./product.server"
+    );
 
     let found: UnlockProduct | null = null;
+    let backingId: string | undefined;
     try {
       // Paid, unrefunded checkouts for this email (lowercased and as typed).
       // The $20 upgrade counts as the app only next to a valid handbook (#108).
@@ -141,6 +219,7 @@ export const unlockByEmail = createServerFn({ method: "POST" })
         data.typed,
       );
       found = combineSessionKinds(sessions.map((s) => s.kind));
+      if (found) backingId = pickBackingSession(sessions, found)?.session.id;
     } catch (err) {
       console.error(
         "[unlock] Stripe email lookup failed:",
@@ -155,7 +234,7 @@ export const unlockByEmail = createServerFn({ method: "POST" })
 
     if (!found) return { ok: false, error: NO_PURCHASE_MESSAGE };
     try {
-      return { ok: true, product: await saveUnlock(found) };
+      return { ok: true, product: await saveUnlock(found, backingId) };
     } catch (err) {
       console.error("[unlock] could not save unlock cookie:", err);
       return {
@@ -217,7 +296,9 @@ export const startAppUpgrade = createServerFn({ method: "POST" })
     const { stripeClient, grantingSessionsForEmail } = await import(
       "../downloads/stripe.server"
     );
-    const { combineSessionKinds } = await import("./product.server");
+    const { combineSessionKinds, pickBackingSession } = await import(
+      "./product.server"
+    );
     const { appUpgradeCheckoutUrl } = await import("./upgrade.server");
 
     let sessions: Awaited<ReturnType<typeof grantingSessionsForEmail>>;
@@ -240,7 +321,14 @@ export const startAppUpgrade = createServerFn({ method: "POST" })
 
     // Already owns the app (full price, or an earlier upgrade): just open it.
     if (combineSessionKinds(sessions.map((s) => s.kind)) === "app") {
-      return { ok: true, action: "unlocked", product: await saveUnlock("app") };
+      return {
+        ok: true,
+        action: "unlocked",
+        product: await saveUnlock(
+          "app",
+          pickBackingSession(sessions, "app")?.session.id,
+        ),
+      };
     }
     const handbook = sessions.find((s) => s.kind === "handbook")?.session;
     if (!handbook) return { ok: false, error: UPGRADE_NO_HANDBOOK_MESSAGE };
