@@ -1,4 +1,5 @@
 import { describe, it, beforeEach, afterEach } from "node:test";
+import { readFileSync } from "node:fs";
 import assert from "node:assert/strict";
 import {
   bestProduct,
@@ -16,6 +17,19 @@ import { readUpgradeResult } from "./unlock-result.ts";
 import { rateLimitHit, resetRateLimits } from "./rate-limit.server.ts";
 
 const ORIGINAL_ENV = { ...process.env };
+
+describe("/buy links to the $37 app", () => {
+  const buy = readFileSync(new URL("../../routes/buy.tsx", import.meta.url), "utf8");
+  const offer = readFileSync(new URL("../offer.ts", import.meta.url), "utf8");
+  it("has a link to /app labelled exactly 'See the app, $37' (the Day 7 email uses it)", () => {
+    assert.match(buy, /<Link to="\/app">\{SEE_APP_LABEL\}<\/Link>/);
+    assert.match(offer, /SEE_APP_LABEL = `See the app, \$\{APP_PRICE_LABEL\}`/);
+    assert.match(offer, /APP_PRICE_LABEL = "\$37"/);
+  });
+  it("does not state the $20 upgrade or 'lifetime' on /buy", () => {
+    assert.doesNotMatch(buy, /UPGRADE_PRICE|UPGRADE_LINE|\$20|lifetime/i);
+  });
+});
 
 describe("paywall path rules", () => {
   it("keeps marketing, legal, checkout and guide index free", () => {

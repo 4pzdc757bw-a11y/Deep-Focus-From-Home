@@ -21,6 +21,12 @@ export const UPGRADE_PRODUCT_NAME = "App upgrade for handbook buyers";
 export const APP_ACCESS_LINE =
   "Pay once, no subscription. Use the app for as long as we offer it.";
 
+/** /buy link to the $37 app. The label is fixed: the Day 7 email uses the same words. */
+export const SEE_APP_LABEL = `See the app, ${APP_PRICE_LABEL}`;
+/** Approved app description (same wording as the home add-on line). */
+export const APP_SHORT_LINE =
+  "The Deep Focus app is a daily planner, focus bell, energy log and weekly planner in your browser, nothing to install.";
+
 export const OFFER_NAME = "Deep Focus from Home";
 
 export type PurchaseProduct = "handbook" | "app";
