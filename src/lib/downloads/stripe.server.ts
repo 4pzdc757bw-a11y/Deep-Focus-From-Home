@@ -158,7 +158,7 @@ export type CheckoutSessionsApi = {
 export const UPGRADE_NOT_ELIGIBLE_MESSAGE =
   "The $20 app upgrade is only for the email that bought the handbook, and the handbook purchase can't be refunded. We couldn't find one for this payment. Email support@deepfocusfromhome.com with your receipt and we'll sort it out.";
 
-function sessionEmail(session: Stripe.Checkout.Session): string {
+export function sessionEmail(session: Stripe.Checkout.Session): string {
   return (
     session.customer_details?.email ??
     session.customer_email ??

@@ -105,3 +105,23 @@ export function combineSessionKinds(
   if (handbook) return "handbook";
   return null;
 }
+
+/**
+ * Which paid, unrefunded checkout backs an unlock of `product`: the one the
+ * refund recheck will look at later. App prefers a full-price app purchase,
+ * then the $20 upgrade (its handbook is checked with it); handbook uses the
+ * handbook purchase. Null when none matches.
+ */
+export function pickBackingSession<T extends { kind: SessionKind }>(
+  sessions: readonly T[],
+  product: SessionProduct,
+): T | null {
+  if (product === "handbook") {
+    return sessions.find((s) => s.kind === "handbook") ?? null;
+  }
+  return (
+    sessions.find((s) => s.kind === "app") ??
+    sessions.find((s) => s.kind === "upgrade") ??
+    null
+  );
+}

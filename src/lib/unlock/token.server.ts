@@ -14,7 +14,17 @@ export type UnlockTokenPayload = {
   iat: number;
   /** Expires at (unix seconds). */
   exp: number;
+  /**
+   * Stripe Checkout Session id of the purchase that backs this unlock (no
+   * email in the cookie). Missing on cookies minted before the refund recheck.
+   */
+  s?: string;
+  /** Next time (unix seconds) the server rechecks that purchase for a refund. */
+  n?: number;
 };
+
+/** Extra fields stored in the token next to the product. */
+export type UnlockTokenExtra = { s?: string; n?: number };
 
 export const UNLOCK_COOKIE_NAME = "df_unlock";
 /** Browsers cap cookie lifetime at ~400 days. */
@@ -68,6 +78,7 @@ export function mintUnlockToken(
   product: UnlockTokenProduct,
   nowSeconds: number = Math.floor(Date.now() / 1000),
   ttlSeconds: number = UNLOCK_TTL_SECONDS,
+  extra: UnlockTokenExtra = {},
 ): string {
   const secret = getUnlockSecret();
   const payload: UnlockTokenPayload = {
@@ -75,6 +86,8 @@ export function mintUnlockToken(
     iat: nowSeconds,
     exp: nowSeconds + ttlSeconds,
   };
+  if (extra.s) payload.s = extra.s;
+  if (typeof extra.n === "number") payload.n = extra.n;
   const body = b64url(Buffer.from(JSON.stringify(payload), "utf8"));
   const data = `v1.${body}`;
   return `${data}.${sign(data, secret)}`;
@@ -107,11 +120,22 @@ export function verifyUnlockToken(
       return null;
     }
     if (typeof payload.exp !== "number" || payload.exp < nowSeconds) return null;
-    return {
+    const out: UnlockTokenPayload = {
       p: payload.p,
       iat: Number(payload.iat) || 0,
       exp: payload.exp,
     };
+    if (
+      typeof payload.s === "string" &&
+      payload.s.startsWith("cs_") &&
+      payload.s.length <= 300
+    ) {
+      out.s = payload.s;
+    }
+    if (typeof payload.n === "number" && Number.isFinite(payload.n)) {
+      out.n = payload.n;
+    }
+    return out;
   } catch {
     return null;
   }
