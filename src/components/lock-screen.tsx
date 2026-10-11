@@ -178,7 +178,7 @@ export function LockScreen({
   const pathname = useRouterState({ select: (st) => st.location.pathname });
   const onHome = pathname === "/";
   const product = useUnlockedProduct();
-  // Bought the handbook, not the app: gentle add-on tone, handbook first.
+  // Bought the handbook, not the app: gentle upgrade tone, handbook first.
   const handbookBuyer = isApp && product === "handbook";
   const Heading = compact ? "h2" : "h1";
   return (
@@ -196,7 +196,7 @@ export function LockScreen({
         <div className="flex items-center gap-2 text-gold">
           <Lock className="size-4" />
           <p className="text-xs font-semibold uppercase tracking-[0.16em]">
-            {handbookBuyer ? "Optional add-on" : "Deep Focus handbook"}
+            {handbookBuyer ? "The Deep Focus app" : "Deep Focus handbook"}
           </p>
         </div>
         {isApp && !handbookBuyer ? (
@@ -215,7 +215,7 @@ export function LockScreen({
           {!isApp
             ? `The Introduction and Chapter 1 are free to read. The rest of the guide is in the handbook: ${PRICE_LABEL}, pay once.`
             : handbookBuyer
-              ? "Your handbook is unlocked, and everything in it works on paper. The Deep Focus app is an optional add-on to the handbook: a daily planner, focus bell, energy log and weekly planner in your browser, nothing to install."
+              ? "Your handbook is unlocked, and everything in it works on paper. The Deep Focus app includes the handbook and adds a daily planner, focus bell, energy log and weekly planner in your browser, nothing to install."
               : `Seven short chapters on working from home: your workspace, household, phone, daily rituals, deep work, people and energy. One action per chapter. Online guide plus the PDF, ${PRICE_LABEL}, pay once.`}
         </p>
         <div className="flex flex-col gap-2 sm:flex-row">

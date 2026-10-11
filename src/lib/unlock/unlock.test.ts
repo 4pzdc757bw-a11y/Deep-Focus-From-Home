@@ -31,6 +31,40 @@ describe("/buy links to the $37 app", () => {
   });
 });
 
+describe("the $37 app includes the handbook (Jeffrey, Oct 11)", () => {
+  const read = (rel: string) =>
+    readFileSync(new URL(rel, import.meta.url), "utf8");
+  const files = {
+    app: read("../../routes/app.tsx"),
+    buy: read("../../routes/buy.tsx"),
+    home: read("../../components/home-offer.tsx"),
+    lock: read("../../components/lock-screen.tsx"),
+    offer: read("../offer.ts"),
+  };
+  it("no page calls the app an add-on to the handbook", () => {
+    for (const [name, src] of Object.entries(files)) {
+      const visible = src
+        .split("\n")
+        .filter((l) => !/^\s*(\/\/|\*|\/\*)/.test(l))
+        .join("\n");
+      assert.doesNotMatch(visible.replace(/ADDON_DISMISSED_KEY|df-app-addon-dismissed/g, ""), /add-on/i, name);
+    }
+  });
+  it("the shared app line says it includes the handbook", () => {
+    assert.match(files.offer, /nothing to install\. It includes the handbook\./);
+    assert.match(files.app, /includes\s+the handbook/);
+    assert.match(files.lock, /app includes the handbook/);
+    assert.match(files.home, /includes the handbook/);
+  });
+  it("/app says phone or computer browser, not web browser", () => {
+    assert.doesNotMatch(files.app, /web browser/);
+    assert.match(files.app, /phone or computer browser/);
+  });
+  it("keeps the approved $20 upgrade line", () => {
+    assert.match(files.offer, /Your \$17 handbook purchase counts toward the \$37 app\./);
+  });
+});
+
 describe("paywall path rules", () => {
   it("keeps marketing, legal, checkout and guide index free", () => {
     for (const p of ["/", "/intro", "/buy", "/app", "/start", "/more", "/terms", "/privacy", "/thanks", "/access", "/store-credit", "/my-downloads", "/guide", "/guide/", "/guide/intro", "/starter"]) {
