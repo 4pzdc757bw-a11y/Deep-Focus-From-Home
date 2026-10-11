@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Card, PageTitle } from "@/components/app-shell";
 import { LegalFooter } from "@/components/legal-footer";
 import { useHasAccess } from "@/components/lock-screen";
+import { MyDownloadsTextLink } from "@/components/support-links";
 import { Button } from "@/components/ui/button";
 import { CHAPTERS } from "@/lib/content";
 import { CHAPTER_1_SLUG, FREE_CHAPTER_SLUGS } from "@/lib/unlock/access";
@@ -96,6 +97,7 @@ function ChapterPage() {
         >
           Back to home
         </Link>
+        {hasHandbook ? <MyDownloadsTextLink /> : null}
       </nav>
       <LegalFooter className="mt-8" />
     </article>

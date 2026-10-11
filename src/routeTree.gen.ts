@@ -20,6 +20,7 @@ import { Route as HouseholdRouteImport } from './routes/household'
 import { Route as IntroRouteImport } from './routes/intro'
 import { Route as MonthRouteImport } from './routes/month'
 import { Route as MoreRouteImport } from './routes/more'
+import { Route as MyDownloadsRouteImport } from './routes/my-downloads'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as SetupRouteImport } from './routes/setup'
 import { Route as StartRouteImport } from './routes/start'
@@ -85,6 +86,11 @@ const MonthRoute = MonthRouteImport.update({
 const MoreRoute = MoreRouteImport.update({
   id: '/more',
   path: '/more',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MyDownloadsRoute = MyDownloadsRouteImport.update({
+  id: '/my-downloads',
+  path: '/my-downloads',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -155,6 +161,7 @@ export interface FileRoutesByFullPath {
   '/intro': typeof IntroRoute
   '/month': typeof MonthRoute
   '/more': typeof MoreRoute
+  '/my-downloads': typeof MyDownloadsRoute
   '/privacy': typeof PrivacyRoute
   '/setup': typeof SetupRoute
   '/start': typeof StartRoute
@@ -178,6 +185,7 @@ export interface FileRoutesByTo {
   '/intro': typeof IntroRoute
   '/month': typeof MonthRoute
   '/more': typeof MoreRoute
+  '/my-downloads': typeof MyDownloadsRoute
   '/privacy': typeof PrivacyRoute
   '/setup': typeof SetupRoute
   '/start': typeof StartRoute
@@ -203,6 +211,7 @@ export interface FileRoutesById {
   '/intro': typeof IntroRoute
   '/month': typeof MonthRoute
   '/more': typeof MoreRoute
+  '/my-downloads': typeof MyDownloadsRoute
   '/privacy': typeof PrivacyRoute
   '/setup': typeof SetupRoute
   '/start': typeof StartRoute
@@ -229,6 +238,7 @@ export interface FileRouteTypes {
     | '/intro'
     | '/month'
     | '/more'
+    | '/my-downloads'
     | '/privacy'
     | '/setup'
     | '/start'
@@ -252,6 +262,7 @@ export interface FileRouteTypes {
     | '/intro'
     | '/month'
     | '/more'
+    | '/my-downloads'
     | '/privacy'
     | '/setup'
     | '/start'
@@ -276,6 +287,7 @@ export interface FileRouteTypes {
     | '/intro'
     | '/month'
     | '/more'
+    | '/my-downloads'
     | '/privacy'
     | '/setup'
     | '/start'
@@ -301,6 +313,7 @@ export interface RootRouteChildren {
   IntroRoute: typeof IntroRoute
   MonthRoute: typeof MonthRoute
   MoreRoute: typeof MoreRoute
+  MyDownloadsRoute: typeof MyDownloadsRoute
   PrivacyRoute: typeof PrivacyRoute
   SetupRoute: typeof SetupRoute
   StartRoute: typeof StartRoute
@@ -389,6 +402,13 @@ declare module '@tanstack/react-router' {
       path: '/more'
       fullPath: '/more'
       preLoaderRoute: typeof MoreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/my-downloads': {
+      id: '/my-downloads'
+      path: '/my-downloads'
+      fullPath: '/my-downloads'
+      preLoaderRoute: typeof MyDownloadsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -495,6 +515,7 @@ const rootRouteChildren: RootRouteChildren = {
   IntroRoute: IntroRoute,
   MonthRoute: MonthRoute,
   MoreRoute: MoreRoute,
+  MyDownloadsRoute: MyDownloadsRoute,
   PrivacyRoute: PrivacyRoute,
   SetupRoute: SetupRoute,
   StartRoute: StartRoute,

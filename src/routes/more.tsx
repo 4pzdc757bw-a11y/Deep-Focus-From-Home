@@ -15,6 +15,7 @@ import { Card, PageTitle } from "@/components/app-shell";
 import { LegalFooter } from "@/components/legal-footer";
 import { Button } from "@/components/ui/button";
 import { useHasAccess } from "@/components/lock-screen";
+import { ContactSupportButton, MyDownloadsButton } from "@/components/support-links";
 import { downloadBackup, importBackup } from "@/lib/backup";
 
 export const Route = createFileRoute("/more")({ component: MorePage });
@@ -66,6 +67,7 @@ const LINKS = [
 
 function MorePage() {
   const appUnlocked = useHasAccess("app");
+  const hasHandbook = useHasAccess("handbook");
   const fileRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const [status, setStatus] = useState("");
@@ -135,6 +137,19 @@ function MorePage() {
           </Button>
         ) : null}
       </div>
+      {hasHandbook ? (
+        <Card className="flex flex-col gap-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
+            Your downloads
+          </p>
+          <p className="text-ink">
+            Lost your handbook PDFs or worksheets? Get fresh links any time.
+          </p>
+          <div>
+            <MyDownloadsButton />
+          </div>
+        </Card>
+      ) : null}
       {LINKS.map((item) => {
         const Icon = item.icon;
         return (
@@ -156,6 +171,18 @@ function MorePage() {
           </Button>
         );
       })}
+      <Card className="flex flex-col gap-3">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
+          Need help?
+        </p>
+        <p className="text-ink">
+          Questions, a problem with your files, or anything else: email us and we
+          will help.
+        </p>
+        <div>
+          <ContactSupportButton />
+        </div>
+      </Card>
       <Card className="flex flex-col gap-3">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
           Legal
