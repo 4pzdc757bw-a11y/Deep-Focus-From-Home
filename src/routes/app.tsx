@@ -15,9 +15,9 @@ import { PreviewAppButton } from "@/components/app-preview-button";
 import { useUnlockedProduct } from "@/components/lock-screen";
 
 /**
- * The $37 app offer. Deliberately unlinked: nothing in the nav, footer, home,
- * guide or /buy points here. Only the Day 5 and Day 7 emails (and existing
- * handbook-buyer upgrade spots) link to it. Kept out of search engines.
+ * The $37 app offer. Not in the nav, footer or guide. Reached from /buy ("See
+ * the app, $37", the bio link lands there), the Day 5 and Day 7 emails and the
+ * handbook-buyer upgrade spots. Kept out of search engines.
  */
 export const Route = createFileRoute("/app")({
   head: () => ({

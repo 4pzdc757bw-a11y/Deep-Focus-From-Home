@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { LegalFooter } from "@/components/legal-footer";
 import { NotReadyLinks } from "@/components/not-ready";
 import {
+  APP_SHORT_LINE,
   markPurchased,
   PRICE_LABEL,
+  SEE_APP_LABEL,
   STRIPE_HANDBOOK_PAYMENT_LINK,
 } from "@/lib/offer";
 import { NO_SALE_COUNTRIES_LINE, STORE_CREDIT_CHECKOUT_LINE } from "@/lib/legal";
@@ -75,6 +77,18 @@ function BuyPage() {
           </>
         )}
         <p className="text-sm text-muted">{NO_SALE_COUNTRIES_LINE}</p>
+      </Card>
+
+      <Card className="flex flex-col gap-3">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
+          Optional add-on · The app
+        </p>
+        <p className="text-ink">{APP_SHORT_LINE}</p>
+        <div>
+          <Button variant="outline" asChild>
+            <Link to="/app">{SEE_APP_LABEL}</Link>
+          </Button>
+        </div>
       </Card>
 
       <NotReadyLinks />
