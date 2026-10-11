@@ -6,11 +6,13 @@ import { SheetPortal } from "@/components/sheet-portal";
 import { WeeklyPlannerSheet } from "@/components/weekly-planner-sheet";
 import { Button } from "@/components/ui/button";
 import { closeDay } from "@/lib/close-day";
+import { blocksNeedingDone, isDayClosed, needsDoneMessage } from "@/lib/close-day-rules";
 import { SHUTDOWN_AFTER_CLOSE } from "@/lib/content";
 import { saveDailyPdf } from "@/lib/daily-pdf";
-import { useFocusStore } from "@/lib/store";
+import { migrateDaily, useFocusStore } from "@/lib/store";
 import { printDaily, printedRecently } from "@/lib/print";
-import { cn, isDateKey, isFriday } from "@/lib/utils";
+import { cn, isDateKey, isFriday, prettyDate } from "@/lib/utils";
+import { isWorkday, nextWorkdayFrom } from "@/lib/work-hours";
 import { currentWorkdayKey } from "@/lib/workday";
 
 /** Friday review follows the work day: a Friday-night shift closes on Saturday morning. */
@@ -38,6 +40,7 @@ function BeforeYouGo() {
 
 type Phase =
   | "idle"
+  | "notice"
   | "week-plan"
   | "friday-review"
   | "confirm"
@@ -48,7 +51,10 @@ type Phase =
  * `variant="inline"` is the outline button under the Shutdown note.
  * On Friday: Weekly Work Planner → Friday review → confirm Close. Otherwise
  * confirm → copy shutdown note to starter day (if in week one), mark day
- * done, offer Save PDF, advance to the next calendar day.
+ * done, then offer Save PDF and Print (both stay open) and a separate button
+ * that moves to the next work day.
+ * Not offered on a day off, on a day already closed, or while a started
+ * block still needs its Done clicked.
  */
 export function CloseDayButton({
   className,
@@ -74,8 +80,48 @@ export function CloseDayButton({
   // Printed / saved this day's PDF in the last ~10 min → don't ask again.
   const [alreadySaved, setAlreadySaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  // Shown after Save PDF / Print, so the screen can stay open.
+  const [savedNote, setSavedNote] = useState("");
+  // Why Close day can't run right now (day off, already closed, Done missing).
+  const [notice, setNotice] = useState<{ title: string; text: string; showBlocks: boolean } | null>(null);
+
+  /** Returns why this day can't be closed yet, or null if it can. */
+  function blockedReason(date: string): { title: string; text: string; showBlocks: boolean } | null {
+    const st = useFocusStore.getState();
+    const raw = st.dailies[date];
+    if (isDayClosed(raw)) {
+      return { title: "Already closed", text: `${prettyDate(date)} is already closed.`, showBlocks: false };
+    }
+    if (!isWorkday(date, st.household?.workDays)) {
+      const nextDate = nextWorkdayFrom(date, date, st.household?.workDays);
+      return {
+        title: "Not a work day",
+        text: `${prettyDate(date)} isn’t one of your work days. Your next work day is ${prettyDate(nextDate)}.`,
+        showBlocks: false,
+      };
+    }
+    if (raw) {
+      const entry = migrateDaily(raw as unknown as Record<string, unknown>, st.household?.hours);
+      const pending = blocksNeedingDone(entry.slots, entry.slotCount);
+      if (pending.length) {
+        return {
+          title: "One more step",
+          text: needsDoneMessage(pending.map((i) => `Block ${i + 1}`)),
+          showBlocks: true,
+        };
+      }
+    }
+    return null;
+  }
 
   function startClose() {
+    const blocked = blockedReason(closingDate());
+    if (blocked) {
+      setNotice(blocked);
+      setPhase("notice");
+      return;
+    }
+    setSavedNote("");
     setAlreadySaved(printedRecently(closingDate()));
     if (dayIsFriday(closingDate())) {
       setPhase("week-plan");
@@ -110,37 +156,32 @@ export function CloseDayButton({
     const closedDate = closingDate();
     const result = closeDay(closedDate);
     setNext({ closedDate, nextDate: result.nextDate });
+    setSavedNote("");
     setPhase("offer-pdf");
   }
 
-  /** "Save PDF": a real PDF straight to Downloads (no print dialog), then next day. */
-  function downloadPdfThenAdvance(target = next) {
+  /** "Save PDF": a real PDF straight to Downloads (no print dialog). The screen stays open. */
+  function savePdf(target = next) {
     const closedDate = target?.closedDate ?? closingDate();
-    const nextDate = target?.nextDate;
     setSaving(true);
     void saveDailyPdf(closedDate).then((ok) => {
       setSaving(false);
       if (!ok) {
         // Could not build the file here: fall back to the print dialog.
-        printThenAdvance(target);
+        setSavedNote("Couldn’t save a PDF here, so the print window opened. Choose Save as PDF there.");
+        printSheet(target);
         return;
       }
-      setPhase("idle");
-      if (nextDate) void navigate({ to: "/daily", search: { date: nextDate } });
+      setSavedNote("Saved. Look in your Downloads folder.");
     });
   }
 
-  /** "Print": the browser print dialog for the closed day, then next day. */
-  function printThenAdvance(target = next) {
-    setPhase("idle");
+  /** "Print": the browser print dialog for the closed day. The screen stays open. */
+  function printSheet(target = next) {
     const closedDate = target?.closedDate ?? closingDate();
-    const nextDate = target?.nextDate;
     // Land on the closed day's Daily OS so it is what prints, then offer Save as PDF.
     void navigate({ to: "/daily", search: { date: closedDate } }).then(() => {
-      window.setTimeout(() => {
-        printDaily(closedDate);
-        if (nextDate) void navigate({ to: "/daily", search: { date: nextDate } });
-      }, 200);
+      window.setTimeout(() => printDaily(closedDate), 200);
     });
   }
 
@@ -156,10 +197,10 @@ export function CloseDayButton({
   }
 
   useEffect(() => {
-    if (phase !== "confirm" && phase !== "offer-pdf") return;
+    if (phase !== "confirm" && phase !== "offer-pdf" && phase !== "notice") return;
     function onKey(e: KeyboardEvent) {
       if (e.key !== "Escape") return;
-      if (phase === "confirm") dismissConfirm();
+      if (phase === "confirm" || phase === "notice") dismissConfirm();
       else advance();
     }
     window.addEventListener("keydown", onKey);
@@ -202,10 +243,56 @@ export function CloseDayButton({
         <FridayReviewSheet onDone={afterFridayReview} date={closingDate()} />
       ) : null}
 
+      {phase === "notice" && notice ? (
+        <SheetPortal>
+          <div
+            className="no-print fixed inset-0 z-50 flex items-center justify-center bg-olive/40 p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="close-day-notice-title"
+            onClick={dismissConfirm}
+          >
+            <div
+              className="flex max-h-[min(92vh,40rem)] w-full max-w-md flex-col rounded-lg border border-yellow bg-cream p-5 shadow-lg"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
+                End of day
+              </p>
+              <h2 id="close-day-notice-title" className="mt-1 font-display text-2xl text-olive">
+                {notice.title}
+              </h2>
+              <p className="mt-2 text-ink">{notice.text}</p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {notice.showBlocks ? (
+                  <button
+                    type="button"
+                    className="inline-flex h-11 items-center justify-center rounded-md bg-olive px-4 text-sm font-semibold text-cream"
+                    onClick={() => {
+                      setPhase("idle");
+                      void navigate({ to: "/daily", search: { date: closingDate() } });
+                    }}
+                  >
+                    Show me my blocks
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  className="inline-flex h-11 items-center justify-center rounded-md border border-yellow bg-paper px-4 text-sm font-semibold text-olive"
+                  onClick={dismissConfirm}
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+          </div>
+        </SheetPortal>
+      ) : null}
+
       {phase === "confirm" ? (
         <SheetPortal>
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-olive/40 p-4"
+          className="no-print fixed inset-0 z-50 flex items-center justify-center bg-olive/40 p-4"
           role="dialog"
           aria-modal="true"
           aria-labelledby="close-day-title"
@@ -228,7 +315,7 @@ export function CloseDayButton({
                 history, then{" "}
                 {alreadySaved
                   ? "moves you to your next work day."
-                  : "offers Save PDF or Print and moves you to your next work day."}
+                  : "offers Save PDF or Print. You move on to your next work day when you click Done."}
               </p>
               {alreadySaved ? (
                 <>
@@ -272,7 +359,7 @@ export function CloseDayButton({
       {phase === "offer-pdf" ? (
         <SheetPortal>
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-olive/40 p-4"
+          className="no-print fixed inset-0 z-50 flex items-center justify-center bg-olive/40 p-4"
           role="dialog"
           aria-modal="true"
           aria-labelledby="save-pdf-title"
@@ -291,9 +378,14 @@ export function CloseDayButton({
               </h2>
               <p className="mt-2 text-ink">
                 Save PDF puts a copy of today’s OS in your Downloads folder. Print
-                opens your printer.
+                opens your printer. You can do both.
               </p>
               <p className="mt-2 text-ink">Your notes stay on this device either way.</p>
+              {savedNote ? (
+                <p role="status" className="mt-2 text-sm font-semibold text-olive">
+                  {savedNote}
+                </p>
+              ) : null}
               <BeforeYouGo />
               {!starterStart ? (
                 <p className="mt-3 rounded-md border border-yellow bg-paper p-3 text-sm text-ink">
@@ -312,9 +404,9 @@ export function CloseDayButton({
             <div className="mt-4 flex flex-wrap gap-2">
               <button
                 type="button"
-                className="inline-flex h-11 items-center justify-center rounded-md bg-olive px-4 text-sm font-semibold text-cream"
+                className="inline-flex h-11 items-center justify-center rounded-md border border-olive bg-paper px-4 text-sm font-semibold text-olive"
                 disabled={saving}
-                onClick={() => downloadPdfThenAdvance()}
+                onClick={() => savePdf()}
               >
                 {saving ? "Saving…" : "Save PDF"}
               </button>
@@ -322,16 +414,16 @@ export function CloseDayButton({
                 type="button"
                 className="inline-flex h-11 items-center justify-center rounded-md border border-olive bg-paper px-4 text-sm font-semibold text-olive"
                 disabled={saving}
-                onClick={() => printThenAdvance()}
+                onClick={() => printSheet()}
               >
                 Print
               </button>
               <button
                 type="button"
-                className="inline-flex h-11 items-center justify-center rounded-md border border-yellow bg-paper px-4 text-sm font-semibold text-olive"
+                className="inline-flex h-11 items-center justify-center rounded-md bg-olive px-4 text-sm font-semibold text-cream"
                 onClick={advance}
               >
-                Skip — next day
+                Done, go to next work day
               </button>
             </div>
           </div>

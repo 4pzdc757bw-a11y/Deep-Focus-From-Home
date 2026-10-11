@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { isDateKey, monthKey, weekKey } from "./utils";
-import { endForStart, endsNextDay, nextWorkdayFrom, workdayKey } from "./work-hours";
+import { endForStart, endsNextDay, nextWorkdayFrom, workdayKey, workdayOnOrAfter } from "./work-hours";
 import { planSlotsFor } from "./week-blocks";
 import {
   DAY_BLOCKS_LAYOUT,
@@ -81,6 +81,8 @@ export type DailyEntry = {
   partnerNote: string;
   /** "Other things I did today": anything beyond the blocks. */
   otherNote: string;
+  /** Close day has run for this day. A closed day can't be closed again. */
+  closed?: boolean;
 };
 
 export type SessionState = {
@@ -361,6 +363,7 @@ function finishDaily(
     note: String(raw.note ?? ""),
     partnerNote: String(raw.partnerNote ?? ""),
     otherNote: String(raw.otherNote ?? ""),
+    ...(raw.closed ? { closed: true } : {}),
   };
 }
 
@@ -428,8 +431,13 @@ export const useFocusStore = create<FocusState>()(
       starterDone: [],
       starterNotes: {},
       starterWriteIns: {},
+      // Day 1 lands on a work day: if today is a day off, it starts on the next work day.
       startStarter: () =>
-        set((s) => ({ starterStart: s.starterStart ?? workdayKey(new Date(), s.household?.hours) })),
+        set((s) => ({
+          starterStart:
+            s.starterStart ??
+            workdayOnOrAfter(workdayKey(new Date(), s.household?.hours), s.household?.workDays),
+        })),
       setStarterStart: (date) =>
         set(() => (isDateKey(date) ? { starterStart: date } : {})),
       toggleStarterDay: (day) =>

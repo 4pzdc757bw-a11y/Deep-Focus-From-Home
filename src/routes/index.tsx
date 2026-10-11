@@ -6,7 +6,7 @@ import { ArrowRight, BookOpen } from "lucide-react";
 import { DailyOs } from "@/components/daily-os";
 import { useWorkdayKey } from "@/lib/workday";
 import { latestClosedDate, nextDateForward } from "@/lib/close-day";
-import { starterDayDate } from "@/lib/work-hours";
+import { starterDayDate, workdayOnOrAfter } from "@/lib/work-hours";
 import { useHasAccess, useUnlockedProduct } from "@/components/lock-screen";
 import { HandbookFirstCard, HandbookUnlockedCard } from "@/components/home-offer";
 import { StarterSignupCard } from "@/components/starter-signup";
@@ -60,7 +60,7 @@ function Home() {
   const forward =
     latestClosed && latestClosed >= workday
       ? nextDateForward(latestClosed, workday, workDays, latestClosed)
-      : workday;
+      : workdayOnOrAfter(workday, workDays);
   const starterDate =
     starterStart && nextDay ? starterDayDate(starterStart, nextDay.day, workDays) : null;
   const nextDate = starterDate && starterDate > forward ? starterDate : forward;
