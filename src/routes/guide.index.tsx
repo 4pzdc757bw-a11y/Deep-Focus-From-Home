@@ -3,11 +3,14 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Card, PageTitle } from "@/components/app-shell";
 import { CHAPTERS } from "@/lib/content";
+import { useHasAccess } from "@/components/lock-screen";
+import { MyDownloadsButton } from "@/components/support-links";
 import { FREE_CHAPTER_SLUGS } from "@/lib/unlock/access";
 
 export const Route = createFileRoute("/guide/")({ component: GuidePage });
 
 function GuidePage() {
+  const hasHandbook = useHasAccess("handbook");
   return (
     <div className="flex flex-col gap-5">
       <Link
@@ -30,6 +33,11 @@ function GuidePage() {
           className="hero-photo h-64 w-full sm:h-80"
         />
       </div>
+      {hasHandbook ? (
+        <div>
+          <MyDownloadsButton />
+        </div>
+      ) : null}
       <p className="text-ink">
         New to the system?{" "}
         <Link to="/intro" className="font-semibold text-olive underline">

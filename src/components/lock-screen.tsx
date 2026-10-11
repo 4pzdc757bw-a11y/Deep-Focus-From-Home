@@ -5,6 +5,7 @@ import { AppUpgradeOffer } from "@/components/app-upgrade";
 import { ArrowLeft, Lock } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 import { Card } from "@/components/app-shell";
+import { MyDownloadsButton } from "@/components/support-links";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PRICE_LABEL } from "@/lib/offer";
@@ -223,6 +224,7 @@ export function LockScreen({
               <Button variant="outline" asChild>
                 <Link to="/guide">Read the handbook</Link>
               </Button>
+              <MyDownloadsButton />
               <PreviewAppButton variant="outline" />
             </>
           ) : (

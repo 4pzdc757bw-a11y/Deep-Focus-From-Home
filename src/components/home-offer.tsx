@@ -3,6 +3,7 @@ import { BookOpen, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Card } from "@/components/app-shell";
 import { useAppPitchAllowed } from "@/components/lock-screen";
+import { MyDownloadsButton } from "@/components/support-links";
 import { Button } from "@/components/ui/button";
 import {
   APP_ACCESS_LINE,
@@ -72,12 +73,13 @@ export function HandbookUnlockedCard() {
         Read one chapter at a time and do its action this week. Start with Chapter 1, then
         the chapter that names your biggest friction.
       </p>
-      <div>
+      <div className="flex flex-col gap-2 sm:flex-row">
         <Button asChild>
           <Link to="/guide">
             <BookOpen className="size-4" /> Read the handbook
           </Link>
         </Button>
+        <MyDownloadsButton />
       </div>
       {pitchAllowed && !dismissed ? (
         <div className="flex items-start gap-2 rounded-md border border-yellow bg-paper p-3 text-sm text-ink">

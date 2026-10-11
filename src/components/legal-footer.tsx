@@ -18,8 +18,16 @@ export function LegalFooter({ className = "" }: { className?: string }) {
           </Link>
         ))}
       </nav>
+      <p className="mt-4">
+        <a
+          href={`mailto:${BUSINESS_EMAIL}`}
+          className="inline-block rounded-md bg-olive px-4 py-2.5 text-base font-bold text-cream underline-offset-4 hover:underline"
+        >
+          Need help? Email {BUSINESS_EMAIL}
+        </a>
+      </p>
       <p className="mt-2 text-xs tracking-wide">
-        {BUSINESS_NAME} · {BUSINESS_ADDRESS} · {BUSINESS_EMAIL}
+        {BUSINESS_NAME} · {BUSINESS_ADDRESS}
       </p>
     </footer>
   );

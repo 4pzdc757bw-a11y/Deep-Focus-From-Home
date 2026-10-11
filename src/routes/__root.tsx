@@ -43,8 +43,10 @@ function GatedOutlet() {
 /** Pages whose component already renders <LegalFooter /> (or LegalDoc). */
 const OWN_FOOTER_PATHS = new Set([
   "/",
+  "/app",
   "/buy",
   "/more",
+  "/my-downloads",
   "/thanks",
   "/start",
   "/starter",

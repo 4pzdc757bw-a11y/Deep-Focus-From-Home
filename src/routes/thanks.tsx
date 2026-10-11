@@ -175,6 +175,17 @@ function HandbookDownloadButtons({
           payment.
         </p>
       )}
+      <p className="text-sm font-semibold text-ink">
+        Save these files to your computer now. You can always get them again
+        from{" "}
+        <Link
+          to="/my-downloads"
+          className="text-olive underline underline-offset-4"
+        >
+          My downloads
+        </Link>
+        .
+      </p>
       {items.map((item) => (
         <Button key={item.key} variant="outline" asChild>
           <a href={item.href}>
@@ -183,8 +194,11 @@ function HandbookDownloadButtons({
         </Button>
       ))}
       <p className="text-xs text-muted">
-        Links expire in about 2 hours. Refresh this page to get new ones, or
-        email {DOWNLOAD_SUPPORT_EMAIL} with your receipt if you need help.
+        These links work for about 2 hours. After that, get new ones from{" "}
+        <Link to="/my-downloads" className="underline underline-offset-2">
+          My downloads
+        </Link>
+        , or email {DOWNLOAD_SUPPORT_EMAIL} if you need help.
       </p>
     </div>
   );
