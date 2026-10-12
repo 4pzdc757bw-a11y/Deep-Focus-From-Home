@@ -7,6 +7,7 @@ const FILES = [
   "../routes/starter.tsx",
   "../components/getting-started-sheet.tsx",
   "../components/daily-os.tsx",
+  "../components/week-rating-sheet.tsx",
 ];
 
 describe("customer wording: click, never tick", () => {

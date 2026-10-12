@@ -134,7 +134,12 @@ export type WeekState = {
   blocks: string[];
   coworking: string;
   fridayNote: string;
+  /** Friday Close day 1-to-5 click question about the week (unset until answered). */
+  weekRating?: number;
 };
+
+/** Days (YYYY-MM-DD) the two "write a review" asks were shown. Each is shown once. */
+export type ReviewAsks = { first?: string; month?: string };
 
 export type MonthState = {
   worked: string;
@@ -184,6 +189,8 @@ type FocusState = {
    */
   blockSetupDone: boolean;
   markBlockSetupDone: () => void;
+  reviewAsks: ReviewAsks;
+  markReviewAsked: (kind: "first" | "month", date: string) => void;
   /** True after the first-open walkthrough is finished or skipped. */
   tourDone: boolean;
   setTourDone: (v: boolean) => void;
@@ -539,6 +546,9 @@ export const useFocusStore = create<FocusState>()(
       markHomeFocusWeekTwoPrompted: () => set({ homeFocusWeekTwoPrompted: true }),
       blockSetupDone: false,
       markBlockSetupDone: () => set({ blockSetupDone: true }),
+      reviewAsks: {},
+      markReviewAsked: (kind, date) =>
+        set((s) => ({ reviewAsks: { ...s.reviewAsks, [kind]: s.reviewAsks?.[kind] ?? date } })),
       tourDone: false,
       setTourDone: (v) => set({ tourDone: v }),
       tourOpen: false,

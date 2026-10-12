@@ -2,6 +2,8 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { Moon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { FridayReviewSheet } from "@/components/friday-review-sheet";
+import { WeekRatingSheet } from "@/components/week-rating-sheet";
+import { closedDaysInWeek, reviewAskDue, type ReviewKind } from "@/lib/review-ask";
 import { SheetPortal } from "@/components/sheet-portal";
 import { WeeklyPlannerSheet } from "@/components/weekly-planner-sheet";
 import { Button } from "@/components/ui/button";
@@ -43,13 +45,14 @@ type Phase =
   | "notice"
   | "week-plan"
   | "friday-review"
+  | "week-rating"
   | "confirm"
   | "offer-pdf";
 
 /**
  * Close-day flow. `variant="nav"` is the rightmost bottom-nav action;
  * `variant="inline"` is the outline button under the Shutdown note.
- * On Friday: Weekly Work Planner → Friday review → confirm Close. Otherwise
+ * On Friday: Weekly Work Planner → Friday review → 1-to-5 week question (twice, a review ask) → confirm Close. Otherwise
  * confirm → copy shutdown note to starter day (if in week one), mark day
  * done, then offer Save PDF and Print (both stay open) and a separate button
  * that moves to the next work day.
@@ -74,6 +77,7 @@ export function CloseDayButton({
   });
   const closingDate = () => (isDateKey(viewedDate) ? viewedDate : currentWorkdayKey());
   const [phase, setPhase] = useState<Phase>("idle");
+  const [askKind, setAskKind] = useState<ReviewKind | null>(null);
   const [next, setNext] = useState<{ closedDate: string; nextDate: string } | null>(
     null,
   );
@@ -135,6 +139,19 @@ export function CloseDayButton({
   }
 
   function afterFridayReview() {
+    const st = useFocusStore.getState();
+    const date = closingDate();
+    setAskKind(
+      reviewAskDue({
+        asks: st.reviewAsks,
+        closedBefore: closedDaysInWeek(st.dailies, date),
+        date,
+      }),
+    );
+    setPhase("week-rating");
+  }
+
+  function afterWeekRating() {
     setPhase("confirm");
   }
 
@@ -241,6 +258,10 @@ export function CloseDayButton({
 
       {phase === "friday-review" ? (
         <FridayReviewSheet onDone={afterFridayReview} date={closingDate()} />
+      ) : null}
+
+      {phase === "week-rating" ? (
+        <WeekRatingSheet onDone={afterWeekRating} date={closingDate()} askKind={askKind} />
       ) : null}
 
       {phase === "notice" && notice ? (
