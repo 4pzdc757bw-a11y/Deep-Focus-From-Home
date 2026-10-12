@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { useHasAccess } from "@/components/lock-screen";
 import { ContactSupportButton, MyDownloadsButton } from "@/components/support-links";
 import { downloadBackup, importBackup } from "@/lib/backup";
+import { APP_SAVE_NOTE } from "@/lib/offer";
 
 export const Route = createFileRoute("/more")({ component: MorePage });
 
@@ -87,6 +88,7 @@ function MorePage() {
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
           Keep a copy
         </p>
+        <p className="text-ink">{APP_SAVE_NOTE}</p>
         <p className="text-ink">
           Download your notes as a file. Import that file if you switch phones.
           Print the household agreement from its page for the fridge.
