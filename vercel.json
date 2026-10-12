@@ -11,7 +11,12 @@
   "headers": [
     {
       "source": "/manifest.webmanifest",
-      "headers": [{ "key": "Content-Type", "value": "application/manifest+json" }]
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/manifest+json"
+        }
+      ]
     }
   ],
   "redirects": [
@@ -36,6 +41,11 @@
       ],
       "destination": "https://deepfocusfromhome.com/:path*",
       "permanent": true
+    },
+    {
+      "source": "/today",
+      "destination": "/",
+      "permanent": false
     }
   ]
 }

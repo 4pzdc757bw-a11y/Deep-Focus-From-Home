@@ -290,7 +290,8 @@ export function DailyOs({ date }: { date?: string }) {
   const activeHere = session.running && session.date === osDate;
   // A day that isn't one of the user's work days can't be started or closed.
   const workDays = useFocusStore((s) => s.household?.workDays);
-  const offDay = hydrated && !isWorkday(osDate, workDays);
+  const markedOff = hydrated && Boolean(entry.dayOff);
+  const offDay = markedOff || (hydrated && !isWorkday(osDate, workDays));
   const nextWorkDate = nextWorkdayFrom(osDate, osDate, workDays);
   // Started blocks that still need Done before "Review and mark the day's top outcomes".
   const needDone = blocksNeedingDone(entry.slots, visible);
@@ -438,7 +439,9 @@ export function DailyOs({ date }: { date?: string }) {
           role="status"
           className="daily-plan-only no-print rounded-md border border-gold bg-paper px-4 py-3 text-sm font-semibold text-ink"
         >
-          {weekdayDate(osDate)} isn’t one of your work days, so Start and Close day are off.
+          {markedOff
+            ? `${weekdayDate(osDate)} is marked as a day off, so Start and Close day are off.`
+            : `${weekdayDate(osDate)} isn’t one of your work days, so Start and Close day are off.`}
           Your next work day is {weekdayDate(nextWorkDate)}.{" "}
           <Link
             to="/daily"
@@ -670,8 +673,14 @@ export function DailyOs({ date }: { date?: string }) {
                 </Button>
               ) : finished ? (
                 <p className="flex min-h-11 items-center gap-2 text-sm font-semibold text-olive">
-                  <Check className="size-4" strokeWidth={3} />
-                  Block finished
+                  {slot.outcomeDone ? (
+                    <>
+                      <Check className="size-4" strokeWidth={3} />
+                      Block finished
+                    </>
+                  ) : (
+                    "Block stopped · click Done by the Outcome if it’s finished"
+                  )}
                 </p>
               ) : dayWhen || offDay ? null : (
                 <Button

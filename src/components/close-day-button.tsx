@@ -96,6 +96,14 @@ export function CloseDayButton({
     if (isDayClosed(raw)) {
       return { title: "Already closed", text: `${prettyDate(date)} is already closed.`, showBlocks: false };
     }
+    if ((raw as { dayOff?: boolean } | undefined)?.dayOff) {
+      const nextDate = nextWorkdayFrom(date, date, st.household?.workDays);
+      return {
+        title: "Day off",
+        text: `${prettyDate(date)} is marked as a day off. Your next work day is ${prettyDate(nextDate)}.`,
+        showBlocks: false,
+      };
+    }
     if (!isWorkday(date, st.household?.workDays)) {
       const nextDate = nextWorkdayFrom(date, date, st.household?.workDays);
       return {
@@ -336,12 +344,12 @@ export function CloseDayButton({
                 history, then{" "}
                 {alreadySaved
                   ? "moves you to your next work day."
-                  : "offers Save PDF or Print. You move on to your next work day when you click Done."}
+                  : "offers Save PDF or Print. Click Close day to start."}
               </p>
               {alreadySaved ? (
                 <>
                   <p className="mt-2 text-sm text-olive">
-                    You already saved today’s PDF, so it won’t ask again.
+                    You opened Save PDF or Print for this day a few minutes ago, so it won’t ask again.
                   </p>
                   <BeforeYouGo />
                 </>
@@ -444,7 +452,7 @@ export function CloseDayButton({
                 className="inline-flex h-11 items-center justify-center rounded-md bg-olive px-4 text-sm font-semibold text-cream"
                 onClick={advance}
               >
-                Done, go to next work day
+                {next?.nextDate ? `Done, go to ${prettyDate(next.nextDate)}` : "Done, go to next work day"}
               </button>
             </div>
           </div>

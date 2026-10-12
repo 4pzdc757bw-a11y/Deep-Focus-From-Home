@@ -265,6 +265,12 @@ export function isWorkday(dateKey: string, workDays?: readonly number[] | null) 
   return normalizeWorkDays(workDays).includes(weekdayOf(dateKey));
 }
 
+/** Week One never starts on a weekend: Saturday or Sunday moves Day 1 to the following Monday. */
+export function weekendStartToMonday(dateKey: string) {
+  const wd = weekdayOf(dateKey);
+  return wd === 6 ? addDays(dateKey, 2) : wd === 0 ? addDays(dateKey, 1) : dateKey;
+}
+
 /** `dateKey` itself if it is a work day, else the next work day after it. */
 export function workdayOnOrAfter(dateKey: string, workDays?: readonly number[] | null) {
   return isWorkday(dateKey, workDays) ? dateKey : nextWorkday(dateKey, workDays);

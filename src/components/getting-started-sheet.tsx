@@ -239,7 +239,7 @@ export function GettingStartedSheet({ onDone }: { onDone: () => void }) {
                     ))}
                   </div>
                   <p className="text-sm text-muted">
-                    Monday to Friday is already picked. Click a day to add or remove it, or just click Next. Close day skips to your next work day.
+                    Monday to Friday is already picked. Click a day to add or remove it, or just click Next. After Close day, the app opens your next picked work day.
                   </p>
                 </div>
                 <p>When does your work day start and stop? This sets the edges. Outside these hours, you’re off.</p>

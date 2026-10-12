@@ -328,6 +328,7 @@ function WeekOneStart({
             className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
           />
         </div>
+        <p className="text-xs text-muted">Weekend start moves Day 1 to Monday.</p>
       </div>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
         <button
