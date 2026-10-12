@@ -3,7 +3,8 @@ import { HandbookCheckoutLink } from "@/components/handbook-checkout-link";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Card, PageTitle } from "@/components/app-shell";
 import { LegalFooter } from "@/components/legal-footer";
-import { useHasAccess } from "@/components/lock-screen";
+import { AppUpgradeOffer } from "@/components/app-upgrade";
+import { useHasAccess, useUnlockedProduct } from "@/components/lock-screen";
 import { MyDownloadsTextLink } from "@/components/support-links";
 import { Button } from "@/components/ui/button";
 import { CHAPTERS } from "@/lib/content";
@@ -18,6 +19,10 @@ function ChapterPage() {
   const { slug } = Route.useParams();
   const ch = CHAPTERS.find((c) => c.slug === slug);
   const hasHandbook = useHasAccess("handbook");
+  // End of the handbook: handbook-only buyers see the $20 app upgrade box.
+  // App buyers already own it, and visitors see the handbook offer instead.
+  const showUpgrade =
+    useUnlockedProduct() === "handbook" && slug === CHAPTERS[CHAPTERS.length - 1]?.slug;
   if (!ch) throw notFound();
   const idx = CHAPTERS.findIndex((c) => c.slug === slug);
   const nextCh = CHAPTERS[idx + 1];
@@ -47,6 +52,7 @@ function ChapterPage() {
         </p>
         <p className="mt-2 text-ink">{ch.action}</p>
       </Card>
+      {showUpgrade ? <AppUpgradeOffer className="no-print" /> : null}
       {hasHandbook ? null : (
         <Card className="flex flex-col gap-3">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
