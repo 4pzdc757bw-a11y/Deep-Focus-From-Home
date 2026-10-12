@@ -29,8 +29,8 @@ function PrivacyPage() {
       <p>Depending on how you use the site, we may collect:</p>
       <ul>
         <li>
-          Contact details you give us (for example, email address when you opt in
-          or buy)
+          Contact details you give us (for example, email address when you opt in,
+          buy, or ask for your download links)
         </li>
         <li>Order details (what you bought, amount paid, date)</li>
         <li>
@@ -61,6 +61,10 @@ function PrivacyPage() {
       <ul>
         <li>Deliver the handbook, fillables, app, or other products you buy</li>
         <li>Send the free newsletter or other messages you asked for</li>
+        <li>
+          Email you your download links when you ask for them through My
+          downloads
+        </li>
         <li>Process payments and keep order records</li>
         <li>
           Apply store credit when you request it under our{" "}
@@ -87,6 +91,10 @@ function PrivacyPage() {
         <li>
           Our email provider, Kit (kit.com), which stores signup addresses and
           sends the emails you asked for
+        </li>
+        <li>
+          Our email provider for one-time messages, Resend (resend.com), which
+          sends the email with your download links when you ask for it
         </li>
         <li>
           Service providers who help us run the business, under limits that
@@ -142,7 +150,9 @@ function PrivacyPage() {
         store credit (up to 12 months from purchase, plus a reasonable record
         period), taxes, and legal duties. You can ask us to delete marketing
         contacts; we may keep what the law requires. Email signup addresses are
-        kept until you unsubscribe or ask us to remove them.
+        kept until you unsubscribe or ask us to remove them. Resend keeps a
+        record of the one-time emails it sends for a limited time under its own
+        terms.
       </p>
 
       <h2>8. Your choices</h2>
