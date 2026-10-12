@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Download } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { Card, PageTitle } from "@/components/app-shell";
 import { LegalFooter } from "@/components/legal-footer";
@@ -46,7 +45,7 @@ function MyDownloadsPage() {
       <PageTitle
         kicker="Handbook"
         title="My downloads"
-        lede="Get your handbook PDFs and fillable worksheets again, any time. Type the email you paid with."
+        lede="Get your handbook PDFs and fillable worksheets again, any time. Type the email you paid with and we'll email you fresh links."
       />
       <Card className="flex flex-col gap-3">
         <form onSubmit={(e) => void submit(e)} className="flex flex-col gap-2">
@@ -73,7 +72,7 @@ function MyDownloadsPage() {
               className="shrink-0"
               disabled={busy || !email.trim()}
             >
-              {busy ? "Checking…" : "Get my downloads"}
+              {busy ? "Sending…" : "Email my download links"}
             </Button>
           </div>
         </form>
@@ -87,22 +86,13 @@ function MyDownloadsPage() {
           </p>
         ) : null}
         {result && result.ok ? (
-          <div className="flex flex-col gap-2">
-            <p className="text-sm font-semibold text-olive">
-              Here are your files. Save them to your computer.
-            </p>
-            {result.links.map((link) => (
-              <Button key={link.key} variant="outline" asChild>
-                <a href={link.url}>
-                  <Download className="size-4" /> {link.label}
-                </a>
-              </Button>
-            ))}
-            <p className="text-xs text-muted">
-              These links work for about 2 hours. Come back to this page any
-              time for new ones.
-            </p>
-          </div>
+          <p
+            role="status"
+            aria-live="polite"
+            className="rounded-md border border-olive bg-paper px-3 py-2 text-sm font-semibold text-olive"
+          >
+            {result.message}
+          </p>
         ) : null}
       </Card>
       <p className="text-sm text-muted">

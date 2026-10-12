@@ -1,14 +1,7 @@
-import type { DownloadFileKey } from "./catalog.ts";
-
-/** Client-safe result of "My downloads". Failures come back as data. */
+/**
+ * Client-safe result of "My downloads". Links are emailed, never returned.
+ * Failures come back as data.
+ */
 export type MyDownloadsResult =
-  | {
-      ok: true;
-      links: {
-        key: DownloadFileKey;
-        label: string;
-        url: string;
-        expiresAt: number;
-      }[];
-    }
+  | { ok: true; message: string }
   | { ok: false; error: string };
