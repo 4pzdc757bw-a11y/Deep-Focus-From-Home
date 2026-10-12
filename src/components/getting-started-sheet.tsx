@@ -54,7 +54,8 @@ function defaultWeekSlot(day: number, workHours: string): WeekBlockDraft {
 /**
  * First-open walkthrough: four short steps, one at a time.
  * Every step saves into the real pages (Household hours, This week, Today).
- * Skip is always one tap. Replay from Tools.
+ * Skip is on steps 2 to 4 only: the work-days step must be finished first
+ * (Oct 11 owner decision A). Replay from Tools.
  */
 export function GettingStartedSheet({ onDone }: { onDone: () => void }) {
   const titleId = useId();
@@ -125,9 +126,12 @@ export function GettingStartedSheet({ onDone }: { onDone: () => void }) {
     onDone();
   }
 
+  // Escape is a Skip too, so it is off on the work-days step (step 0).
+  const stepRef = useRef(step);
+  stepRef.current = step;
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") close();
+      if (e.key === "Escape" && stepRef.current > 0) close();
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -302,9 +306,11 @@ export function GettingStartedSheet({ onDone }: { onDone: () => void }) {
           </div>
 
           <div className="mt-5 flex items-center gap-2">
-            <Button variant="ghost" onClick={close}>
-              Skip
-            </Button>
+            {step > 0 ? (
+              <Button variant="ghost" onClick={close}>
+                Skip
+              </Button>
+            ) : null}
             <div className="ml-auto flex gap-2">
               {step > 0 ? (
                 <Button variant="outline" onClick={() => setStep(step - 1)}>
