@@ -5,6 +5,7 @@ import { SheetPortal } from "@/components/sheet-portal";
 import { Field, Input } from "@/components/ui/input";
 import { useFocusStore } from "@/lib/store";
 import { playDoneBell, playStartBell } from "@/lib/chime";
+import { APP_SAVE_NOTE_SHORT } from "@/lib/offer";
 import { weekKey } from "@/lib/utils";
 import {
   WEEKDAY_ORDER,
@@ -295,6 +296,7 @@ export function GettingStartedSheet({ onDone }: { onDone: () => void }) {
                 <p>When your work day is over, scroll down Today to the <strong>Shutdown note</strong> and write one line. Click the two shutdown steps under <strong>End of day</strong>, then tap the <strong>Close day</strong> button just below them, beside Send to partner and Print this day.</p>
                 <p>Close day marks the day done, offers to save a PDF (unless you just printed it), and opens your next work day’s page.</p>
                 <p>That’s it. Tapping the button below starts Day 1 of your 7-day starter.</p>
+                <p className="text-sm text-muted">{APP_SAVE_NOTE_SHORT}</p>
               </>
             ) : null}
           </div>

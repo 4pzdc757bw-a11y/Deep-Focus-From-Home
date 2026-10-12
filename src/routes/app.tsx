@@ -5,6 +5,7 @@ import { LegalFooter } from "@/components/legal-footer";
 import {
   APP_ACCESS_LINE,
   APP_PRICE_LABEL,
+  APP_SAVE_NOTE,
   markPurchased,
   STRIPE_APP_PAYMENT_LINK,
 } from "@/lib/offer";
@@ -86,6 +87,14 @@ function AppOfferPage() {
             PDF. It also includes everything in the handbook.
           </p>
         </div>
+        {product === "app" ? null : (
+          <p
+            className="rounded-md border border-yellow bg-paper p-3 text-sm text-ink"
+            data-testid="app-save-note"
+          >
+            {APP_SAVE_NOTE}
+          </p>
+        )}
         {handbookBuyer ? (
           <>
             <PreviewAppButton variant="outline" />
