@@ -27,6 +27,16 @@ export const SEE_APP_LABEL = `See the app, ${APP_PRICE_LABEL}`;
 export const APP_SHORT_LINE =
   "The Deep Focus app is a daily planner, focus bell, energy log and weekly planner in your browser, nothing to install. It includes the handbook.";
 
+/**
+ * Honest buyer note (Jeffrey, Oct 11 2026): the app keeps entries in the
+ * browser, not on a server. Shown on /app before buying, on the Tools page and
+ * in the first-run getting-started steps.
+ */
+export const APP_SAVE_NOTE =
+  "The Deep Focus app saves your plans and week setups in the browser you use. They stay in that phone or computer browser and do not carry over to another browser or device.";
+export const APP_SAVE_NOTE_SHORT =
+  "Your plans and week setups are saved in this browser, on this phone or computer. They do not carry over to another browser or device.";
+
 export const OFFER_NAME = "Deep Focus from Home";
 
 export type PurchaseProduct = "handbook" | "app";
