@@ -37,7 +37,7 @@ export const getMyDownloads = createServerFn({ method: "POST" })
     const tenMinutes = 10 * 60 * 1000;
     if (
       rateLimitHit(`downloads-ip:${ip}`, 8, tenMinutes) ||
-      rateLimitHit(`downloads-email:${data.email}`, 5, tenMinutes)
+      rateLimitHit(`downloads-email:${data.email}`, 3, tenMinutes)
     ) {
       return { ok: false, error: MY_DOWNLOADS_BUSY_MESSAGE };
     }
