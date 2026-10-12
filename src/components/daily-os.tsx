@@ -785,7 +785,7 @@ export function DailyOs({ date }: { date?: string }) {
           <StatusLine
             done={entry.checks.block}
             label="Deep-work block started"
-            pending="ticks itself when a start bell rings"
+            pending="marks itself done when a start bell rings"
           />
           <p className="daily-subhead mt-1 text-xs font-semibold uppercase tracking-[0.14em] text-gold">
             Shutdown · 5 minutes
@@ -843,7 +843,7 @@ export function DailyOs({ date }: { date?: string }) {
           <StatusLine
             done={entry.checks.shutdown}
             label="Shutdown sequence done"
-            pending="ticks itself when all steps are ticked, or when you close the day"
+            pending="marks itself done when you click all the steps, or when you close the day"
           />
         </div>
         <div className="no-print flex flex-wrap gap-2">

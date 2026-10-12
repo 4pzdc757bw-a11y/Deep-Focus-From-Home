@@ -63,8 +63,8 @@ function StarterPage() {
         title="Seven days. One job each day."
         lede={
           appUnlocked
-            ? "Do not add extra systems this week. Finish the job, open that day’s OS, tick the day, stop."
-            : "Your free 7-day pack. Do not add extra systems this week. Finish the job, tick the day, write one line, stop."
+            ? "Do not add extra systems this week. Finish the job, open that day’s OS, click the day, stop."
+            : "Your free 7-day pack. Do not add extra systems this week. Finish the job, click the day, write one line, stop."
         }
       />
       {appUnlocked ? null : (
