@@ -29,3 +29,19 @@ describe("review ask rules", () => {
     assert.match(no, /do not share/);
   });
 });
+
+import { readFileSync } from "node:fs";
+describe("Vera's review conditions (Oct 11)", () => {
+  const sheet = readFileSync(new URL("../components/week-rating-sheet.tsx", import.meta.url), "utf8");
+  it("says nothing is sent until the buyer sends it", () => {
+    assert.match(sheet, /Nothing is sent until you send it\./);
+  });
+  it("share box starts unchecked", () => {
+    assert.match(sheet, /useState\(false\);\s*\n/);
+    assert.match(sheet, /const \[share, setShare\] = useState\(false\)/);
+  });
+  it("review text is passed through unedited (trim only), no names collected", () => {
+    const src = readFileSync(new URL("./review-ask.ts", import.meta.url), "utf8");
+    assert.doesNotMatch(src, /name/i);
+  });
+});
