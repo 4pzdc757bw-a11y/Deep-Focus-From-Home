@@ -510,7 +510,7 @@ export function DailyOs({ date }: { date?: string }) {
                   </span>
                 ) : doneHere || dur ? (
                   <span className="text-sm font-semibold text-olive">
-                    {doneHere ? "Block complete" : null}
+                    {doneHere ? (slot.outcomeDone ? "Block finished" : "Block stopped") : null}
                     {dur ? `${doneHere ? " · " : ""}${dur}` : null}
                   </span>
                 ) : null}

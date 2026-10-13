@@ -13,6 +13,10 @@ describe("work hours", () => {
   it("first block starts at the start of work hours, 90 min", () => {
     assert.deepEqual(blockDefaults(0, "11:30–17:00"), { start: "11:30", end: "13:00" });
     assert.deepEqual(blockDefaults(0, ""), { start: "09:00", end: "10:30" });
+    // Block 1 stopped late at night (end 20:45) must not push Block 2 to 9:15 PM.
+    assert.deepEqual(blockDefaults(1, "", "20:45"), { start: "11:00", end: "12:30" });
+    assert.deepEqual(blockDefaults(2, "09:00–17:00", "20:45"), { start: "13:00", end: "14:30" });
+    assert.deepEqual(blockDefaults(1, "09:00–17:00", "10:30"), { start: "11:00", end: "12:30" });
   });
 });
 
