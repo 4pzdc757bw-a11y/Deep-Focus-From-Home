@@ -366,12 +366,12 @@ export function CloseDayButton({
                 Close today?
               </h2>
               <p className="mt-2 text-ink">
-                Marks today done (and copies your Shutdown note and Other things
-                I did today into the starter day’s “one line” during week one), keeps the Daily OS in local
-                history, then{" "}
+                This marks today done and saves it in your history. Then it{" "}
                 {alreadySaved
-                  ? "moves you to your next work day."
-                  : "offers Save PDF or Print."}
+                  ? "opens your next work day."
+                  : "offers Save PDF or Print, then opens your next work day."}
+                {" "}During week one, your Shutdown note and Other things I did today are also copied into the
+                starter day’s “one line.”
               </p>
               {alreadySaved ? (
                 <>

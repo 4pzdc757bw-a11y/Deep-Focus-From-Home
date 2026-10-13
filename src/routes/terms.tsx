@@ -77,8 +77,8 @@ function TermsPage() {
         You receive a personal license to use the app for yourself. You do not
         own the app’s code, design, or brand. You may not redistribute, resell,
         share paid access, or claim the app as your own product. Section 5
-        (License) also applies. Keep your access link or code private; it’s for
-        your use only.
+        (License) also applies. Access is tied to the email you paid with; don’t
+        share it, it’s for your use only.
       </p>
       <p>
         The app runs in current phone and computer web browsers; there is
@@ -165,7 +165,7 @@ function TermsPage() {
         purchase price you paid (unless we say otherwise in writing), can be used toward any
         Jeffsebiz product, and is good for 12 months from the purchase date.{" "}
         {STORE_CREDIT_LIMITS} Full details:{" "}
-        <Link to="/store-credit">Store Credit / Digital Purchase Policy</Link>.
+        <Link to="/store-credit">Store Credit Policy</Link>.
       </p>
       <p>{REFUND_ENDS_ACCESS}</p>
       <FixItRule as="h3" />

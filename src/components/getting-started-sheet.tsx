@@ -282,7 +282,7 @@ export function GettingStartedSheet({ onDone }: { onDone: () => void }) {
 
             {step === 2 ? (
               <>
-                <p>On Today, tap <strong>Start · ring the bell</strong> when your block begins. It rings and writes down the time. The button then changes to <strong>End · ring the bell</strong> — tap it when you stop.</p>
+                <p>On Today, click <strong>Start · ring the bell</strong> when your block begins. It rings and writes down the time. The button then changes to <strong>End · ring the bell</strong> — click it when you stop.</p>
                 <p>Try the sounds now so you know them:</p>
                 <div className="flex flex-wrap gap-2">
                   <Button variant="outline" onClick={() => void playStartBell()}>
@@ -297,7 +297,7 @@ export function GettingStartedSheet({ onDone }: { onDone: () => void }) {
 
             {step === 3 ? (
               <>
-                <p>When your work day is over, scroll down Today to the <strong>Shutdown note</strong> and write one line. Click the two shutdown steps under <strong>End of day</strong>, then tap the <strong>Close day</strong> button just below them, beside Send to partner and Print this day.</p>
+                <p>When your work day is over, scroll down Today to the <strong>Shutdown note</strong> and write one line. Click the two shutdown steps under <strong>End of day</strong>, then click the <strong>Close day</strong> button just below them, beside Send to partner and Print this day.</p>
                 <p>Close day marks the day done, offers to save a PDF (unless you just printed it), and opens your next work day’s page.</p>
                 <p>That’s it. Clicking the button below starts Day 1 of your 7-day starter.</p>
                 <p className="text-sm text-muted">{APP_SAVE_NOTE_SHORT}</p>
