@@ -43,7 +43,7 @@ const LINKS = [
   {
     to: "/week",
     title: "Weekly deep-work planner",
-    copy: "Four blocks and one coworking slot.",
+    copy: "Up to 8 focus blocks a day and one coworking slot.",
     icon: CalendarRange,
   },
   {

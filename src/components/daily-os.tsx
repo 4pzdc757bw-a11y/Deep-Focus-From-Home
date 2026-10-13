@@ -185,7 +185,7 @@ function BlockSetupPrompt() {
         <span className="font-semibold text-olive">
           Make these blocks match your real day.
         </span>{" "}
-        Set up each day on the Week page the way it really runs: block times,
+        Set up each day in Tools &gt; Week the way it really runs: block times,
         lengths, meetings. Every day can be different.
       </p>
       <Link
