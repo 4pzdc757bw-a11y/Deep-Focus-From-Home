@@ -184,7 +184,7 @@ export function WeekBlocksEditor({
             ? (() => {
                 const opens = planDayTimes(mine, hours).length;
                 return opens > mine.length
-                  ? ` Today page opens with ${opens} blocks: these, then standard blocks after them.`
+                  ? ` ${WEEKDAY_LONG[day]}'s page opens with ${opens} blocks: these, then standard blocks after them.`
                   : null;
               })()
             : " With none set, this day opens with 4 standard blocks."}
