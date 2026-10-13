@@ -132,7 +132,7 @@ function PrivacyPage() {
         messages for us. Every email has an unsubscribe link, or you can email
         support@deepfocusfromhome.com to be removed; we’ll stop within 10 business days.
         Our emails may use standard open and click tracking to help us improve
-        them. We don’t add buyers to this list unless they sign up themselves.
+        them. If you buy, we add your email for product updates. You can unsubscribe anytime.
       </p>
 
       <h2>6. App data on your device</h2>
