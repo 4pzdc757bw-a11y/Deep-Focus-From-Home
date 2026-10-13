@@ -24,7 +24,7 @@ export function needsDoneMessage(labels: readonly string[]): string {
     labels.length <= 2
       ? labels.join(" and ")
       : `${labels.slice(0, -1).join(", ")} and ${labels[labels.length - 1]}`;
-  return `Click Done on ${list} first. Each Done button is beside that block’s Outcome.`;
+  return `Click Done on ${list} first. Done is beside that block’s Outcome.`;
 }
 
 /** True once Close day has run for this day. */

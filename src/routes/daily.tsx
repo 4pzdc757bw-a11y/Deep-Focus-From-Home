@@ -5,6 +5,7 @@ import { DailyOs } from "@/components/daily-os";
 import { PageTitle } from "@/components/app-shell";
 import { isDateKey, prettyDate } from "@/lib/utils";
 import { useWorkdayKey } from "@/lib/workday";
+import { useFocusStore } from "@/lib/store";
 
 export const Route = createFileRoute("/daily")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -20,8 +21,11 @@ function DailyPage() {
   const isToday = date === workday;
   const navigate = useNavigate();
 
-  /** Day off: open the next work day without marking anything done. */
+  const markedOff = useFocusStore((s) => Boolean(s.dailies[date]?.dayOff));
+
+  /** Day off: mark this day off (no Start, no Close day), then open the next work day. */
   function skipToNextWorkday() {
+    useFocusStore.getState().patchDaily(date, { dayOff: true });
     void navigate({ to: "/daily", search: { date: nextDateAfterClose(date) } });
   }
 
@@ -40,6 +44,18 @@ function DailyPage() {
           title="One page for this workday"
           lede={`${prettyDate(date)}. Put the task in a time slot, write the outcome, ring the bell to start and to finish.`}
         />
+        {markedOff ? (
+          <p className="mt-2 inline-flex min-h-10 items-center gap-1.5 rounded-md border border-gold bg-paper px-3 text-sm font-semibold text-muted">
+            Day off
+            <button
+              type="button"
+              onClick={() => useFocusStore.getState().patchDaily(date, { dayOff: false })}
+              className="ml-2 text-olive underline underline-offset-2"
+            >
+              Undo
+            </button>
+          </p>
+        ) : (
         <button
           type="button"
           onClick={skipToNextWorkday}
@@ -48,6 +64,7 @@ function DailyPage() {
           <SkipForward className="size-4" />
           Day off — skip to next workday
         </button>
+        )}
       </div>
       <DailyOs date={date} />
     </div>
