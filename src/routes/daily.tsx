@@ -21,6 +21,7 @@ function DailyPage() {
   const isToday = date === workday;
   const navigate = useNavigate();
 
+  const hydrated = useFocusStore((s) => s.hydrated);
   const markedOff = useFocusStore((s) => Boolean(s.dailies[date]?.dayOff));
 
   /** Day off: mark this day off (no Start, no Close day), then open the next work day. */
@@ -66,7 +67,8 @@ function DailyPage() {
         </button>
         )}
       </div>
-      <DailyOs date={date} />
+      {/* Wait for saved blocks so default unstarted blocks don't flash first. */}
+      {hydrated ? <DailyOs date={date} /> : <div className="min-h-[60vh]" aria-busy="true" />}
     </div>
   );
 }
