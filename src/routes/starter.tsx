@@ -1,7 +1,7 @@
 import { LegalFooter } from "@/components/legal-footer";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, CalendarDays, Download } from "lucide-react";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { useHasAccess } from "@/components/lock-screen";
 import { HandbookCheckoutLink } from "@/components/handbook-checkout-link";
 import { Card, PageTitle } from "@/components/app-shell";
@@ -286,6 +286,8 @@ function WeekOneStart({
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const isToday = started === todayKey();
+  // Only after a Saturday or Sunday is picked (the store moves it to Monday).
+  const [pickedWeekend, setPickedWeekend] = useState(false);
 
   function openPicker() {
     const el = inputRef.current;
@@ -323,12 +325,20 @@ function WeekOneStart({
             required
             onClick={openPicker}
             onChange={(e) => {
-              if (e.target.value) onChange(e.target.value);
+              if (e.target.value) {
+                const wd = new Date(`${e.target.value}T12:00:00`).getDay();
+                setPickedWeekend(wd === 0 || wd === 6);
+                onChange(e.target.value);
+              }
             }}
             className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
           />
         </div>
-        <p className="text-xs text-muted">Weekend start moves Day 1 to Monday.</p>
+        {pickedWeekend ? (
+          <p role="status" className="text-xs text-muted">
+            Weekend start moves Day 1 to Monday.
+          </p>
+        ) : null}
       </div>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
         <button

@@ -7,7 +7,7 @@ import { closedDaysInWeek, reviewAskDue, type ReviewKind } from "@/lib/review-as
 import { SheetPortal } from "@/components/sheet-portal";
 import { WeeklyPlannerSheet } from "@/components/weekly-planner-sheet";
 import { Button } from "@/components/ui/button";
-import { closeDay } from "@/lib/close-day";
+import { closeDay, nextDateAfterClose } from "@/lib/close-day";
 import { blocksNeedingDone, isDayClosed, needsDoneMessage } from "@/lib/close-day-rules";
 import { SHUTDOWN_AFTER_CLOSE } from "@/lib/content";
 import { saveDailyPdf } from "@/lib/daily-pdf";
@@ -77,6 +77,13 @@ export function CloseDayButton({
   });
   const closingDate = () => (isDateKey(viewedDate) ? viewedDate : currentWorkdayKey());
   const [phase, setPhase] = useState<Phase>("idle");
+  // Off day or a later date: Close day shows as unavailable (greyed, not clickable).
+  const viewedOff = useFocusStore((s) => {
+    const d = isDateKey(viewedDate) ? viewedDate : null;
+    return d ? Boolean((s.dailies[d] as { dayOff?: boolean } | undefined)?.dayOff) : false;
+  });
+  const viewedFuture = isDateKey(viewedDate) && viewedDate > currentWorkdayKey();
+  const unavailable = viewedOff || viewedFuture;
   const [askKind, setAskKind] = useState<ReviewKind | null>(null);
   const [next, setNext] = useState<{ closedDate: string; nextDate: string } | null>(
     null,
@@ -109,6 +116,14 @@ export function CloseDayButton({
       return {
         title: "Not a work day",
         text: `${prettyDate(date)} isn’t one of your work days. Your next work day is ${prettyDate(nextDate)}.`,
+        showBlocks: false,
+      };
+    }
+    const today = currentWorkdayKey();
+    if (date > today) {
+      return {
+        title: "Not today yet",
+        text: `You can plan ${prettyDate(date)} now. Close day opens on ${prettyDate(date)}.`,
         showBlocks: false,
       };
     }
@@ -240,6 +255,7 @@ export function CloseDayButton({
           variant="outline"
           className={className}
           onClick={startClose}
+          disabled={unavailable}
           aria-haspopup="dialog"
         >
           <Moon className="size-4" />
@@ -250,9 +266,12 @@ export function CloseDayButton({
           type="button"
           className={cn(
             "flex min-h-14 w-full flex-col items-center justify-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted",
+            unavailable && "cursor-not-allowed opacity-40",
             className,
           )}
           onClick={startClose}
+          disabled={unavailable}
+          title={unavailable ? (viewedOff ? "Day off: Close day is off" : "Close day opens on that day") : undefined}
           aria-haspopup="dialog"
         >
           <Moon className="size-5" strokeWidth={1.8} />
@@ -344,7 +363,7 @@ export function CloseDayButton({
                 history, then{" "}
                 {alreadySaved
                   ? "moves you to your next work day."
-                  : "offers Save PDF or Print. Click Close day to start."}
+                  : "offers Save PDF or Print."}
               </p>
               {alreadySaved ? (
                 <>
@@ -361,7 +380,7 @@ export function CloseDayButton({
                 className="inline-flex h-11 items-center justify-center rounded-md bg-olive px-4 text-sm font-semibold text-cream"
                 onClick={runClose}
               >
-                Close day
+                {`Close day, then ${prettyDate(nextDateAfterClose(closingDate()))}`}
               </button>
               <button
                 type="button"
