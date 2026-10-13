@@ -41,7 +41,7 @@ export function CheckRow({
         )}
       >
         {label}
-        {checked ? <span className="hidden print:inline"> — done</span> : null}
+        {checked ? <span className="hidden print:inline"> ✓</span> : null}
       </span>
     </label>
   );

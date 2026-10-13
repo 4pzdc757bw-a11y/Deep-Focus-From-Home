@@ -228,3 +228,21 @@ describe("changing the day on the fly", () => {
     assert.deepEqual(addedBlockTimes(undefined, 0, 150, "9am-5pm"), { start: "09:00", end: "11:30" });
   });
 });
+
+it("catchUpBlocks: block stopped at 9:01 PM keeps later blocks in the work day", async () => {
+  const { catchUpBlocks: cu } = await import("./block-plan.ts");
+  const slots = [
+    { start: "09:00", end: "10:30", started: true },
+    { start: "21:00", end: "21:01", started: true },
+    { start: "21:30", end: "23:00", auto: true },
+    { start: "23:15", end: "00:45", auto: true },
+  ];
+  const moves = cu(slots, 4, "2026-10-12", "9:00 AM-5:00 PM", new Date(2026, 9, 12, 21, 5));
+  for (const m of moves) {
+    const [h] = m.start.split(":").map(Number);
+    assert.ok(h! >= 9 && h! < 17, `start ${m.start}`);
+    const [eh] = m.end.split(":").map(Number);
+    assert.ok(eh! >= 9 && eh! <= 17, `end ${m.end}`);
+  }
+  assert.equal(moves.length, 2);
+});

@@ -125,7 +125,7 @@ function Home() {
             {nextDay ? (
               <Button asChild>
                 <Link to="/daily" search={{ date: nextDate }}>
-                  Start Day {nextDay.day} <ArrowRight className="size-4" />
+                  {starterDate && starterDate < workday ? "Pick up" : "Start"} Day {nextDay.day} <ArrowRight className="size-4" />
                 </Link>
               </Button>
             ) : (
