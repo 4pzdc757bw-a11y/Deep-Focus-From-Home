@@ -440,8 +440,8 @@ export function DailyOs({ date }: { date?: string }) {
           className="daily-plan-only no-print rounded-md border border-gold bg-paper px-4 py-3 text-sm font-semibold text-ink"
         >
           {markedOff
-            ? `${weekdayDate(osDate)} is marked as a day off, so Start and Close day are off.`
-            : `${weekdayDate(osDate)} isn’t one of your work days, so Start and Close day are off.`}
+            ? `${weekdayDate(osDate)} is marked as a day off, so Start and Close day are off. `
+            : `${weekdayDate(osDate)} isn’t one of your work days, so Start and Close day are off. `}
           Your next work day is {weekdayDate(nextWorkDate)}.{" "}
           <Link
             to="/daily"
@@ -842,9 +842,12 @@ export function DailyOs({ date }: { date?: string }) {
                       />
                     </Field>
                   </div>
-                  <div className="no-print flex flex-wrap gap-2 py-1">
-                    <CloseDayButton variant="inline" />
-                  </div>
+                  {/* Close day only on today's page, never on a day off or another date. */}
+                  {dayWhen || offDay ? null : (
+                    <div className="no-print flex flex-wrap gap-2 py-1">
+                      <CloseDayButton variant="inline" />
+                    </div>
+                  )}
                 </>
               ) : null}
             </Fragment>
