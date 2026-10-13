@@ -111,11 +111,24 @@ export function catchUpBlocks(
     const target = ceilQuarter(earliest);
     // Passed → move. Times the app already moved keep following the block
     // before (e.g. Block 1 ends early → Block 2 comes 15 min after it).
-    if (movable && (start < earliest || (slot.auto && prevEnd != null && start !== target))) {
+    const dayStart = wh?.start ?? (toMinutes("09:00") as number);
+    const stop = wh?.stop ?? dayStart + 8 * 60;
+    const outside = (m: number) => m < dayStart || m + 15 > stop;
+    // An app-moved block already pushed past the work day (saved before this fix).
+    const strayAuto = movable && slot.auto && outside(start);
+    if (strayAuto || (movable && (start < earliest || (slot.auto && prevEnd != null && start !== target)))) {
+      if (strayAuto || outside(target)) {
+        // Past the work day (a block stopped at 9:01 PM): later blocks go back
+        // to their normal work-day times instead of running into the night.
+        const def = withLength(defaultDayTimes(i + 1, hours)[i]!);
+        if (def.start !== slot.start || def.end !== slot.end) out.push({ index: i, ...def });
+        prevEnd = null;
+        prevRan = false;
+        continue;
+      }
       const newStart = target;
       end = newStart + len;
-      const stop = wh?.stop ?? null;
-      if (stop != null && end > stop && stop - newStart >= 15) end = stop;
+      if (end > stop && stop - newStart >= 15) end = stop;
       out.push({ index: i, start: toClock(newStart), end: toClock(end) });
     }
     prevEnd = end;

@@ -78,7 +78,7 @@ export function EnergyCheckInSheet({
         {step === "ask" ? (
           <>
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
-              Block complete
+              Block finished
             </p>
             <h2 id={titleId} className="mt-1 font-display text-2xl text-olive">
               Log energy for this block?

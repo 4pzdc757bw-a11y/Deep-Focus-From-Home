@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/input";
 import { DayButton } from "@/components/week-slot-picker";
-import { addedBlockTimes, MAX_DAY_BLOCKS } from "@/lib/block-plan";
+import { addedBlockTimes, MAX_DAY_BLOCKS, planDayTimes } from "@/lib/block-plan";
 import { useFocusStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import {
@@ -180,7 +180,14 @@ export function WeekBlocksEditor({
         </p>
         <p className="text-sm text-muted">
           Just {WEEKDAY_LONG[day]}. Every other day keeps its own blocks.
-          {mine.length ? null : " With none set, this day opens with 4 standard blocks."}
+          {mine.length
+            ? (() => {
+                const opens = planDayTimes(mine, hours).length;
+                return opens > mine.length
+                  ? ` Today page opens with ${opens} blocks: these, then standard blocks after them.`
+                  : null;
+              })()
+            : " With none set, this day opens with 4 standard blocks."}
         </p>
       </div>
 

@@ -131,8 +131,8 @@ export async function completeSession() {
     }
     releaseScreen();
     notify(
-      "Block complete",
-      "The deep-work slot is done. Write the outcome and shut down.",
+      "Block finished",
+      "The focus block is done. Write the outcome and shut down.",
     );
     await playDoneBell().catch(() => undefined);
   } finally {

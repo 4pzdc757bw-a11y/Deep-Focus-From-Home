@@ -234,7 +234,7 @@ function StatusLine({
       </span>
       <span>
         {label}
-        {done ? " — done" : <span className="print:hidden"> — {pending}</span>}
+        {done ? null : <span className="print:hidden"> — {pending}</span>}
       </span>
     </p>
   );
@@ -508,10 +508,10 @@ export function DailyOs({ date }: { date?: string }) {
                   <span className="tabular-nums text-sm font-semibold text-olive">
                     {remainingLabel(left)} left
                   </span>
-                ) : doneHere || dur ? (
+                ) : doneHere || finished || dur ? (
                   <span className="text-sm font-semibold text-olive">
-                    {doneHere ? (slot.outcomeDone ? "Block finished" : "Block stopped") : null}
-                    {dur ? `${doneHere ? " · " : ""}${dur}` : null}
+                    {doneHere || finished ? (slot.outcomeDone ? "Block finished" : "Block stopped") : null}
+                    {dur ? `${doneHere || finished ? " · " : ""}${dur}` : null}
                   </span>
                 ) : null}
               </div>
