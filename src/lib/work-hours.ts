@@ -3,6 +3,7 @@
 export const BLOCK_MINUTES = 90;
 const GAP_MINUTES = 30;
 const FALLBACK_START = "09:00";
+const DEFAULT_DAY_MINUTES = 8 * 60;
 
 export function toMinutes(hhmm: string): number | null {
   const m = /^(\d{1,2}):(\d{2})$/.exec(hhmm.trim());
@@ -112,16 +113,19 @@ export function blockDefaults(
 ): { start: string; end: string } {
   const wh = parseWorkHours(hours);
   const dayStart = wh?.start ?? (toMinutes(FALLBACK_START) as number);
-  const dayStop = wh?.stop ?? null;
+  // No stop set: assume the default 9–5 length (8 h) so defaults stay in the work day.
+  const dayStop = wh?.stop ?? dayStart + DEFAULT_DAY_MINUTES;
   // Previous block's end on the work day's timeline (past midnight for night shifts).
   const prev = prevEnd ? workMinutes(prevEnd, hours) : null;
-  let start =
-    index > 0 && prev != null
-      ? prev + GAP_MINUTES
-      : dayStart + index * (BLOCK_MINUTES + GAP_MINUTES);
+  const planned = dayStart + index * (BLOCK_MINUTES + GAP_MINUTES);
+  // Follow the previous block's real end only when it is inside the work day.
+  // A block stopped late at night (end = 8:45 PM) must not push the next
+  // default to 9:15 PM.
+  const prevUsable = index > 0 && prev != null && prev >= dayStart && prev + GAP_MINUTES + 15 <= dayStop;
+  let start = prevUsable ? prev! + GAP_MINUTES : planned;
   if (start < dayStart) start = dayStart;
   let end = start + BLOCK_MINUTES;
-  if (dayStop != null) {
+  {
     if (end > dayStop) end = dayStop;
     if (end - start < 15) {
       // No room left: fit the last block of the day before the stop time.

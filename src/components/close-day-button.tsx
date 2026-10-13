@@ -256,6 +256,8 @@ export function CloseDayButton({
           className={className}
           onClick={startClose}
           disabled={unavailable}
+          aria-disabled={unavailable || undefined}
+          style={unavailable ? { opacity: 0.4 } : undefined}
           aria-haspopup="dialog"
         >
           <Moon className="size-4" />
@@ -266,16 +268,22 @@ export function CloseDayButton({
           type="button"
           className={cn(
             "flex min-h-14 w-full flex-col items-center justify-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted",
-            unavailable && "cursor-not-allowed opacity-40",
+            unavailable && "pointer-events-none cursor-not-allowed opacity-40",
             className,
           )}
-          onClick={startClose}
+          onClick={unavailable ? undefined : startClose}
           disabled={unavailable}
+          aria-disabled={unavailable || undefined}
+          // Inline too, so the greyed look can't be lost to class order.
+          style={unavailable ? { opacity: 0.4 } : undefined}
           title={unavailable ? (viewedOff ? "Day off: Close day is off" : "Close day opens on that day") : undefined}
           aria-haspopup="dialog"
         >
           <Moon className="size-5" strokeWidth={1.8} />
           Close day
+          {unavailable ? (
+            <span className="sr-only">{viewedOff ? " (day off)" : " (not today yet)"}</span>
+          ) : null}
         </button>
       )}
 

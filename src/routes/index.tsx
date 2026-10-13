@@ -63,7 +63,9 @@ function Home() {
       : workdayOnOrAfter(workday, workDays);
   const starterDate =
     starterStart && nextDay ? starterDayDate(starterStart, nextDay.day, workDays) : null;
-  const nextDate = starterDate && starterDate > forward ? starterDate : forward;
+  // Start Day N opens that starter day's own date (Day 1 started Wed → Wed),
+  // not the next open work day.
+  const nextDate = starterDate ?? forward;
   const peak = peakFrom(energy);
   const [now, setNow] = useState(() => Date.now());
   const [showHomeFocus, setShowHomeFocus] = useState(false);
