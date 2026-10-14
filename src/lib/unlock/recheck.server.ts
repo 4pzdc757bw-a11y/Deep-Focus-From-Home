@@ -31,8 +31,8 @@ import type { UnlockTokenPayload } from "./token.server.ts";
  *   left alone until the buyer unlocks again.
  */
 
-/** How long a good answer is trusted before the next recheck. */
-export const RECHECK_INTERVAL_SECONDS = 24 * 60 * 60;
+/** How long a good answer is trusted before the next recheck (was 24h; a refunded buyer kept access up to a day). */
+export const RECHECK_INTERVAL_SECONDS = 60 * 60;
 /** After Stripe errors or is slow, try again after this long. */
 export const RECHECK_RETRY_SECONDS = 60 * 60;
 /** Longest the page waits on Stripe for the recheck. */
