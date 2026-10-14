@@ -587,11 +587,13 @@ html[data-df-starter] .df-pre-welcome {
     box-sizing: border-box !important;
     display: flex !important;
     flex-direction: column !important;
-    /* Printable area ≈ 10in with 0.5in @page margins; leave slack for Safari */
+    /* Printable area ≈ 10in with 0.5in @page margins. Keep ~0.6in slack: Safari/Chrome
+       print dialogs can add their own margins or headers/footers, and a sheet
+       even a hair taller than the page spills onto a blank extra page. */
     width: 100% !important;
     max-width: 100% !important;
-    height: 9.85in !important;
-    max-height: 9.85in !important;
+    height: 9.4in !important;
+    max-height: 9.4in !important;
     min-height: 0 !important;
     margin: 0 !important;
     border-radius: 0 !important;
