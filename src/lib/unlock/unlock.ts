@@ -68,7 +68,7 @@ async function saveUnlock(
 }
 
 /**
- * Terms §8: a refund ends access. Once a day per browser, recheck the
+ * Terms §8: a refund ends access. Once an hour per browser, recheck the
  * purchase behind this device's unlock; clear the cookie if it was fully
  * refunded and the buyer has nothing else valid. Fails open on any Stripe
  * problem. Old cookies with no purchase info are left alone.
