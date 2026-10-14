@@ -2,13 +2,16 @@ import { UnlockDeviceForm } from "@/components/lock-screen";
 import { HandbookCheckoutLink } from "@/components/handbook-checkout-link";
 import { LegalFooter } from "@/components/legal-footer";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, BookOpen } from "lucide-react";
+import { ArrowRight, BookOpen, Home as HomeIcon, Users } from "lucide-react";
 import { DailyOs } from "@/components/daily-os";
 import { useWorkdayKey } from "@/lib/workday";
 import { latestClosedDate, nextDateForward } from "@/lib/close-day";
 import { starterDayDate, workdayOnOrAfter } from "@/lib/work-hours";
 import { useHasAccess, useUnlockedProduct } from "@/components/lock-screen";
-import { HandbookFirstCard, HandbookUnlockedCard } from "@/components/home-offer";
+import {
+  HandbookFirstCard,
+  HandbookUnlockedCard,
+} from "@/components/home-offer";
 import { StarterSignupCard } from "@/components/starter-signup";
 import { PRICE_LABEL } from "@/lib/offer";
 import { Card, PageTitle } from "@/components/app-shell";
@@ -36,7 +39,9 @@ function Home() {
   const appUnlocked = useHasAccess("app");
   const starterStart = useFocusStore((s) => s.starterStart);
   const starterDone = useFocusStore((s) => s.starterDone);
-  const homeFocusWeekTwoPrompted = useFocusStore((s) => s.homeFocusWeekTwoPrompted);
+  const homeFocusWeekTwoPrompted = useFocusStore(
+    (s) => s.homeFocusWeekTwoPrompted,
+  );
   const session = useFocusStore((s) => s.session);
   const energy = useFocusStore((s) => s.energy);
   const tourDone = useFocusStore((s) => s.tourDone);
@@ -62,7 +67,9 @@ function Home() {
       ? nextDateForward(latestClosed, workday, workDays, latestClosed)
       : workdayOnOrAfter(workday, workDays);
   const starterDate =
-    starterStart && nextDay ? starterDayDate(starterStart, nextDay.day, workDays) : null;
+    starterStart && nextDay
+      ? starterDayDate(starterStart, nextDay.day, workDays)
+      : null;
   // Start Day N opens that starter day's own date (Day 1 started Wed → Wed),
   // not the next open work day.
   const nextDate = starterDate ?? forward;
@@ -82,9 +89,18 @@ function Home() {
     }
     const force = forceHomeFocusSetupPrompt();
     const due =
-      force || (isWeekTwo(starterStart, workday, workDays) && !homeFocusWeekTwoPrompted);
+      force ||
+      (isWeekTwo(starterStart, workday, workDays) && !homeFocusWeekTwoPrompted);
     setShowHomeFocus(due);
-  }, [hydrated, starterStart, homeFocusWeekTwoPrompted, homeFocusDismissed, appUnlocked, workday, workDays]);
+  }, [
+    hydrated,
+    starterStart,
+    homeFocusWeekTwoPrompted,
+    homeFocusDismissed,
+    appUnlocked,
+    workday,
+    workDays,
+  ]);
 
   useEffect(() => {
     if (!session.running || !session.endsAt) return;
@@ -106,9 +122,13 @@ function Home() {
               : "Week one is done"}
           </h2>
           <p className="mt-2 text-ink">
-            {nextDay ? nextDay.job : "Keep running the Daily OS. Do not add extra systems."}
+            {nextDay
+              ? nextDay.job
+              : "Keep running the Daily OS. Do not add extra systems."}
           </p>
-          {peak ? <p className="mt-2 text-ink">{peakLine(peak, energy.length)}</p> : null}
+          {peak ? (
+            <p className="mt-2 text-ink">{peakLine(peak, energy.length)}</p>
+          ) : null}
           {session.running && session.endsAt ? (
             <p className="mt-2 tabular-nums font-semibold text-olive">
               Block live · {remainingLabel(session.endsAt - now)} left
@@ -125,7 +145,8 @@ function Home() {
             {nextDay ? (
               <Button asChild>
                 <Link to="/daily" search={{ date: nextDate }}>
-                  {starterDate && starterDate < workday ? "Pick up" : "Start"} Day {nextDay.day} <ArrowRight className="size-4" />
+                  {starterDate && starterDate < workday ? "Pick up" : "Start"}{" "}
+                  Day {nextDay.day} <ArrowRight className="size-4" />
                 </Link>
               </Button>
             ) : (
@@ -173,7 +194,8 @@ function Home() {
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
               <Button size="lg" asChild>
                 <HandbookCheckoutLink>
-                  Get the handbook, {PRICE_LABEL} <ArrowRight className="size-4" />
+                  Get the handbook, {PRICE_LABEL}{" "}
+                  <ArrowRight className="size-4" />
                 </HandbookCheckoutLink>
               </Button>
               <Link
@@ -197,7 +219,10 @@ function Home() {
                 src="/images/cover.jpg"
                 srcSet="/images/cover-480.jpg 480w, /images/cover.jpg 800w"
                 sizes="(min-width: 768px) 736px, calc(100vw - 32px)"
-                width={800} height={1189} fetchPriority="high" decoding="async"
+                width={800}
+                height={1189}
+                fetchPriority="high"
+                decoding="async"
                 alt="A remote worker at a clean desk, looking at a computer, no phone in view"
                 className="hero-photo h-64 w-full sm:h-80"
               />
@@ -252,10 +277,12 @@ function Home() {
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
                 7-day starter
               </p>
-              <p className="mt-1 font-display text-xl text-olive">Start with Day 1 today.</p>
+              <p className="mt-1 font-display text-xl text-olive">
+                Start with Day 1 today.
+              </p>
               <p className="mt-2 text-ink">
-                Claim one surface that is work-only. After you start, Today opens
-                on the current day — not this welcome.
+                Claim one surface that is work-only. After you start, Today
+                opens on the current day — not this welcome.
               </p>
               <GuideFirstNote />
               <div className="mt-4">
@@ -313,16 +340,39 @@ function Home() {
 /** Day 1 nudge: read Guide chapters 1–4 (workspace setup) before starting the week. */
 function GuideFirstNote() {
   return (
-    <div className="mt-3 flex flex-col gap-2 rounded-md border border-yellow bg-paper p-3 sm:flex-row sm:items-center">
-      <p className="text-sm text-ink sm:flex-1">
-        Before you start your week, read Guide chapters 1–4. They show you how to set up your
-        workspace.
-      </p>
-      <Button variant="outline" size="sm" asChild>
-        <Link to="/guide/$slug" params={{ slug: CHAPTER_1_SLUG }}>
-          <BookOpen className="size-4" /> Read chapter 1
-        </Link>
-      </Button>
-    </div>
+    <>
+      <div className="mt-3 flex flex-col gap-2 rounded-md border border-yellow bg-paper p-3 sm:flex-row sm:items-center">
+        <p className="text-sm text-ink sm:flex-1">
+          Before you start your week, read Guide chapters 1–4. They show you how
+          to set up your workspace.
+        </p>
+        <Button variant="outline" size="sm" asChild>
+          <Link to="/guide/$slug" params={{ slug: CHAPTER_1_SLUG }}>
+            <BookOpen className="size-4" /> Read chapter 1
+          </Link>
+        </Button>
+      </div>
+      <div className="mt-3 flex flex-col gap-2 rounded-md border border-yellow bg-paper p-3 sm:flex-row sm:items-center">
+        <p className="text-sm text-ink sm:flex-1">
+          Do your Home focus setup first: location, work surface, lights and
+          sound. Check all three before you click Start.
+        </p>
+        <Button variant="outline" size="sm" asChild>
+          <Link to="/setup">
+            <HomeIcon className="size-4" /> Open Home focus setup
+          </Link>
+        </Button>
+      </div>
+      <div className="mt-3 flex flex-col gap-2 rounded-md border border-yellow bg-paper p-3 sm:flex-row sm:items-center">
+        <p className="text-sm text-ink sm:flex-1">
+          Print your Household focus agreement for the fridge (Guide chapter 2).
+        </p>
+        <Button variant="outline" size="sm" asChild>
+          <Link to="/household">
+            <Users className="size-4" /> Open Household agreement
+          </Link>
+        </Button>
+      </div>
+    </>
   );
 }
