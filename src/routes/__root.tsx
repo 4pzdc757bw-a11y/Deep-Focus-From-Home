@@ -5,6 +5,7 @@ import {
   Scripts,
   useRouterState,
 } from "@tanstack/react-router";
+import { Analytics } from "@vercel/analytics/react";
 import { AuthProvider } from "@/lib/auth/provider";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import { AppShell } from "@/components/app-shell";
@@ -111,6 +112,8 @@ export const Route = createRootRoute({
             <GatedOutlet />
           </AppShell>
         </AuthProvider>
+        {/* Visitor stats (Vercel Web Analytics), per Privacy section 4. */}
+        <Analytics />
         <Scripts />
       </body>
     </html>
