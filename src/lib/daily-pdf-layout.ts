@@ -31,7 +31,7 @@ export type PdfDay = {
   noteAfterId: string;
   shutdownDone: boolean;
   footer: string;
-  /** JPEG data URL of the site logo (optional). */
+  /** PNG data URL of the site wordmark (optional). */
   logo?: string | null;
 };
 
@@ -91,21 +91,24 @@ export function drawDailyPdf(doc: jsPDF, day: PdfDay) {
 
   // ---- Header
   let y = M;
-  let textX = M;
+  let hasLogo = false;
   if (day.logo) {
     try {
-      doc.addImage(day.logo, "JPEG", M, y, 26, 38);
-      textX = M + 34;
+      // Wordmark (4:1) replaces the brand text line.
+      doc.addImage(day.logo, "PNG", M, y, 112, 28);
+      hasLogo = true;
     } catch {
       /* logo is decoration only */
     }
   }
-  color(OLIVE);
-  font("bold", 17);
-  doc.text(pdfText(day.brand), textX, y + 17);
+  if (!hasLogo) {
+    color(OLIVE);
+    font("bold", 17);
+    doc.text(pdfText(day.brand), M, y + 17);
+  }
   color(GOLD);
   font("bold", 7.5);
-  doc.text(pdfText(day.kicker.toUpperCase()), textX, y + 30, { charSpace: 1.2 });
+  doc.text(pdfText(day.kicker.toUpperCase()), M, y + (hasLogo ? 38 : 30), { charSpace: 1.2 });
   color(OLIVE);
   font("bold", 12);
   doc.text(pdfText(day.dateLine), PAGE_W - M, y + 17, { align: "right" });

@@ -361,10 +361,9 @@ html[data-df-starter] .df-pre-welcome {
   }
 
   .daily-print-header .daily-print-logo {
-    width: 0.36in;
-    height: 0.5in;
-    object-fit: cover;
-    border-radius: 2pt;
+    display: block;
+    width: auto;
+    height: 0.4in;
   }
 
   .daily-print-header .daily-print-brand {

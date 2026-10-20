@@ -63,19 +63,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="mx-auto flex h-14 max-w-3xl items-center gap-3 px-4">
           <Link to="/" className="flex min-w-0 items-center gap-3" aria-label="Deep Focus from Home — home">
             <img
-              src="/images/logo.jpg"
-              width={32} height={32} decoding="async"
-              alt=""
-              className="size-8 rounded-sm object-cover"
+              src="/images/wordmark.png"
+              width={1200} height={300} decoding="async"
+              alt="Deep Focus from Home"
+              className="h-7 w-auto mix-blend-multiply sm:h-9"
             />
-            <div className="min-w-0">
-              <p className="truncate text-[11px] font-semibold uppercase tracking-[0.18em] text-olive">
-                Deep Focus
-              </p>
-              <p className="truncate text-[11px] uppercase tracking-[0.16em] text-gold">
-                From Home
-              </p>
-            </div>
           </Link>
           <nav aria-label="Site" className="ml-auto flex items-center gap-4">
             {HEADER_LINKS.map((l) => {
