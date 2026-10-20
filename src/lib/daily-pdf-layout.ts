@@ -94,8 +94,8 @@ export function drawDailyPdf(doc: jsPDF, day: PdfDay) {
   let hasLogo = false;
   if (day.logo) {
     try {
-      // Wordmark (4:1) replaces the brand text line.
-      doc.addImage(day.logo, "PNG", M, y, 112, 28);
+      // Wordmark (~8.5:1) replaces the brand text line.
+      doc.addImage(day.logo, "PNG", M, y + 4, 169, 20);
       hasLogo = true;
     } catch {
       /* logo is decoration only */
@@ -108,7 +108,7 @@ export function drawDailyPdf(doc: jsPDF, day: PdfDay) {
   }
   color(GOLD);
   font("bold", 7.5);
-  doc.text(pdfText(day.kicker.toUpperCase()), M, y + (hasLogo ? 38 : 30), { charSpace: 1.2 });
+  doc.text(pdfText(day.kicker.toUpperCase()), M, y + (hasLogo ? 36 : 30), { charSpace: 1.2 });
   color(OLIVE);
   font("bold", 12);
   doc.text(pdfText(day.dateLine), PAGE_W - M, y + 17, { align: "right" });

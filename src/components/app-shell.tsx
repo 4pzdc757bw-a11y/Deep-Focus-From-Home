@@ -64,9 +64,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <Link to="/" className="flex min-w-0 items-center gap-3" aria-label="Deep Focus from Home — home">
             <img
               src="/images/wordmark.png"
-              width={1200} height={300} decoding="async"
+              width={879} height={104} decoding="async"
               alt="Deep Focus from Home"
-              className="h-7 w-auto mix-blend-multiply sm:h-9"
+              className="h-5 w-auto sm:h-7"
             />
           </Link>
           <nav aria-label="Site" className="ml-auto flex items-center gap-4">
