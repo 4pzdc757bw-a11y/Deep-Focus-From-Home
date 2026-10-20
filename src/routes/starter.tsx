@@ -92,7 +92,12 @@ function StarterPage() {
           ))}
         </Card>
       )}
-      {appUnlocked ? null : <StarterSignupCard title="Get each day by email, too." />}
+      {appUnlocked ? null : (
+        <>
+          <StarterSignupCard title="Get each day by email, too." />
+          <p className="text-sm text-muted">No credit card required.</p>
+        </>
+      )}
       {!started ? (
         <Button onClick={start}>Start week one today</Button>
       ) : (
