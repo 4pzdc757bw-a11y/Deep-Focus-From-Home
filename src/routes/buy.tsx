@@ -52,6 +52,7 @@ function BuyPage() {
         </ul>
         <p className="text-3xl font-display text-olive">{PRICE_LABEL}</p>
         <p className="text-sm text-muted">Pay once. No subscription.</p>
+        <p className="text-sm text-muted">Available now.</p>
         {handbookCheckout ? (
           <Button asChild>
             <a href={handbookCheckout} rel="noopener noreferrer">
