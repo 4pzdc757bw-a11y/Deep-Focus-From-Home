@@ -463,9 +463,8 @@ export function DailyOs({ date }: { date?: string }) {
       ) : null}
 
       <div className="daily-print-header hidden print:flex">
-        <img src="/images/logo.jpg" alt="" className="daily-print-logo" />
         <div className="min-w-0 flex-1">
-          <p className="daily-print-brand font-display text-olive">Deep Focus from Home</p>
+          <img src="/images/wordmark.png" alt="Deep Focus from Home" className="daily-print-logo" />
           <p className="daily-print-kicker text-xs font-semibold uppercase tracking-[0.18em] text-gold">
             Daily Focus OS
           </p>

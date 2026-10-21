@@ -60,24 +60,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-dvh bg-sage text-ink">
       <SessionWatcher />
       <header className="no-print sticky top-0 z-20 border-b border-yellow/80 bg-sage/90 backdrop-blur-sm">
-        <div className="mx-auto flex h-14 max-w-3xl items-center gap-3 px-4">
-          <Link to="/" className="flex min-w-0 items-center gap-3" aria-label="Deep Focus from Home — home">
+        <div className="mx-auto flex h-16 max-w-3xl items-center gap-2 px-4 sm:gap-3">
+          <Link to="/" className="flex min-w-0 shrink-0 items-center rounded-full border border-olive/25 bg-sage px-2.5 py-1 sm:px-4 sm:py-1.5" aria-label="Deep Focus from Home — home">
             <img
-              src="/images/logo.jpg"
-              width={32} height={32} decoding="async"
-              alt=""
-              className="size-8 rounded-sm object-cover"
+              src="/images/wordmark.png"
+              width={879} height={104} decoding="async"
+              alt="Deep Focus from Home"
+              className="h-[20px] w-auto min-[380px]:h-[24px] sm:h-[38px]"
             />
-            <div className="min-w-0">
-              <p className="truncate text-[11px] font-semibold uppercase tracking-[0.18em] text-olive">
-                Deep Focus
-              </p>
-              <p className="truncate text-[11px] uppercase tracking-[0.16em] text-gold">
-                From Home
-              </p>
-            </div>
           </Link>
-          <nav aria-label="Site" className="ml-auto flex items-center gap-4">
+          <nav aria-label="Site" className="ml-auto flex items-center gap-2.5 sm:gap-4">
             {HEADER_LINKS.map((l) => {
               const active =
                 l.to === "/"

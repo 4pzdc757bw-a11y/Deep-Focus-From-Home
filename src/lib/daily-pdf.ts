@@ -23,7 +23,7 @@ function longDate(key: string) {
 
 async function logoDataUrl(): Promise<string | null> {
   try {
-    const res = await fetch("/images/logo.jpg");
+    const res = await fetch("/images/wordmark.png");
     if (!res.ok) return null;
     const blob = await res.blob();
     return await new Promise((resolve) => {
